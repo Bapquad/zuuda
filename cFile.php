@@ -67,10 +67,11 @@ class cFile implements iFile
 					{
 						continue;
 					}
-					$rt = array_merge( $rt, (array) ( _correctPath( $path . ( ( is_null( $file ) ) ? $name : $name . PS . $file ) ) ) );
+					$rt = array_merge( $rt, (array) ( $path . ( ( is_null( $file ) ) ? $name : $name . PS . $file ) ) );
 				}
 			}
 		}
+		
 		return $rt;
 	}
 	

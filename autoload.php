@@ -42,14 +42,14 @@ function _assetPath( $file_path, $file = false )
 	global $configs;
 	if( isset( $configs[ 'themes' ] ) && isset( $configs[ 'SHIP' ] ) ) 
 	{
-		$path = _correctPath( WEB_DIR . $configs[ 'themes' ] . DS . $file_path );
+		$path = _correctPath( WEB_DIR . $configs[ 'themes' ] . $file_path );
 		if( call( Zuuda\cFile::get(), $path )->exist() ) 
 		{
 			if( $file ) 
 			{
 				return $path;
 			}
-			return ( _correctPath( WEB_PATH . $configs[ 'themes' ] . PS . $file_path ) );
+			return ( WEB_PATH . $configs[ 'themes' ] . $file_path );
 		}
 	} 
 	
@@ -59,7 +59,7 @@ function _assetPath( $file_path, $file = false )
 	}
 	else 
 	{
-		return _correctPath( WEB_PATH . $file_path );
+		return WEB_PATH . $file_path;
 	}
 }
 
@@ -71,12 +71,14 @@ function _currentControllerFile()
 	$controller = $configs[ 'MODULE' ].DS.CTRL_DIR.$configs[ 'CONTROLLER' ].CONTROLLER.$configs[ 'EXT' ];
 	if( $configs[ 'COM' ] && isset( $configs['SHIP'] ) ) 
 	{
-		if( call( Zuuda\cFile::get(), CODE.$controller )->exist() ) 
-			return CODE.$controller; 
-		if( call( Zuuda\cFile::get(), COM.$controller )->exist() ) 
-			return COM.$controller; 
+		$code_path = _correctPath( CODE.$controller );
+		$com_path = _correctPath( COM.$controller );
+		if( call( Zuuda\cFile::get(), $code_path )->exist() ) 
+			return $code_path; 
+		if( call( Zuuda\cFile::get(), $com_path )->exist() ) 
+			return $com_path; 
 	}
-	return MOD_DIR.$controller; 
+	return _correctPath( MOD_DIR.$controller ); 
 }
 
 

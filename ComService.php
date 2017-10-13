@@ -55,10 +55,10 @@ class ComService implements iComService
 			$name = $handle->route[ $i ][ 'name' ];
 			$left = $handle->route[ $i ]->left;
 			$right = $handle->route[ $i ]->right;
-			
 			if ( $left == $url ) 
 			{
 				$live_path = str_replace( $basename, 'live.xml', $file_path );
+
 				if( call( cFile::get(), $live_path )->exist() ) 
 				{
 					$live_xml = simplexml_load_file( $live_path );
@@ -81,12 +81,13 @@ class ComService implements iComService
 			$configs = self::_loadConfigs();
 			list( $realpath, $filename ) = each( $configs );
 			
-			$list = cFile::lookFile( $realpath, $filename );
+			$list = cFile::lookFile( _correctPath( $realpath ), _correctPath( $filename ) );
 			foreach( $list as $file_path ) 
 			{
 				return self::_routing( $app, $url, $file_path );
 			}
 		}
+
 		return false;
 	}
 }

@@ -105,7 +105,6 @@ class ThemeService implements iTaskService, iThemeService
 		}
 		
 		$themes = ThemeClient::load();
-		
 		foreach( $themes as $key => $theme ) 
 		{
 			foreach( $theme as $i => $data ) 

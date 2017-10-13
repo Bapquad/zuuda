@@ -96,7 +96,7 @@ class ThemeClient implements iThemeClient
 		if( $configs ) 
 		{
 			list( $realpath, $filename ) = each( $configs );
-			$themes = cFile::lookDir( $realpath, $filename );
+			$themes = cFile::lookDir( _correctPath( $realpath ), _correctPath( $filename ) );
 			return self::_request( $themes );
 		}
 		return NULL;

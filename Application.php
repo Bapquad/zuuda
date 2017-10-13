@@ -154,7 +154,6 @@ class Application
 		Session::Start();
 		$_instance = new Application();
 		$_instance->_bootService();
-		
 		if( Config::get( 'COM' ) ) 
 		{
 			$_instance->_bootServices( BTShipnelService::getInstance() );
@@ -163,7 +162,6 @@ class Application
 			$_instance->_bootServices( CateService::getInstance(), $_instance );
 			$_instance->_bootServices( RouteService::getInstance(), $_instance );			
 		}
-		
 		$_instance->_bootParams();
 		return $_instance;
 	}
@@ -174,14 +172,14 @@ class Application
 		if ( $configs[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
 		{
 			error_reporting(E_ALL);
-			ini_set('display_errors','On');
+			ini_set('display_errors', 1);
 		} 
 		else 
 		{
 			error_reporting(E_ALL);
-			ini_set('display_errors','Off');
-			ini_set('log_errors', 'On');
-			ini_set('error_log', WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log');
+			ini_set('display_errors', 0);
+			ini_set('log_errors', 1);
+			ini_set('error_log', _correctPath(WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log') );
 		}
 		return $this;
 	}
@@ -231,7 +229,8 @@ class Application
 		{
 			$controller_class_name = $this->_extractController(); 
 			$controller_class_file = _currentControllerFile(); 
-			if(file_exists( _correctPath( $controller_class_file ) ) ) 
+			
+			if(file_exists( $controller_class_file ) ) 
 			{
 				$dispatch = new $controller_class_name();
 				
