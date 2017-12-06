@@ -2,6 +2,7 @@
 namespace Zuuda;
 
 define( 'AUTH_DATA', 'authorization' );
+define( 'auth', AUTH_DATA );
 
 abstract class Authorization implements iAuthorization 
 {
@@ -9,19 +10,60 @@ abstract class Authorization implements iAuthorization
 	private $_user_model;
 	private $_data;
 	
-	private function _getUserModel() { return $this->_user_model; }
-	private function _getData() { return $this->_data; }
-	
-	private function _setUserModel( $user_model ) { $this->_user_model = $user_model; return $this; }
-	private function _setData( $data ) { $this->_data = $data; return $this; }
-	
 	final public function GetUserModel() { return $this->_getUserModel(); }
 	final public function SetUserModel( Model $user_model ) { return $this->_setUserModel( $user_model ); }
 	final public function ConfigOpenAuth( $data ) { return $this->_configOpenAuth( $data ); }
 	final public function Destroy() { return $this->_destroyAuth(); }
 	final public function Clear() { return $this->_destroyAuth(); }
-	/** abstract public function Authorizing( $data ); */
-	final public function GetAuth() { return $this->_getAuth(); }
+	final public function GetAuth($key=NULL) { return $this->_getAuth($key); }
+	/** abstract public function Authorizing( $input ); */
+	
+	protected function _setUserModel( $user_model ) { $this->_user_model = $user_model; return $this; }
+	protected function _setData( $data, $value = NULL ) 
+	{
+		if( NULL != $value ) 
+		{
+			try 
+			{
+				if( !is_string( $data ) ) 
+				{
+					throw new Exception("Authorization::_setData parameter 1 must be a string key.", 1);
+				}
+				$this->_data[ $data ] = $value;
+				return $this;
+			} 
+			catch( Exception $e ) 
+			{
+				echo $e->getMessage(); 
+				exit;
+			}
+		}
+
+		if( NULL === $data ) 
+		{
+			$this->_data = $data;
+		}
+		else 
+		{
+			$this->_data = array_merge( $data ); 
+		}
+
+		return $this;
+	}
+	
+	protected function _getUserModel() { return $this->_user_model; }
+	protected function _getData($key=NULL) 
+	{
+		if( NULL !== $key && NULL !== $this->_data ) 
+		{
+			if( array_key_exists( $key, $this->_data ) ) 
+			{
+				return $this->_data[ $key ];
+			}
+			return NULL;
+		}
+		return $this->_data; 
+	}
 	
 	public function __construct( Model $user_model = NULL ) 
 	{
@@ -38,38 +80,33 @@ abstract class Authorization implements iAuthorization
 		return $this;
 	}
 	
-	private function _getAuth() 
+	private function _getAuth($key=NULL) 
 	{
-		if( !is_null( $data = $this->_getData() ) 
+		// first look auth
+		if( $data = $this->_lookAuth() )
 		{
-			return $data;
-		}
-		else 
-		{
-			if( $data = $this->_lookAuth() )
-			{
-				$this->_setData( data );
-				return $data;
-			}
-		}
+			$this->_setData( $data );
+
+			return $this->_getData($key);
+		} 
 		
 		return false;
 	}
 	
 	private function _destroyAuth() 
 	{
-		if( isset( Session::get( AUTH_DATA ) ) 
+		if( NULL !== Session::get( AUTH_DATA ) )
 		{
 			$this->_setData( NULL );
-			return Session::unregister( AUTH_DATA );
+			Session::unregister( AUTH_DATA );
 		}
 		
-		return true;
+		return $this;
 	}
 	
 	private function _lookAuth() 
 	{
-		if( isset( Session::get( AUTH_DATA ) ) 
+		if( NULL !== Session::get( AUTH_DATA ) )
 		{
 			return Session::get( AUTH_DATA );
 		}

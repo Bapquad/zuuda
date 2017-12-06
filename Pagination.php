@@ -201,7 +201,7 @@ class Pagination implements iHTML, iPagination
 		$total = $this->_getTotal();
 		
 		ob_start();
-		include( cFile::assetPath( WIDGET_DIR . str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) . PS . 'render.inc.php', true ) );
+		include( WIDGET_DIR . _correctPath( str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) ) . PS . 'render.inc.php' );
 		$_response = ob_get_contents();
 		ob_end_clean();
 		

@@ -47,6 +47,7 @@ class ComService implements iComService
 	
 	private static function _routing( $app, $url, $file_path ) 
 	{
+		global $configs;
 		$basename = basename( $file_path );
 		$handle = simplexml_load_file( $file_path );
 		$len = count( $handle->route );
@@ -58,12 +59,12 @@ class ComService implements iComService
 			if ( $left == $url ) 
 			{
 				$live_path = str_replace( $basename, 'live.xml', $file_path );
-
 				if( call( cFile::get(), $live_path )->exist() ) 
 				{
 					$live_xml = simplexml_load_file( $live_path );
-					if( $live_xml->live->status == 'true' ) 
+					if( (int) $live_xml->live->status ) 
 					{
+						getSingleton( 'Config' )->set( 'CODE_OF', $live_xml->live->codeof->__toString() );
 						$app->setUrl( str_replace( $left, $right, $url ) );
 						return true;
 					}
@@ -81,11 +82,12 @@ class ComService implements iComService
 			$configs = self::_loadConfigs();
 			list( $realpath, $filename ) = each( $configs );
 			
-			$list = cFile::lookFile( _correctPath( $realpath ), _correctPath( $filename ) );
+			$list = cFile::lookFile( $realpath, $filename );
 			foreach( $list as $file_path ) 
 			{
 				return self::_routing( $app, $url, $file_path );
 			}
+			die();
 		}
 
 		return false;

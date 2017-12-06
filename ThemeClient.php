@@ -16,8 +16,7 @@ class ThemeClient implements iThemeClient
 			(
 				'basename'	=> 'theme', 
 				'extension'	=> '.xml', 
-				'hostpath'	=> THM_DIR, 
-				'root'	=> WEB_DIR,
+				'hostpath'	=> THEME_DIR, 
 			);
 		}
 		return false;
@@ -58,7 +57,7 @@ class ThemeClient implements iThemeClient
 		{
 			return array
 			(
-				$configs[ 'root' ] . $configs[ 'hostpath' ] => $configs[ 'basename' ] . $configs[ 'extension' ] 
+				$configs[ 'hostpath' ] => $configs[ 'basename' ] . $configs[ 'extension' ] 
 			);
 		}
 		return false;
@@ -66,27 +65,25 @@ class ThemeClient implements iThemeClient
 	
 	private static function _loadData( $handle ) 
 	{
-		$rs = array(); 
+		$outs = array(); 
 		$len = count( $handle );
 		for( $i = 0; $i < $len; $i++ ) 
 		{
 			$data = $handle->theme[ $i ];
-			array_push( $rs, self::_fetch( $data ) );
+			array_push( $outs, self::_fetch( $data ) );
 		}
-		return $rs;
+		return $outs;
 	}
 	
 	private static function _request( $themes ) 
 	{
-		$rs = array();
-		
+		$outs = array();
 		foreach( $themes as $key => $theme ) 
 		{
 			$handle = simplexml_load_file( $theme );
-			array_push( $rs, self::_loadData( $handle ) );
+			array_push( $outs, self::_loadData( $handle ) );
 		}
-		
-		return $rs;
+		return $outs;
 	}
 	
 	private static function _load() 
@@ -96,7 +93,7 @@ class ThemeClient implements iThemeClient
 		if( $configs ) 
 		{
 			list( $realpath, $filename ) = each( $configs );
-			$themes = cFile::lookDir( _correctPath( $realpath ), _correctPath( $filename ) );
+			$themes = cFile::lookDir( $realpath, $filename );
 			return self::_request( $themes );
 		}
 		return NULL;

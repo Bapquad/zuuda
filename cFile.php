@@ -13,7 +13,8 @@ class cFile implements iFile
 	public static function LookFile( $path, $file ) { return self::_lookFile( $path, $file ); }
 	public static function LookDir( $path, $file = NULL ) { return self::_lookDir( $path, $file ); }
 	
-	public static function AssetPath( $path, $file = false ) { return _assetPath( $path, $file ); }
+	public static function AssetPath( $path, $file = true ) { return _assetPath( $path, $file ); }
+	public static function BuildPath( $path, $file = true ) { return _assetPath( $path, $file, true ); }
 	
 	public function __invoke( $name ) { return new FileInfo( $name ); }
 	private function __clone(){}
@@ -55,24 +56,60 @@ class cFile implements iFile
 	
 	private static function _lookDir( $path, $file = NULL ) 
 	{
-		$rt = array();
-		
+		$out_path = array();
+		$ignoreDirs = array('.','..','.DS_Store','empty');
+
 		if( self::_isDir( $path ) ) 
 		{
 			if( $hl = self::_openDir( $path ) ) 
 			{
-				while( ( $name = self::_readDir( $hl ) ) !== false ) 
+				while( ( $com_name = self::_readDir( $hl ) ) !== false ) 
 				{
-					if( $name == '.' || $name == '..' || $name == 'empty' ) 
+					if( in_array( $com_name, $ignoreDirs ) ) 
 					{
 						continue;
 					}
-					$rt = array_merge( $rt, (array) ( $path . ( ( is_null( $file ) ) ? $name : $name . PS . $file ) ) );
-				}
+
+					if( $dl = self::_openDir( $path . $com_name ) ) 
+					{
+						while( ( $name = self::_readDir( $dl ) ) !== false ) 
+						{
+							if( in_array( $name, $ignoreDirs ) ) 
+							{
+								continue;
+							}
+
+							if( NULL==$file ) 
+							{
+								$post_name = $name; 
+							} 
+							else 
+							{
+								$need_path = $path . $com_name . DS . $file;
+								$real_path = $path . $com_name . DS . $name;
+								if( file_exists( $need_path ) && ( $real_path == $need_path ) ) 
+								{
+									$post_name = $file;
+								} 
+								else 
+								{
+									$post_name = $name . PS . $file;
+								}
+							}
+
+							$result_path = $path . $com_name . DS . $post_name; 
+
+							if( file_exists( $result_path ) ) 
+							{
+								$out_path = array_merge( $out_path, (array) $result_path );
+							}
+						}
+					}
+				} 
 			}
 		}
 		
-		return $rt;
+		return $out_path;
 	}
 	
 }

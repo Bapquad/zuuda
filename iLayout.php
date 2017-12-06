@@ -9,6 +9,9 @@ interface iLayout
 	public function IncludeAsset( $assets );
 	public function PreloadAsset();
 	public function CustomAsset();
+	public function IncludeJui( $value );
+	public function PreloadJui( $value );
+	public function RequireJui( $value );
 	
 	public function HeadHtml( $value );
 	public function HeadStyle( $value );

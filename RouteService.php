@@ -36,7 +36,7 @@ class RouteService implements iTaskService, iRouteService
 	
 	private static function _routing( Model $model, $prefix, $url ) 
 	{
-		$model->setHasOne( array( 'com_layout' => $prefix.'com_layout' ) );
+		$model->setHasOne( array( 'com_layout' => 'com_layout' ) );
 		$routes = $model->showHasOne()->query();
 		foreach( $routes as $route ) 
 		{
@@ -57,7 +57,6 @@ class RouteService implements iTaskService, iRouteService
 		
 		$url = getSingleton( 'Global' )->get( 'url' );
 		$handle = simplexml_load_file( $service );
-		
 		foreach( $handle as $key => $program ) 
 		{
 			$name = $program->name;

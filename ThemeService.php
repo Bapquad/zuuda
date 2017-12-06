@@ -55,7 +55,7 @@ class ThemeService implements iTaskService, iThemeService
 	{
 		if( Config::get( 'COM' ) ) 
 		{
-			$data = $model->getLastedData();
+			$data = $model->where('status', 1)->getLastedData();
 			$data = $model->item( $data, 0 );
 			if( $data[ 'status' ] != THEME_INACTIVE ) 
 			{
@@ -87,7 +87,7 @@ class ThemeService implements iTaskService, iThemeService
 				break;
 			}
 		}
-		
+
 		return true;
 	}
 	

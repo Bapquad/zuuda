@@ -104,10 +104,15 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	public function IncludeScript( $value ) { return $this->_includeScript( $value ); }
 	public function IncludeTag( $value ) { return $this->_includeTag( $value ); }
 	public function IncludeCss( $value ) { return $this->_includeCss( $value ); }
-	public function IncludeJs( $value ) { return $this->_includeJs( $value ); }
+	public function IncludeJs( $value ) { return $this->_includeJs( $value ); } 
+
+	public function IncludeJui( $value ) { return $this->_includeJui( $value ); }
+	public function PreloadJui( $value ) { return $this->_preloadJui( $value ); }
+	public function RequireJui( $value ) { return $this->_requireJui( $value ); }
 	
 	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); } 
 	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
+	public function Get( $name ) { return $this->_get( $name ); }
 	public function AddBlock( $block, $force_name ) { return $this->_addBlock( $block, $force_name ); } 
 	
 	public function SetHeaderLayout( $layout ) { return $this->_setHeaderLayout( $layout ); }
@@ -121,6 +126,64 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	public function LoadHeader() { return $this->_loadHeader(); }
 	public function LoadFooter() { return $this->_loadFooter(); }
 	public function LoadLayout() { return $this->_loadLayout(); }
+	public function Display( $blockName ) { return $this->_executeBlock( $blockName ); }
+	public function Equip( $blockName ) { return $this->_executeBlock( $blockName ); }
+	public function ExecuteBlock( $blockName, $methodName ) { return $this->_executeBlock( $blockName, $methodName ); }
+
+	public function JsonLayout( $data=NULL ) { $this->_jsonLayout( $data ); }
+	public function PrintJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
+	public function OutputJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
+	public function DisplayJSON ( $data=NULL ) { $this->_jsonLayout( $data ); }
+
+	protected function DisplayAsCss() { return $this->_displayAsCss(); }
+	protected function DisplayAsJs() { return $this->_displayAsJs(); }
+	protected function DisplayAsJson() { return $this->_displayAsJson(); }
+	protected function DisplayAsText() { return $this->_displayAsText(); }
+	protected function DisplayAsStream( $name ) { return $this->_displayAsStream( $name ); }
+	
+	protected function MakeStream( $name ) { return $this->_displayAsStream( $name ); }
+	protected function MakeAPIOut() { return $this->CORS(); }
+	protected function MakeAPI() { return $this->CORS(); }
+
+	private function _executeBlock( $blockName, $methodName=NULL ) 
+	{
+		$methodName = ($methodName) ? $methodName : 'render';
+		if( array_key_exists( $blockName, $this->_blocks ) ) 
+		{
+			call_user_func( array( $this->_blocks[ $blockName ], $methodName ) );
+		}
+		return $this;
+	}
+
+	private function _displayAsCss() 
+	{
+		RequestHeader::DisplayCSS(); 
+		return $this;
+	} 
+
+	private function _displayAsJs() 
+	{
+		RequestHeader::DisplayJS();
+		return $this;
+	} 
+
+	private function _displayAsJson() 
+	{
+		RequestHeader::DisplayJSON();
+		return $this;
+	} 
+
+	private function _displayAsText() 
+	{
+		RequestHeader::DisplayText(); 
+		return $this;
+	} 
+
+	private function _displayAsStream( $name ) 
+	{
+		RequestHeader::Stream( $name );
+		return $this;
+	}
 	
 	private function _packageVars( $vars=NULL ) 
 	{
@@ -173,18 +236,15 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		global $configs; 
 		global $html, $file;
 		
+		extract( $this->_vars );
+		$this->_packageVars( $aggrs );
 		extract( $this->_blocks );
 		
-		$this->_packageVars( $aggrs );
-		
-		extract( $this->_vars );
-
 		if( $this->_layout_engine_path ) 
 		{
 			include_once( $this->_layout_engine_path );
-			exit();
+			exit;
 		}
-		
 		if( $this->_finishHeaderPath() && $this->_layout_header )
 		{
 			include_once( $this->_layout_header_path );
@@ -197,62 +257,6 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		{
 			include_once( $this->_layout_footer_path );
 		}
-	}
-	
-	private function _engineLayout( $layout_content = NULL, $vars = NULL ) 
-	{
-		$this->_packageVars( $vars );
-		
-		if( !is_null( $layout_content ) ) 
-		{
-			$this->_layout_engine_vars = $layout_content;
-			$layout_route = array(
-				'/<!--@>(.*)<@-->/' => '<?php include( cFile::assetPath( TPL_PATH . "\1", true ) ) ?>', 
-				'/<!--%>(.*)<%-->/'	  => '<?php include( cFile::assetPath( TPL_PATH . $this->_layout_engine_vars["\1"], true ) ) ?>', 
-			);
-		}
-		else 
-		{
-			$layout_route = array(
-				'/<!--@>(.*)<@-->/' => '<?php include( cFile::assetPath( TPL_PATH . "\1", true ) )?>', 
-				'/<!--%>(.*)<%-->/'	  => '<!-- \1 -->', 
-			);
-		}
-		
-		if( is_null( $this->_layout_main_path ) ) 
-		{
-			$file_name = cFile::assetPath( LAYOUT_DIR.LAYOUT_MAIN, true ); 
-			$cache_main_path = LAYOUT_MAIN;
-		}
-		else 
-		{
-			$file_name = cFile::assetPath( TPL_DIR.$this->_layout_main_path, true );
-			$cache_main_path = preg_replace( '/[\/\\\]/', '_', $this->_layout_main_path );
-		}
-		
-		$cache_file_name = _correctPath( CACHE_DIR.LAYOUT_DIR.$cache_main_path );
-		
-		if( file_exists( $cache_file_name ) ) 
-		{
-			$this->_layout_engine_path = $cache_file_name;
-		}
-		else 
-		{
-			if( $layout_template = file_get_contents( $file_name ) ) 
-			{
-				foreach($layout_route as $pattern => $result)
-					$layout_template = preg_replace($pattern, $result, $layout_template);
-				
-				$f = file_put_contents( $cache_file_name, $layout_template );
-				
-				if( $f ) 
-				{
-					$this->_layout_engine_path = $cache_file_name;
-				}
-			}
-		}
-		
-		return $this;
 	}
 	
 	private function _renderBlock( $block, $aggrs = NULL ) 
@@ -321,6 +325,18 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		}
 		$this->_vars[ $name ] = $value;
 		return $this;
+	} 
+
+	private function _get( $name ) 
+	{
+		if( is_string( $name ) ) 
+		{
+			if( array_key_exists( $name, $this->_vars ) ) 
+			{
+				return $this->_vars[ $name ];
+			}
+		}
+		return NULL;
 	}
 	
 	private function _assign( $name, $value )
@@ -330,47 +346,49 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function _includeJs( $value ) 
 	{
-		return $this->_contentAsset( SCRIPT_ASSET, $value );
-	}
+		return $this->_includeScript( $value );
+	} 
 	
 	private function _includeCss( $value ) 
 	{
-		return $this->_contentAsset( STYLE_ASSET, $value );
+		return $this->_includeStyle( $value );
 	}
 	
 	private function _includeTag( $value ) 
 	{
-		return $this->_contentAsset( HTML_ASSET, $value );
+		return $this->_includeHtml( $value );
 	}
 	
 	private function _includeScript( $value ) 
 	{
-		return $this->_contentAsset( SCRIPT_ASSET, $value );
+		return $this->_contentScript( $value );
 	}
 	
 	private function _includeStyle( $value ) 
 	{
-		return $this->_contentAsset( STYLE_ASSET, $value );
+		return $this->_contentStyle( $value );
 	}
 	
 	private function _includeHtml( $value ) 
 	{
-		return $this->_contentAsset( HTML_ASSET, $value );
+		return $this->_contentHtml( $value );
 	}
 	
 	private function _includeMeta( $value ) 
 	{
-		return $this->_contentAsset( HTML_ASSET, $value );
+		return $this->_contentHtml( $value );
 	}
 	
 	private function _contentScript( $value ) 
 	{
-		return $this->_contentAsset( SCRIPT_ASSET, $value );
+		$path = 'js/' . $value . '.js';
+		return $this->_contentAsset( SCRIPT_ASSET, $path );
 	}
 	
 	private function _contentStyle( $value ) 
 	{
-		return $this->_contentAsset( STYLE_ASSET, $value );
+		$path = 'skin/css/' . $value . '.css';
+		return $this->_headAsset( STYLE_ASSET, $path );
 	}
 	
 	private function _contentHtml( $value ) 
@@ -381,51 +399,53 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	private function _contentAsset( $type, $value ) 
 	{
 		return $this->_addContentAsset( $type, $value );
-	}
+	} 
 	
 	private function _preloadJs( $value ) 
 	{
-		return $this->_headAsset( SCRIPT_ASSET, $value );
+		return $this->_preloadScript( $value );
 	}
 	
 	private function _preloadCss( $value ) 
 	{
-		return $this->_headAsset( STYLE_ASSET, $value );
+		return $this->_preloadStyle( $value );
 	}
 	
 	private function _preloadTag( $value ) 
 	{
-		return $this->_headAsset( HTML_ASSET, $value );
+		return $this->_preloadHtml( $value );
 	}
 	
 	private function _preloadScript( $value ) 
 	{
-		return $this->_headAsset( SCRIPT_ASSET, $value );
+		return $this->_headScript( $value );
 	}
 	
 	private function _preloadStyle( $value ) 
 	{
-		return $this->_headAsset( STYLE_ASSET, $value );
+		return $this->_headStyle( $value );
 	}
 	
 	private function _preloadHtml( $value ) 
 	{
-		return $this->_headAsset( HTML_ASSET, $value );
+		return $this->_headHtml( $value );
 	}
 	
 	private function _preloadMeta( $value ) 
 	{
-		return $this->_headAsset( HTML_ASSET, $value );
+		return $this->_headHtml( $value );
 	}
 	
 	private function _headScript( $value ) 
 	{
-		return $this->_headAsset( SCRIPT_ASSET, $value );
+		$path = 'js/' . $value . '.js';
+		return $this->_headAsset( SCRIPT_ASSET, $path );
 	}
 	
 	private function _headStyle( $value ) 
 	{
-		return $this->_headAsset( STYLE_ASSET, $value );
+		$path = 'skin/css/' . $value . '.css';
+		return $this->_headAsset( STYLE_ASSET, $path );
 	}
 	
 	private function _headHtml( $value ) 
@@ -457,7 +477,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		
 		foreach( $assets[ STYLE_ASSET ] as $href ) 
 		{
-			$css_path = WEB_PATH . "skin/css/" . $href . ".css";
+			$css_path = getSingleton( 'Html' )->assetPath( $href );
 $str = <<<EOD
 <link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
@@ -466,7 +486,7 @@ EOD;
 		
 		foreach( $assets[ SCRIPT_ASSET ] as $src ) 
 		{
-			$js_path = WEB_PATH . "js/" . $src . ".js";
+			$js_path = getSingleton( 'Html' )->assetPath( $src );
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;
@@ -476,9 +496,28 @@ EOD;
 		return $this;
 	}
 
+	private function _requireJui( $value ) 
+	{
+		return $this->_preloadJui( $value );
+	}
+	
+	private function _preloadJui( $value ) 
+	{
+		$this->_headAsset( STYLE_ASSET, 'jui/' . $value . '.css' );
+		$this->_headAsset( SCRIPT_ASSET, 'jui/' . $value . '.js' );
+		return $this;
+	}
+
+	private function _includeJui( $value ) 
+	{
+		$this->_headAsset( STYLE_ASSET, 'jui/' . $value . '.css' );
+		$this->_contentAsset( SCRIPT_ASSET, 'jui/' . $value . '.js' );
+		return $this;
+	}
+
 	private function _finishHeaderPath() 
 	{
-		$this->_layout_header_path = cFile::assetPath( LAYOUT_DIR.$this->_layout_header_path, true );
+		$this->_layout_header_path = LAYOUT_DIR.$this->_layout_header_path;
 		return file_exists( $this->_layout_header_path );
 	}
 
@@ -486,12 +525,12 @@ EOD;
 	{
 		if(is_null($tpl_path)) 
 		{
-			$this->_tpl_path = cFile::assetPath( TPL_DIR.$this->_tpl_path, true );
+			$this->_tpl_path = TPL_DIR.$this->_tpl_path;
 			return file_exists($this->_tpl_path);
 		}
 		else 
 		{
-			$_tpl_path = cFile::assetPath( TPL_DIR.$tpl_path, true );
+			$_tpl_path = TPL_DIR.$tpl_path;
 			if(file_exists($_tpl_path)) 
 			{
 				return $_tpl_path;
@@ -505,7 +544,7 @@ EOD;
 
 	private function _finishFooterPath() 
 	{
-		$this->_layout_footer_path = cFile::assetPath( LAYOUT_DIR.$this->_layout_footer_path, true );
+		$this->_layout_footer_path = LAYOUT_DIR.$this->_layout_footer_path;
 		return file_exists($this->_layout_footer_path);
 	} 
 	
@@ -533,5 +572,80 @@ EOD;
 		}
 
 		// echo "You have CORS!";
+	} 
+
+	private function _jsonLayout( $data_json = NULL ) 
+	{
+		$data = array();
+		
+		if( NULL!==$data_json ) 
+		{
+			$data = $data_json;
+		} 
+		else if( NULL!==$this->_vars ) 
+		{
+			$data = $this->_vars;
+		}
+
+		RequestHeader::DisplayJSON();
+		echo json_encode( $data );
+
+		exit;
+	}
+	
+	private function _engineLayout( $layout_content = NULL, $vars = NULL ) 
+	{
+		$this->_packageVars( $vars );
+		
+		if( !is_null( $layout_content ) ) 
+		{
+			$this->_layout_engine_vars = $layout_content;
+			$layout_route = array(
+				'/<!--@>(.*)<@-->/' => '<?php include( _assetPath( TPL_NAME_DIR . "\1", true ) ) ?>', 
+				'/<!--%>(.*)<%-->/'	  => '<?php include( _assetPath( TPL_NAME_DIR . $this->_layout_engine_vars["\1"], true ) ) ?>', 
+			);
+		}
+		else 
+		{
+			$layout_route = array(
+				'/<!--@>(.*)<@-->/' => '<?php include( _assetPath( TPL_NAME_DIR . "\1", true ) ) ?>', 
+				'/<!--%>(.*)<%-->/'	  => '<!-- \1 -->', 
+			);
+		}
+
+		if( is_null( $this->_layout_main_path ) ) 
+		{
+			$file_name = _assetPath( TPL_LAYOUT_NAME_DIR.LAYOUT_MAIN, true ); 
+			$cache_main_path = LAYOUT_MAIN;
+		}
+		else 
+		{
+			$file_name = _assetPath( TPL_NAME_DIR.$this->_layout_main_path, true );
+			$cache_main_path = preg_replace( '/[\/\\\]/', '_', $this->_layout_main_path );
+		}
+
+		$cache_file_name = _assetPath( CACHE_LAYOUT_NAME_DIR.$cache_main_path, true );
+
+		if( file_exists( $cache_file_name ) ) 
+		{
+			$this->_layout_engine_path = $cache_file_name;
+		}
+		else 
+		{
+			if( $layout_template = file_get_contents( $file_name ) ) 
+			{
+				foreach($layout_route as $pattern => $result)
+					$layout_template = preg_replace($pattern, $result, $layout_template);
+				
+				$f = file_put_contents( $cache_file_name, $layout_template );
+				
+				if( $f ) 
+				{
+					$this->_layout_engine_path = $cache_file_name;
+				}
+			}
+		}
+		
+		return $this;
 	}
 }

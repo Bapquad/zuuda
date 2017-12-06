@@ -220,7 +220,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$num_of_rows = $default_num_rows;
 		}
 		
-		$total_pages = (int) ceil( $length / $num_of_rows );
+		$total_pages = (int)ceil( (int)$length[ 'size' ] / $num_of_rows );
 		$this->_setTotalPages( $total_pages );
 		
 		// Check current page greater total pages.
@@ -237,7 +237,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		
 		if( $this->getPaging() === true ) 
 		{
-			$paging = new Pagination( $current_page, $length );
+			$paging = new Pagination( $current_page, $length[ 'size' ] );
 			// $paging->setPath( 'admin/stat/index/' );
 			// $paging->setPath( '/?page={page}' );
 			$paging->setPath( $printer );
@@ -527,7 +527,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		}
 		
 		$this->_assign( 'printer', $printer );				// Distributes page printer datas.
-		$this->_assign( 'length', $length );				// Distributes the length value.
+		$this->_assign( 'length', $length[ 'size' ] );				// Distributes the length value.
 		$this->_assign( 'current_page', $current_page );	// Distributes the curr page value.
 		$this->_assign( 'total_pages', $total_pages );		// Distributes the total pages value.
 		$this->_assign( 'data', $data_grid );				// Distributes the data of grid.
@@ -562,14 +562,14 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		
 		if( is_null( $template ) ) 
 		{
-			$path = WIDGET_DIR . str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) . PS . 'template' . '.tpl'; 
+			$path = WIDGET_DIR . _correctPath( str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) ) . DS . 'template' . '.tpl'; 
 		}
 		else 
 		{
 			$path = WIDGET_DIR . $template;
 		}
 		
-		include cFile::assetPath( $path, true );
+		include( $path );
 		
 		return $this;
 	}

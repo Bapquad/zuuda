@@ -15,46 +15,31 @@ class Model extends SQLQuery
 	{
 		if ( !isset( $this->abstract ) ) 
 		{
-			global $inflect;
-			global $configs;
-			
 			if( _hasBase() )
 			{
+				$prefix = $this->_getPrefix();
+				
 				if( $this->setTable() == MODEL_SFREE ) 
 				{
 					return;
 				}
-				
-				$prefix = $this->_getPrefix();
-				$has_one = $this->_getHasOne();
-				
-				if( !is_null( $prefix ) && $prefix != '' ) 
+
+				if( isset( $this->_hasOne ) ) 
 				{
-					if( !is_null( $has_one ) ) 
-					{
-						foreach( $has_one as $alias_child => $table_child ) 
-						{
-							$has_one[ $alias_child ] = $prefix . $table_child;
-						}
-						$this->_setHasOne( $has_one );
-					}
-					if( isset( $this->hasMany ) ) 
-					{
-						foreach( $this->hasMany as $aliasChild => $tableChild ) 
-						{
-							$this->hasMany[ $aliasChild ] = $this->_prefix . $tableChild;
-						}
-					}
-					if( isset( $this->hasManyAndBelongsToMany ) ) 
-					{
-						foreach( $this->hasManyAndBelongsToMany as $aliasChild => $tableChild ) 
-						{
-							$this->hasManyAndBelongsToMany[ $aliasChild ] = $this->_prefix . $tableChild;
-						}
-					}
-				
-					$this->_table = $this->_prefix . $this->_table;
+					$this->_orderHasOne( $this->_hasOne );
 				}
+
+				if( isset( $this->_hasMany ) ) 
+				{
+					$this->_orderHasMany( $this->_hasMany );
+				}
+
+				if( isset( $this->_hasManyAndBelongsToMany ) ) 
+				{
+					$this->_orderHMABTM( $this->_hasManyAndBelongsToMany );
+				}
+
+				$this->_table = $prefix . $this->_table;
 
 				$this->_startConn();
 			}

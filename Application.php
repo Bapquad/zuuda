@@ -66,6 +66,9 @@ class Application
 		GlobalModifier::set( 'html', Html::getInstance() );
 		GlobalModifier::set( 'file', cFile::getInstance() );
 		GlobalModifier::set( '$_post', array() );
+		GlobalModifier::set( '$_get', array() );
+		GlobalModifier::set( '$_server', array() );
+		GlobalModifier::set( '$_file', array() );
 		GlobalModifier::loadUrl();
 	}
 	
@@ -74,7 +77,7 @@ class Application
 		global $configs;
 		
 		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->_routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
-	
+		
 		$has_vars = stripos( $_SERVER[ "REQUEST_URI" ], '?' );
 		if( $has_vars ) 
 		{
@@ -105,12 +108,16 @@ class Application
 			if( in_array( 'REQUEST_VARIABLES', $configs ) ) 
 			{
 				GlobalModifier::set( '_GET', $configs[ 'REQUEST_VARIABLES' ] );
+				GlobalModifier::set( '_get', $configs[ 'REQUEST_VARIABLES' ] );
 			}
 		}
 		else 
 		{
 			GlobalModifier::set( '_GET', array() );
-		}
+			GlobalModifier::set( '_get', array() );
+		} 
+
+		GlobalModifier::set( '_server', $_SERVER );
 	}
 	
 	private function _bootServices( $serviceInst, $appInst = NULL ) 
@@ -136,13 +143,17 @@ class Application
 			$configs["MODULE"] = $module;
 
 			$controller = (isset($configs['QUERY_STRING']) && isset($configs['QUERY_STRING'][0])) ? $configs['QUERY_STRING'][0] : NULL;
+			if( NULL === $controller || empty_char === $controller ) 
+			{
+				$controller = 'Index';
+			}
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
 			$configs["CONTROLLER"] = $controller;
 			
 			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
 
-			$_extract = $module.DS.CTRL_DIR.$controller.CONTROLLER;
-			
+			$_extract = $module.BS.CTRLER_PRE.BS.$controller.CONTROLLER;
+
 			return $_extract;
 		}
 		return $router['default']['controller'];
@@ -160,7 +171,8 @@ class Application
 			$_instance->_bootServices( ThemeService::getInstance() );
 			$_instance->_bootServices( ComService::getInstance(), $_instance );
 			$_instance->_bootServices( CateService::getInstance(), $_instance );
-			$_instance->_bootServices( RouteService::getInstance(), $_instance );			
+			$_instance->_bootServices( RouteService::getInstance(), $_instance );
+			$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}
 		$_instance->_bootParams();
 		return $_instance;
@@ -179,7 +191,7 @@ class Application
 			error_reporting(E_ALL);
 			ini_set('display_errors', 0);
 			ini_set('log_errors', 1);
-			ini_set('error_log', _correctPath(WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log') );
+			ini_set('error_log', WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log');
 		}
 		return $this;
 	}
@@ -229,12 +241,19 @@ class Application
 		{
 			$controller_class_name = $this->_extractController(); 
 			$controller_class_file = _currentControllerFile(); 
-			
+
 			if(file_exists( $controller_class_file ) ) 
 			{
 				$dispatch = new $controller_class_name();
-				
-				$action = $configs['ACTION'].ACTION;
+				$action = preg_replace( '/[\-\_\s]/', ';', $configs['ACTION'] );
+				$action = explode( ';', $action );
+				foreach( $action as $key => $value ) 
+				{
+					$action[ $key ] = strtoupper( substr( $value, 0, 1 ) ).substr( $value, 1 );
+				}
+				$action = implode( EMPTY_CHAR, $action );
+				$action .= ACTION;
+				if($action === 'Action') $action = 'IndexAction';
 
 				if((int)method_exists($dispatch, $action)) 
 				{
@@ -246,7 +265,6 @@ class Application
 							$configs["QUERY_STRING"][ $i ] = strtolower( $configs["QUERY_STRING"][ $i ] );
 						}
 					} 
-					
 					call_user_func_array(array($dispatch, "CheckMass"), $_POST); 
 					call_user_func_array(array($dispatch, "BeforeAction"), $configs["QUERY_STRING"]);
 					call_user_func_array(array($dispatch, $action), $configs["QUERY_STRING"]);
@@ -254,12 +272,13 @@ class Application
 				}
 				else 
 				{
-					// die( "Action couldn't found!" );
+					header( "HTTP/1.1 404 Not Found" );
 					die( "<h1>Error 404! Could not found file.</h1>" );
 				}
 			}
 			else 
 			{
+				header( "HTTP/1.1 404 Not Found" );
 				die( "<h1>Error 404! Could not found file.</h1>" );
 			}
 		}

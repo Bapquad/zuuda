@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <servicebooter>
 	<themeservice>
-		<name prefix="vcart_" model="Theme">Zuuda\ThemeService</name>
+		<name prefix="couka_" model="Theme">Zuuda\ThemeService</name>
 		<bootcb></bootcb>
 	</themeservice>
 	<comservice>
@@ -9,13 +9,17 @@
 		<bootcb></bootcb>
 	</comservice>
 	<cateservice>
-		<name prefix="vcart_" model="Category">Zuuda\CateService</name>
+		<name prefix="couka_" model="Category">Zuuda\CateService</name>
 		<bootcb></bootcb>
 	</cateservice>
 	<routeservice>
-		<name prefix="vcart_" model="Com Route" layout="com_layout">Zuuda\RouteService</name>
+		<name prefix="couka_" model="Com Route" layout="com_layout">Zuuda\RouteService</name>
 		<bootcb></bootcb>
 	</routeservice>
+	<extensioninformationservice>
+		<name driver="driver" basename="about" extension="xml">Zuuda\ExtensionInformationService</name>
+		<bootcb></bootcb>
+	</extensioninformationservice>
 	<btshipnelservice>
 		<name route="shipnel" class="info" ship="097370591949c9e67f2d54e4403fe1b7">Zuuda\BTShipnelService</name>
 		<bootcb></bootcb>

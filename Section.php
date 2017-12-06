@@ -233,7 +233,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 			{
 				extract( $aggrs );
 			}
-			include( cFile::assetPath( BLOCK_DIR . str_replace( '\Blocks', '', get_class( $this ) ) . PS . $this->_tpl_name, true ) );
+			include( BLOCK_DIR . _correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
 		}
 		
 		return $this;

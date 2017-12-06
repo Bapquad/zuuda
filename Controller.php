@@ -49,9 +49,15 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function PreloadHtml( $value ) { return $this->_preloadHtml( $value ); }
 	public function PreloadCss( $value ) { return $this->_preloadCss( $value ); }
 	public function PreloadJs( $value ) { return $this->_preloadJs( $value ); }
+	public function RequireJs( $value ) { return $this->_preloadJs( $value ); }
+	public function RequireJui( $value ) { return $this->_requireJui( $value ); }
+	public function IncludeJui( $value ) { return $this->_includeJui( $value ); }
 	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
 	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
-	public function Render( $template = NULL, $aggrs = NULL ) { return $this->_render( $template, $aggrs ); }
+	public function Render( $template = NULL, $agrs = NULL ) { return $this->_render( $template, $agrs ); }
+	public function CustomRender( $renderer, $agrs = NULL ) { $this->_customRender( $renderer, $agrs ); }
+	public function RenderBy( $renderer, $agrs = NULL ) { $this->_customRender( $renderer, $agrs ); }
+	public function RenderWith( $renderer, $agrs = NULL ) { $this->_customRender( $renderer, $agrs ); }
 	
 	/** Implements interface iBlock */
 	public function AddBlock( $block, $force_name = NULL ) { return $this->_addBlock( $block, $force_name ); }
@@ -76,6 +82,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		if( _hasBase() ) 
 		{
 			$model_class_name = _currentModelClass();
+
 			if( _availbleClass( $model_class_name ) ) 
 			{
 				$this->_setModel( new $model_class_name );
@@ -176,6 +183,26 @@ abstract class Controller implements iController, iDeclare, iBlock
 		}
 		return $this;
 	}
+
+	protected function _requireJui( $value ) 
+	{
+		$view = $this->_getView();
+		if( isset( $view ) ) 
+		{
+			$view->requireJui( $value );
+		} 
+		return $this;
+	}
+
+	protected function _includeJui( $value ) 
+	{
+		$view = $this->_getView();
+		if( isset( $view ) ) 
+		{
+			$view->includeJui( $value );
+		} 
+		return $this;
+	}
 	
 	protected function _assign( $name, $value ) 
 	{
@@ -192,20 +219,45 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _render( $template = NULL, $aggrs = NULL ) 
+	protected function _render( $template = NULL, $agrs = NULL ) 
 	{
 		$view = $this->_getView();
 		
 		if( !is_null( $view ) ) 
 		{
-			if( !is_null( $aggrs ) ) 
+			if( !is_null( $agrs ) ) 
 			{
-				foreach ( $aggrs as $key => $value ) 
+				while (list($a, $b) = each($agrs)) 
 				{
-					$view->set( $key, $value );
+					$view->set($a, $b);
 				}
 			}
 			$view->render( $template );
+		}
+	} 
+
+	private function _customRender( $render_name, $agrs = NULL ) 
+	{
+		$view = $this->_getView();
+
+		if( !is_null( $view ) ) 
+		{
+			if( !is_null( $agrs ) ) 
+			{
+				while (list($a, $b) = each($agrs)) 
+				{
+					$view->set($a, $b);
+				}
+			}
+			if( method_exists( $view, $render_name ) ) 
+			{
+				call_user_func_array( array( $view, $render_name ), array( $agrs ) );
+			} 
+			else 
+			{
+				header( "HTTP/1.1 404 Not Found" );
+				die( "<h1>Error 404! Could not found file.</h1>" );
+			}
 		}
 	}
 	
@@ -232,28 +284,75 @@ abstract class Controller implements iController, iDeclare, iBlock
 	
 	protected function _checkMass()  
 	{
-		global $_post;
+		global $_post, $_file, $configs;
 
-		if( !empty( $_POST ) ) 
+		if( isset( $_SERVER[ 'REQUEST_URI' ] ) ) 
 		{
-			Session::Register( "_mass_vertifier", array( 'fixed'=>false, 'data'=>$_POST ) );
-			
-			if( isset( $_SERVER[ 'REQUEST_URI' ] ) ) 
+			$url = $_SERVER[ 'REQUEST_URI' ];
+		} 
+		else 
+		{
+			$url = PS . $url;
+		} 
+
+		$thread_id = md5( $url );
+
+		if( !empty( $_POST ) || ( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) ) 
+		{
+			if( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) 
 			{
-				$url = $_SERVER[ 'REQUEST_URI' ];
-			} 
-			else 
-			{
-				$url = PS . $url;
+				$n = 'name';
+				$t = 'type';
+				$s = 'size';
+				$e = 'error';
+				$p = 'tmp_name';
+				$md = 'media';
+
+				foreach ($_FILES as $key => $value) 
+				{
+					if(is_array( $_FILES[ $key ][ $n ] ) ) 
+					{
+						foreach( $_FILES[ $key ][ $n ] as $akey => $file ) 
+						{
+							$tn = $_FILES[ $key ][ $p ][ $akey ];
+							$fn = $_FILES[ $key ][ $n ][ $akey ];
+							$tp = $_FILES[ $key ][ $t ][ $akey ];
+							if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
+							{
+								$tp = TMP_DIR . $md . DS . $fn;
+								move_uploaded_file( $tn, $tp );
+								$_FILES[ $key ][ $p ][ $akey ] = $tp;
+							}
+						}
+					} 
+					else 
+					{
+						$tn = $_FILES[ $key ][ $p ];
+						$fn = $_FILES[ $key ][ $n ];
+						$tp = $_FILES[ $key ][ $t ];
+						if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
+						{
+							$tp = TMP_DIR . $md . DS . $fn;
+							move_uploaded_file( $tn, $tp );
+							$_FILES[ $key ][ $p ] = $tp;
+						}
+					}
+				}
+				Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES ) );
 			}
+			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_POST ) );
 			_direct( $url );
 		}
 
-		$_mass_vertifier_data = Session::Get( "_mass_vertifier" );
+		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );
+		$_mass_vertifier_data = Session::Get( "_mass_vertifier" . $thread_id );
+
 		if( !is_null( $_mass_vertifier_data ) ) 
 		{
+			$_file = $_file_vertifier_data[ "data" ];
 			$_post = $_mass_vertifier_data[ "data" ];
-			Session::Unregister( "_mass_vertifier" );
+			Session::Unregister( "_file_vertifier" . $thread_id );
+			Session::Unregister( "_mass_vertifier" . $thread_id );
 		}
 	}
 }

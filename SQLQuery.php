@@ -6,9 +6,10 @@ abstract class SQLQuery
 {
 	protected $_dbHandle;
 	protected $_result;
-	protected $_query;
+	protected $_querySQL;
 	protected $_table;
-	protected $_describe = array();
+	protected $_describe = array(); 
+	protected $_unDescrible = array();
 	protected $_order_by;
 	protected $_order;
 	protected $_extraConditions;
@@ -16,13 +17,18 @@ abstract class SQLQuery
 	protected $_hO;
 	protected $_hM;
 	protected $_hMABTM;
+	protected $_hasOneBlink = array();
+	protected $_hasManyBlink = array();
+	protected $_hasManyAndBelongsToManyBlink = array();
 	protected $_page;
 	protected $_limit;
+	protected $_imerge;
+	protected $_ibind;
 	protected $_prefix;
 	
 	protected function _getDBHandle() { return $this->_dbHandle; }
 	protected function _getResult() { return $this->_result; }
-	protected function _getQuery() { return $this->_query; }
+	protected function _getQuerySQL() { return $this->_querySQL; }
 	protected function _getModel() { return ( isset( $this->_model ) ) ? $this->_model : NULL; }
 	protected function _getModelName() { return $this->_getModel(); }
 	protected function _getTable() { return ( isset( $this->_table ) ) ? $this->_table : NULL; }
@@ -41,16 +47,21 @@ abstract class SQLQuery
 	
 	protected function _setDBHandle( $value ) { $this->_dbHandle = $value; return $this; }
 	protected function _setResult( $value ) { $this->_result = $value; return $this; }
-	protected function _setQuery( $value ) { $this->_query = $value; return $this; }
+	protected function _setQuery( $value ) { $this->_querySQL = $value; return $this; }
 	protected function _setTable( $value ) { return $this->_setTableName( $value ); }
 	protected function _setModel( $value ) { return $this->_setModelName( $value ); }
 	protected function _setOrderBy( $value ) { $this->_order_by = $value; return $this; }
 	protected function _setOrder( $value ) { $this->_order = $value; return $this; }
 	protected function _setExtraConditions( $value ) { $this->_extraConditions = $value; return $this; }
 	protected function _setCollection( $value ) { $this->_collection = $value; return $this; }
-	protected function _setHasOne( $value ) { $this->_hasOne = $value; return $this; }
-	protected function _setHasMany( $value ) { $this->_hasMany = $value; return $this; }
-	protected function _setHasManyAndBelongsToMany( $value ) { $this->_hasManyAndBelongsToMany = $value; return $this; }
+
+	protected function _setHasOne( $value ) { return $this->_orderHasOne( $value ); }
+	protected function _addHasOne( $value ) { return $this->_orderHasOne( $value ); }
+	protected function _setHasMany( $value ) { return $this->_orderHasMany( $value ); }
+	protected function _addHasMany( $value ) { return $this->_orderHasMany( $value ); }
+	protected function _setHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
+	protected function _addHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
+
 	protected function _setPage( $value ) { $this->_page = $value; return $this; }
 	/** private function _setLimit */
 	protected function _setPrefix( $value ) { $this->_prefix = $value; return $this; }
@@ -58,7 +69,8 @@ abstract class SQLQuery
 	/** Connects to database **/
 	public function Connect( $address, $account, $pwd, $name ) { return $this->_connect( $address, $account, $pwd, $name ); }
 	public function Query( $query = NULL ) { return $this->_query( $query ); }
-	public function GetQuery() { return $this->_getQuery(); }
+	public function GetQuery() { return $this->_getQuerySQL(); }
+	public function GetQuerySQL() { return $this->_getQuerySQL(); }
 	public function GetModel() { return $this->_getModel(); }
 	public function GetModelName() { return $this->_getModel(); }
 	public function GetTable() { return $this->_getTable(); }
@@ -66,21 +78,56 @@ abstract class SQLQuery
 	public function Parse( $result ) { return $this->_parse( $result ); }
 	public function Item( $result, $index = NULL ) { return $this->_item( $result, $index ); }
 	public function Select( $field, $label = NULL ) { return $this->_select( $field, $label = NULL ); }
+	public function UnSelect( $fields ) { return $this->_unSelect( $fields ); }
 	public function GetCollectionString() { return $this->_getCollectionString(); }
-	public function Where( $field, $value ) { return $this->_where( $field, $value ); }
+	public function Between( $field, $start, $end ) { return $this->_between( $field, $start, $end ); }
+	public function Equal( $field, $value ) { return $this->_equal( $field, $value ); }
+	public function Greater( $field, $value ) { return $this->_greater( $field, $value ); } 
+	public function GreaterThanOrEqual( $field, $value ) { return $this->_greaterThanOrEqual( $field, $value ); } 
+	public function In( $field, $values ) { return $this->_in( $field, $values ); }
+	public function Is( $field, $value ) { return $this->_is( $field, $value ); }
+	public function IsNot( $field, $value ) { return $this->_isNot( $field, $value ); }
+	public function IsNull( $field ) { return $this->_isNull( $field ); }
+	public function Less( $field, $value ) { return $this->_less( $field, $value ); } 
+	public function LessThanOrEqual( $field, $value ) { return $this->_lessThanOrEqual( $field, $value ); } 
 	public function Like( $field, $value ) { return $this->_like( $field, $value ); }
+	public function Not( $field, $value ) { return $this->_not( $field, $value ); }
+	public function NotEqual( $field, $value ) { return $this->_notEqual( $field, $value ); }
+	public function NotIn( $field, $values ) { return $this->_notIn( $field, $values ); }
+	public function NotLike( $field, $value ) { return $this->_notLike( $field, $value ); }
+	public function Where( $field, $value ) { return $this->_where( $field, $value ); }
 	public function ShowHasOne() { return $this->_showHasOne(); }
 	public function ShowHasMany() { return $this->_showHasMany(); }
 	public function ShowHMABTM() { return $this->_showHMABTM(); }
+	public function HideHasOne() { return $this->_hideHasOne(); }
+	public function HideHasMany() { return $this->_hideHasMany(); }
+	public function HideHMABTM() { return $this->_hideHMABTM(); }
+	public function ClearHasOne() { return $this->_clearHasOne(); }
+	public function ClearHasMany() { return $this->_clearHasMany(); }
+	public function ClearHMABTM() { return $this->_clearHMABTM(); } 
+	public function ConvertHasOne( $data ) { return $this->_convertHasOne( $data ); } 
+	public function ConvertHasMany( $data ) { return $this->_convertHasMany( $data ); } 
+	public function ConvertHMABTM( $data ) { return $this->_convertHMABTM( $data ); } 
+	public function BlinkHasOne( $data ) { return $this->_blinkHasOne( $data ); } 
+	public function BlinkHasMany( $data ) { return $this->_blinkHasMany( $data ); } 
+	public function BlinkHMABTM( $data ) { return $this->_blinkHMABTM( $data ); } 
+	public function UnBlinkHasOne( $data ) { return $this->_unBlinkHasOne( $data ); } 
+	public function UnBlinkHasMany( $data ) { return $this->_unBlinkHasMany( $data ); } 
+	public function UnBlinkHMABTM( $data ) { return $this->_unBlinkHMABTM( $data ); } 
 	public function SetLimit( $value ) { return $this->_setLimit( $value ); }
+	public function Limit( $value ) { return $this->_setLimit( $value ); }
 	public function SetPage( $value ) { return $this->_setPage( $value ); }
+	public function Page( $value ) { return $this->_setPage( $value ); }
 	public function OrderBy( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
+	public function Order( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
+	public function Load() { return $this->_search(); }
 	public function Search() { return $this->_search(); }
 	public function Custom( $query ) { return $this->_custom( $query ); }
-	public function Delete() { return $this->_delete(); }
-	public function Save() { return $this->_save(); }
-	public function Clear() { return $this->_clear(); }
-	public function TotalPages() { return $this->_totalPages(); }
+	public function Delete( $id=NULL ) { return $this->_delete( $id ); }
+	public function Save( $data=NULL ) { return $this->_save( $data ); }
+	public function Clear( $deep=false ) { return $this->_clear( $deep ); }
+	public function TotalPages() { return $this->_totalPages(); } 
+	public function Total() { return $this->_total(); } 
 	public function Length() { return $this->_length(); }
 	public function DBList() { return $this->_dbList(); }
 	public function SetIncreament( $value ) { $this->_setIncreament( $value ); }
@@ -90,6 +137,7 @@ abstract class SQLQuery
 	public function GetMaxId( $label = NULL ) { return $this->_maxId( $label ); }
 	public function GetData( $id = NULL ) { return $this->_getData( $id ); }
 	public function GetLastedData() { return $this->_getLastedData(); }
+	public function GetError() { return $this->_getError(); } 
 	public function SetData( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
 	public function SetPrefix( $value ) { return $this->_setPrefix( $value ); }
 	public function SetTableName( $value ) { return $this->_setTableName( $value ); }
@@ -97,6 +145,12 @@ abstract class SQLQuery
 	public function SetHasOne( $value ) { return $this->_setHasOne( $value ); }
 	public function SetHasMany( $value ) { return $this->_setHasMany( $value ); }
 	public function SetHasManyAndBelongsToMany( $value ) { return $this->_setHasManyAndBelongsToMany( $value ); }
+	public function AddHasOne( $value ) { return $this->_addHasOne( $value ); }
+	public function AddHasMany( $value ) { return $this->_addHasMany( $value ); }
+	public function AddHasManyAndBelongsToMany( $value ) { return $this->_addHasManyAndBelongsToMany( $value ); }
+	public function Merge( $value ) { return $this->_merge( $value ); }
+	public function Bind( $value ) { return $this->_bind( $value ); } 
+	public function Find( $id ) { return $this->_find( $id ); } 
 	
 	abstract protected function _startConn();
 	abstract protected function setTable();
@@ -167,37 +221,55 @@ abstract class SQLQuery
 		
 		if( !is_null( $index ) ) 
 		{
-			if( isset( $result[ $index ][ $model ] ) ) 
-			{
-				return $result[ $index ][ $model ];
-			} 
-			else 
-			{
-				return $result[ $index ][ $this->_model ];
-			}
+			return ( isset( $result[ $index ][ $model ] ) ) ? $result[ $index ][ $model ] : $result[ $index ][ $this->_model ];
 		}
 		else 
 		{
-			if( isset( $result[ $model ] ) ) 
+			if( isset( $result[ 0 ] ) ) 
 			{
-				return $result[ $model ];
-			}
-			else 
-			{
-				return $result[ $this->_model ];
-			}
+				return ( isset( $result[ $model ] ) ) ? $result[ 0 ][ $model ] : $result[ 0 ][ $this->_model ];
+			} 
+			return ( isset( $result[ $model ] ) ) ? $result[ $model ] : ( isset( $result[ $this->_model ] ) ) ? $result[ $this->_model ] : NULL;
 		}
 	}
 
 	/** Select Query **/
 	
-	private function _select( $field, $label = NULL ) 
+	private function _select( $fields, $label = NULL ) 
 	{
-		$this->_collection .=  ',`' . $this->_model . '`.`' . $field . '`';
+		if( is_array( $fields ) ) 
+		{
+			foreach( $fields as $key => $value ) 
+			{
+				if( is_string( $key ) ) 
+				{
+					$this->_select( $value, $key );
+				} 
+				$this->_select( $value );
+			} 
+
+			return $this;
+		}
+		$this->_collection .=  ',`' . $this->_model . '`.`' . $fields . '`';
 		if( !is_null( $label ) )
 		{
 			 $this->_collection .= ' AS \'' . $label . '\'';
 		}
+		return $this;
+	} 
+
+	private function _unSelect( $fields ) 
+	{
+		if( is_array( $fields ) ) 
+		{
+			foreach( $fields as $key ) 
+			{
+				$this->_unSelect( $key );
+			}
+			return $this;
+		} 
+
+		$this->_unDescrible = array_merge( $this->_unDescrible, (array) $fields ); 
 		return $this;
 	}
 	
@@ -205,20 +277,118 @@ abstract class SQLQuery
 	{
 		if( is_null( $this->_collection ) )
 		{
+			$describe = $this->_describe; 
+
+			if( isset( $this->_unDescrible ) ) 
+			{
+				foreach( $describe as $key => $value ) 
+				{
+					if( in_array( $value, $this->_unDescrible ) ) 
+					{
+						unset( $describe[ $key ] );
+					}
+				}
+				return '`'. implode( '`, `', $describe ) .'`';
+			} 
+
 			return '*';
 		}
-		return substr( $this->_collection, 1 );
+		return substr( $this->_collection, 1 ); 
 	}
 
-	private function _where( $field, $value ) 
+	private function _between( $field, $start_value, $end_value ) 
 	{
-		$this->_extraConditions .= '`'.$this->_model.'`.`'.$field.'` = \''.mysqli_real_escape_string( $this->_dbHandle, $value ).'\' AND ';
+		$this->_extraConditions .= 'BETWEEN `'.$this->_model.'`.`'.$field.'` >= \''.mysqli_real_escape_string( $this->_dbHandle, $start_value ).'\' AND `'.$this->_model.'`.`'.$field.'` <= \''.mysqli_real_escape_string( $this->_dbHandle, $end_value ).'\' AND ';
 		return $this;
+	} 
+
+	private function _equal( $field, $value ) 
+	{
+		return $this->_where( $field, $value );
+	} 
+
+	private function _greater( $field, $value ) 
+	{
+		return $this->_where( $field, $value, '>' );
+	} 
+
+	private function _greaterThanOrEqual( $field, $value ) 
+	{
+		return $this->_where( $field, $value, '>=' );
+	} 
+
+	private function _in( $field, $values ) 
+	{
+		return $this->_where( $field, implode( ', ', $values ), 'IN' );
 	}
 
-	private function _like($field, $value) 
+	private function _is( $field, $value ) 
 	{
-		$this->_extraConditions .= '`'.$this->_model.'`.`'.$field.'` LIKE \'%'.mysqli_real_escape_string( $this->_dbHandle, $value ).'%\' AND ';
+		return $this->_where( $field, $value, 'IS' ); 
+	} 
+
+	public function _isNot( $field, $value ) 
+	{
+		return $this->_where( $field, $value, 'IS NOT' );
+	} 
+
+	public function _isNull( $field ) 
+	{
+		return $this->_where( $field, 'NULL', 'IS' );
+	} 
+
+	public function _less( $field, $value ) 
+	{
+		return $this->_where( $field, $value, '<' );
+	} 
+
+	public function _lessThanOrEqual( $field, $value ) 
+	{
+		return $this->_where( $field, $value, '<=' );
+	} 
+
+	private function _like( $field, $value ) 
+	{
+		return $this->where( $field, $value, 'LIKE' );
+	}
+
+	public function _not( $field, $value ) 
+	{
+		return $this->_notEqual( $field, $value );
+	} 
+
+	public function _notEqual( $field, $value ) 
+	{
+		return $this->_where( $field, $value, '!=' );
+	}
+
+	public function _notIn( $field, $values ) 
+	{
+		return $this->where( $field, implode( ', ', $values ), 'NOT IN' );
+	} 
+
+	public function _notLike( $field, $value ) 
+	{
+		return $this->where( $field, $value, 'NOT LIKE' );
+	}
+
+	private function _where( $field, $value, $operator='=' ) 
+	{
+		$sql_value = mysqli_real_escape_string( $this->_dbHandle, $value );
+
+		if( $operator === 'LIKE' || $operator === 'NOT LIKE' ) 
+		{
+			$sql_value = '\'' . '%' . $sql_value . '%' . '\'';
+		} 
+		else if( $operator === 'IN' || $operator === 'NOT IN' ) 
+		{
+			$sql_value = '('.$sql_value.')';
+		}
+		else 
+		{
+			$sql_value = '\'' . $sql_value . '\'';
+		}
+		$this->_extraConditions .= '`'.$this->_model.'`.`'.$field.'` '.$operator.' '.$sql_value.' AND ';
 		return $this;
 	}
 
@@ -238,6 +408,238 @@ abstract class SQLQuery
 	{
 		$this->_hMABTM = 1;
 		return $this;
+	} 
+
+	private function _hideHasOne() 
+	{
+		$this->_hO = null;
+		return $this;
+	} 
+
+	private function _hideHasMany() 
+	{
+		$this->_hM = null;
+		return $this;
+	}
+
+	private function _hideHMABTM() 
+	{
+		$this->_hMABTM = null;
+		return $this;
+	} 
+
+	private function _clearHasOne() 
+	{
+		$this->_hasOne = NULL;
+		return $this;
+	} 
+
+	private function _clearHasMany() 
+	{
+		$this->_hasMany = NULL; 
+		return $this;
+	} 
+
+	private function _clearHMABTM() 
+	{
+		$this->_hasManyAndBelongsToMany = NULL;
+		return $this;
+	} 
+
+	private function _blinkHasOne( $blink_data ) 
+	{
+		return $this->_blinkRelative( 
+			$this->_hasManyBlink, 
+			$blink_data 
+		);
+	} 
+
+	private function _blinkHasMany( $blink_data ) 
+	{
+		return $this->_blinkRelative( 
+			$this->_hasManyBlink, 
+			$blink_data 
+		);
+	} 
+
+	private function _blinkHMABTM( $blink_data ) 
+	{
+		return $this->_blinkRelative( 
+			$this->_hasManyAndBelongsToManyBlink, 
+			$blink_data 
+		);
+	} 
+
+	private function _blinkRelative( &$data_current, $blink_data ) 
+	{
+		if( is_array( $blink_data ) ) 
+		{
+			$data_current = array_merge( $data_current, $blink_data );
+		} 
+		else 
+		{
+			array_push( $data_current, $blink_data ); 
+		} 
+		return $this;
+	} 
+
+	private function _unBlinkHasOne( $unblink_data ) 
+	{
+		return $this->_unBlinkRelative(
+			$this->_hasOneBlink, 
+			$unblink_data 
+		);
+	} 
+
+	private function _unBlinkHasMany( $unblink_data ) 
+	{
+		return $this->_unBlinkRelative(
+			$this->_hasManyBlink, 
+			$unblink_data 
+		); 
+	}
+
+	private function _unBlinkHMABTM( $unblink_data ) 
+	{
+		return $this->_unBlinkRelative( 
+			$this->_hasManyAndBelongsToManyBlink, 
+			$unblink_data 
+		);
+	}
+
+	private function _unBlinkRelative( &$data_current, $unblink_data ) 
+	{
+		if( is_array( $unblink_data ) ) 
+		{
+			foreach( $unblink_data as $key => $value ) 
+			{
+				if( !in_array( $value, $data_current ) ) 
+				{
+					continue;
+				} 
+				$this->_unBlinkRelative( $data_current, $value );
+			}
+		} 
+		else 
+		{
+			foreach( $data_current as $key => $value ) 
+			{
+				if( $unblink_data != $data_current[ $key ] ) 
+				{
+					continue;
+				}
+				unset( $data_current[ $key ] );
+			}
+		} 
+		return $this;
+	}
+
+	private function _convertHasOne( $convert_data ) 
+	{
+		return $this->_convertRelative( 
+			$this->_hasOne, 
+			$convert_data 
+		);
+	}
+
+	private function _convertHasMany( $convert_data ) 
+	{
+		return $this->_convertRelative( 
+			$this->_hasMany, 
+			$convert_data 
+		); 
+	} 
+
+	private function _convertHMABTM( $convert_data ) 
+	{
+		return $this->_convertRelative(
+			$this->_hasManyAndBelongsToMany, 
+			$convert_data 
+		); 
+	} 
+
+	private function _convertRelative( &$data_current, $convert_data ) 
+	{
+		foreach( $data_current as $key => $value ) 
+		{
+			if( array_key_exists( $key, $convert_data ) ) 
+			{
+				$tmp = $data_current[ $key ];
+				$data_current[ $convert_data[ $key ] ] = $tmp; 
+				unset( $data_current[ $key ] );
+			}
+		} 
+		return $this;
+	}
+
+	protected function _orderHasOne( $hasOne ) 
+	{
+		foreach( $hasOne as $alias_child => $table_child ) 
+		{
+			if( is_array($table_child) ) 
+			{
+				list( $table, $key ) = each( $table_child );
+				$this->_hasOne[ $alias_child ] = array( 
+					'key'	=> $key, 
+					'table'	=> $table 
+				);
+			} 
+			else 
+			{
+				$this->_hasOne[ $alias_child ] = $table_child;
+			}
+		} 
+		return $this;
+	}
+
+	protected function _orderHasMany( $hasMany ) 
+	{
+		foreach( $hasMany as $alias_child => $table_child ) 
+		{
+			if( is_array($table_child) ) 
+			{
+				list( $table, $key ) = each( $table_child );
+				$this->_hasMany[ $alias_child ] = array( 
+					'key'	=> $key, 
+					'table'	=> $table 
+				);
+			} 
+			else 
+			{
+				$this->_hasMany[ $alias_child ] = $table_child;
+			}
+		} 
+		return $this;
+	} 
+
+	protected function _orderHMABTM( $hasMABTM ) 
+	{
+		foreach( $hasMABTM as $alias_child => $table_child ) 
+		{
+			if( is_array( $table_child ) ) 
+			{
+				list( $table, $key ) = each( $table_child[0] );
+				$table_child['data'] = array( 
+					'key'	=> $key, 
+					'table' => $this->_tableSort( $table )  
+				);
+				unset($table_child[0]);
+
+				list( $table, $key ) = each( $table_child[1] );
+				$table_child['join'] = array( 
+					'key'	=> $key, 
+					'table' => $this->_tableSort( $table )  
+				);
+				unset($table_child[1]);
+
+				$this->_hasManyAndBelongsToMany[ $alias_child ] = $table_child;
+			} 
+			else 
+			{
+				$this->_hasManyAndBelongsToMany[ $alias_child ] = $table_child;
+			}
+		}
+		return $this;
 	}
 
 	private function _setLimit( $limit ) 
@@ -256,25 +658,97 @@ abstract class SQLQuery
 	{
 		$this->_setOrderBy( $order_by )->_setOrder( $order );
 		return $this;
+	} 
+
+	/** HOW TO USE MERGE(models) FUNCTION
+	 * $this->model->merge([
+	 *	'Avatar' 	=> array('media.avatar_id.id', array('id'=>'= 2', 'name'=>'like \'%funny/%\'')), 
+	 *	'UserStat' 	=> array('user_stat.id.user_id'),
+	 * ])->search();
+	 */
+	private function _merge( $models )
+	{
+		global $inflect;
+
+		$prefix = $this->_retrivePrefix();
+
+		$this->_imerge = NL;
+		foreach( $models as $alias => $model ) 
+		{
+			$key = $model[ 0 ];
+			$key = explode( '.', $key );
+			
+			$alias_key = $key[ 2 ];
+			$foreign_key = $key[ 1 ];
+			$alias_merge = explode( '_', $key[ 0 ] );
+			sort( $alias_merge );
+			foreach( $alias_merge as $key => $value ) 
+			{
+				$alias_merge[ $key ] = strtolower($inflect->pluralize($value));
+			}
+
+			$table_merge = $prefix . implode( '_', $alias_merge );
+			
+			$condition = '';
+			if( isset($model[ 1 ]) ) 
+			{
+				foreach( $model[ 1 ] as $key => $value ) 
+				{
+					$condition .= "AND `" . $alias . "`.`" . $key . "` " . $value . ' '; 
+				}
+			}
+
+			$this->_imerge .= "INNER JOIN `" . $table_merge . "` AS `" . $alias . "` ON `" . $alias . "`.`" . $alias_key . "` = `" . $this->_model . "`.`" . $foreign_key . "` " . $condition . NL;
+		}
+		return $this;
 	}
 
-	private function _search() 
+	private function _bind( $models ) 
+	{
+		global $inflect;
+
+		$prefix = $this->_retrivePrefix();
+
+		$this->_ibind = NL;
+
+		$this->_ibind -= "INNER JOIN `Table1` AS Alias ON Alias.`id` = Model.`id`";
+
+		return $this;
+	} 
+
+	private function buildMainQuery( $prefix ) 
 	{
 		global $inflect;
 
 		$from = '`'.$this->_table.'` as `'.$this->_model.'` ';
 		$conditions = '\'1\'=\'1\' AND ';
-		$conditionsChild = '';
-		$fromChild = '';
 		
 		if( $this->_hO == 1 && isset( $this->_hasOne ) ) 
 		{
-			foreach ( $this->_hasOne as $alias => $model ) 
+			foreach ( $this->_hasOne as $modelChild => $tableChild ) 
 			{
-				$table = strtolower( $inflect->pluralize( $model ) );
-				$singularAlias = strtolower( $alias );
-				$from .= 'LEFT JOIN `'.$table.'` as `'.$alias.'` ';
-				$from .= 'ON `'.$this->_model.'`.`'.$singularAlias.'_id` = `'.$alias.'`.`id`  ';
+				if( in_array( $modelChild, $this->_hasOneBlink ) ) 
+				{
+					continue;
+				} 
+
+				$aliasKey = '';
+
+				if(is_array( $tableChild )) 
+				{
+					$aliasKey = $tableChild[ 'key' ];
+					$tableChild = $tableChild[ 'table' ];
+				}
+				
+				$this->_tableSort($tableChild);
+
+				if( $aliasKey=='' ) 
+					$aliasKey = $tableChild . '_id';
+
+				$tableChild = $prefix . $inflect->pluralize( $tableChild );
+
+				$from .= 'LEFT JOIN `'.$tableChild.'` as `'.$modelChild.'` ';
+				$from .= 'ON `'.$this->_model.'`.`'.$aliasKey.'` = `'.$modelChild.'`.`id`  ';
 			}
 		}
 
@@ -300,150 +774,217 @@ abstract class SQLQuery
 			$offset = ( $this->_page-1 ) * $this->_limit;
 			$conditions .= ' LIMIT '.$this->_limit.' OFFSET '.$offset;
 		}
-		$this->_query = 'SELECT ' . $this->getCollectionString() . ' FROM '.$from.' WHERE '.$conditions;
-		#echo '<!--'.$this->_query.'-->';
-		$this->_result = mysqli_query( $this->_dbHandle, $this->_query );
+		$this->_querySQL = 'SELECT ' . $this->getCollectionString() . ' FROM ' . $from . $this->_imerge . 'WHERE ' . $conditions;
+	} 
+
+	private function _find( $id ) 
+	{
+		return $this->_where( 'id', $id )->_search();
+	}
+
+	private function _search() 
+	{
+		global $inflect;
+		$conditionsChild = '';
+		$fromChild = '';
+		$prefix = $this->_retrivePrefix();
+
+		$this->buildMainQuery( $prefix );
+		
+		$this->_result = mysqli_query( $this->_dbHandle, $this->_querySQL );
 		$result = array();
 		$table = array();
 		$field = array();
 		$tempResults = array();
 		
-		if ( @mysqli_num_rows( $this->_result ) > 0 ) 
+		if( $this->_result ) 
 		{
-			$numOfFields = mysqli_num_fields( $this->_result );
-
-			while( $field_info = mysqli_fetch_field( $this->_result ))
+			if( mysqli_num_rows( $this->_result ) > 0 ) 
 			{
-				array_push( $table, $field_info->table );
-			    array_push( $field, $field_info->name );
-			}
+				$numOfFields = mysqli_num_fields( $this->_result );
 
-			while( $row = mysqli_fetch_row( $this->_result ) ) 
-			{
-				for( $i = 0; $i < $numOfFields; ++$i ) 
+				while( $field_info = mysqli_fetch_field( $this->_result ))
 				{
-					$tempResults[ $table[ $i ] ][ $field [ $i ] ] = $row[ $i ];
+					array_push( $table, $field_info->table );
+				    array_push( $field, $field_info->name );
 				}
 
-				if( $this->_hM == 1 && isset( $this->_hasMany ) ) 
+				while( $row = mysqli_fetch_row( $this->_result ) ) 
 				{
-					foreach ( $this->_hasMany as $alias_child => $modelChild ) 
+					for( $i = 0; $i < $numOfFields; ++$i ) 
 					{
-						$queryChild = '';
-						$conditionsChild = '';
-						$fromChild = '';
+						$tempResults[ $table[ $i ] ][ $field [ $i ] ] = $row[ $i ];
+					}
 
-						$tableChild = strtolower($inflect->pluralize($modelChild));
-						$pluralAliasChild = strtolower($inflect->pluralize($alias_child));
-						$singularAliasChild = strtolower($alias_child);
-
-						$fromChild .= '`'.$tableChild.'` as `'.$alias_child.'`';
-						
-						$conditionsChild .= '`'.$alias_child.'`.`'.strtolower($this->_model).'_id` = \''.$tempResults[$this->_model][ID].'\'';
-
-						$queryChild =  'SELECT * FROM '.$fromChild.' WHERE '.$conditionsChild;	
-						$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
-				
-						$tableChild = array();
-						$fieldChild = array();
-						$temp_results_child = array();
-						$results_child = array();
-						
-						if (mysqli_num_rows($resultChild) > 0) 
+					if( $this->_hM == 1 && isset( $this->_hasMany ) ) 
+					{
+						foreach ( $this->_hasMany as $modelChild => $aliasChild ) 
 						{
-							$numOfFieldsChild = mysqli_num_fields( $resultChild );
-
-							while( $field_info = mysql_fetch_row($resultChild) ) 
+							if( in_array( $modelChild, $this->_hasManyBlink ) ) 
 							{
-								array_push( $tableChild, $field_info->table );
-								array_push( $fieldChild, $field_info->name );
+								continue; 
 							}
 
-							while( $rowChild = mysqli_fetch_row($resultChild) ) 
+							$queryChild = '';
+							$conditionsChild = '';
+							$fromChild = '';
+							$aliasKey = '';
+
+							if( is_array($aliasChild) ) 
 							{
-								for ($j = 0;$j < $numOfFieldsChild; ++$j) 
+								$aliasKey = $aliasChild[ 'key' ];
+								$aliasChild = $aliasChild[ 'table' ];
+							} 
+							else 
+							{
+								$aliasKey = $this->_alias . '_id';
+							}
+							
+							$aliasChild = explode( '_', $aliasChild );
+							sort($aliasChild);
+							$modelAlias = array();
+							foreach( $aliasChild as $key => $value )  
+							{
+								array_push( $modelAlias, ucfirst(strtolower($inflect->singularize($value))) );
+								$aliasChild[ $key ] = strtolower($inflect->singularize($value));
+							}
+
+							$aliasChild = implode( '_', $aliasChild );
+
+							$modelAlias = implode( '', $modelAlias );
+
+							$tableChild = $prefix . strtolower($inflect->pluralize($aliasChild));
+
+							$fromChild .= '`'.$tableChild.'` as `'.$modelAlias.'`';
+							$conditionsChild .= '`'.$modelAlias.'`.`'.$aliasKey.'` = \''.$tempResults[$this->_model][ID].'\'';
+
+							$queryChild =  'SELECT * FROM '.$fromChild.' WHERE '.$conditionsChild;	
+							$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
+							$tableChild = array();
+							$fieldChild = array();
+							$temp_results_child = array();
+							$results_child = array();
+
+							if( $resultChild ) 
+							{
+								if( mysqli_num_rows($resultChild) > 0 ) 
 								{
-									$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
+									$numOfFieldsChild = mysqli_num_fields( $resultChild );
+
+									while( $field_info = mysqli_fetch_field($resultChild) ) 
+									{
+										array_push( $tableChild, $field_info->table );
+										array_push( $fieldChild, $field_info->name );
+									}
+
+									while( $rowChild = mysqli_fetch_row($resultChild) ) 
+									{
+										for ($j = 0;$j < $numOfFieldsChild; ++$j) 
+										{
+											$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
+										}
+										array_push( $results_child, $temp_results_child );
+									}
 								}
-								array_push( $results_child, $temp_results_child );
+								
+								$tempResults[ $modelChild ] = $results_child;
+								
+								mysqli_free_result($resultChild);
 							}
 						}
-						
-						$tempResults[ $alias_child ] = $results_child;
-						
-						mysqli_free_result($resultChild);
 					}
-				}
 
-				if ($this->_hMABTM == 1 && isset($this->_hasManyAndBelongsToMany)) 
-				{
-					foreach ($this->_hasManyAndBelongsToMany as $alias_child => $tableChild) 
+					if ($this->_hMABTM == 1 && isset($this->_hasManyAndBelongsToMany)) 
 					{
-						$queryChild = '';
-						$conditionsChild = '';
-						$fromChild = '';
-
-						$tableChild = strtolower($inflect->pluralize($tableChild));
-						$pluralAliasChild = strtolower($inflect->pluralize($alias_child));
-						$singularAliasChild = strtolower($alias_child);
-
-						$pluralAliasTable = strtolower( $inflect->pluralize( $this->_model ) );
-						$prefix = str_replace( $pluralAliasTable, '', $this->_table );
-						
-						$sortTables = array( $pluralAliasTable ,$pluralAliasChild );
-						sort($sortTables);
-						$joinTable = $prefix . implode('_',$sortTables);
-
-						$fromChild .= '`'.$tableChild.'` as `'.$alias_child.'`,';
-						$fromChild .= '`'.$joinTable.'`,';
-						
-						$conditionsChild .= '`'.$joinTable.'`.`'.$singularAliasChild.'_id` = `'.$alias_child.'`.`id` AND ';
-						$conditionsChild .= '`'.$joinTable.'`.`'.strtolower($this->_model).'_id` = \''.$tempResults[$this->_model]['id'].'\'';
-						$fromChild = substr($fromChild,0,-1);
-
-						$queryChild =  'SELECT * FROM '.$fromChild.' WHERE '.$conditionsChild;	
-						$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
-				
-						$tableChild = array();
-						$fieldChild = array();
-						$temp_results_child = array();
-						$results_child = array();
-						
-						if ( mysqli_num_rows( $resultChild ) > 0 ) 
+						foreach ($this->_hasManyAndBelongsToMany as $modelChild => $aliasChild) 
 						{
-							$numOfFieldsChild = mysqli_num_fields( $resultChild );
-							for ( $j = 0; $j < $numOfFieldsChild; ++$j ) 
-							{
-								array_push( $tableChild, mysqli_field_table( $resultChild, $j ) );
-								array_push( $fieldChild, mysqli_field_name( $resultChild, $j ) );
-							}
+							$queryChild = '';
+							$conditionsChild = '';
+							$fromChild = '';
 
-							while ( $rowChild = mysqli_fetch_row( $resultChild ) ) 
+							$cacheChild = $aliasChild;
+
+							if( is_array( $cacheChild ) ) 
 							{
-								for ( $j = 0;$j < $numOfFieldsChild; ++$j ) 
+								$singularAliasChild = $cacheChild['data']['key'];
+								$tableModel = $this->_modelSort( $cacheChild['data']['table'] );
+								$tableChild = $prefix . $inflect->pluralize( $cacheChild['data']['table'] );
+								$joinTable = $prefix . $inflect->pluralize( $cacheChild['join']['table'] );
+								$joinAlias = $this->_modelSort( $cacheChild['join']['table'] );
+								$aliasKey = $cacheChild['join']['key'];
+							} 
+							else 
+							{
+								$singularAliasChild = strtolower($inflect->singularize($aliasChild)).'_id';
+								$pluralAliasTable = strtolower($inflect->pluralize($this->_alias));
+								$pluralAliasChild = strtolower($inflect->pluralize($aliasChild));
+								$sortTables = array( $pluralAliasTable ,$pluralAliasChild );
+								sort($sortTables);
+								$joinTable = $prefix . implode('_',$sortTables);
+								$tableModel = $this->_modelSort( $aliasChild );
+								$tableChild = $prefix . strtolower($inflect->pluralize($aliasChild));
+								$sortAliases = array( $this->_model, $tableModel );
+								sort($sortAliases);
+								$joinAlias = implode('', $sortAliases);
+								$aliasKey = $this->_alias.'_id';
+							}
+							
+							$fromChild .= '`'.$tableChild.'` as `'.$tableModel.'`,';
+							$fromChild .= '`'.$joinTable.'` as `'.$joinAlias.'`,';
+							$conditionsChild .= '`'.$joinAlias.'`.`'.$singularAliasChild.'` = `'.$tableModel.'`.`id` AND ';
+							$conditionsChild .= '`'.$joinAlias.'`.`'.$aliasKey.'` = \''.$tempResults[$this->_model]['id'].'\'';
+							
+							$fromChild = substr($fromChild,0,-1);
+							$queryChild =  'SELECT * FROM '.$fromChild.' WHERE '.$conditionsChild;	
+							$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
+
+							$tableChild = array();
+							$fieldChild = array();
+							$temp_results_child = array();
+							$results_child = array();
+							
+							if( $resultChild ) 
+							{
+								if ( mysqli_num_rows( $resultChild ) > 0 ) 
 								{
-									$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
+									$numOfFieldsChild = mysqli_num_fields( $resultChild );
+
+									while( $field_info = mysqli_fetch_field($resultChild) ) 
+									{
+										array_push( $tableChild, $field_info->table );
+										array_push( $fieldChild, $field_info->name );
+									}
+
+									while ( $rowChild = mysqli_fetch_row( $resultChild ) ) 
+									{
+										for ( $j = 0;$j < $numOfFieldsChild; ++$j ) 
+										{
+											$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
+										}
+										array_push( $results_child,$temp_results_child );
+									}
 								}
-								array_push( $results_child,$temp_results_child );
+								
+								$tempResults[ $modelChild ] = $results_child;
+
+								mysqli_free_result( $resultChild );
 							}
 						}
-						
-						$tempResults[ $alias_child ] = $results_child;
-						mysqli_free_result( $resultChild );
 					}
+					array_push( $result,$tempResults );
 				}
 
-				array_push( $result,$tempResults );
-			}
+				if ( mysqli_num_rows( $this->_result ) == 1 && $this->id != null ) 
+				{
+					$result = $result[0];
+				}
+			} 
+			
+			mysqli_free_result( $this->_result );
+		}
 
-			if ( mysqli_num_rows( $this->_result ) == 1 && $this->id != null ) 
-			{
-				$result = $result[0];
-			}
-		} 
-		
-		@mysqli_free_result( $this->_result );
 		$this->clear();
+		
 		return $result;
 	}
 
@@ -462,28 +1003,57 @@ abstract class SQLQuery
 
 		if(substr_count(strtoupper($query),"SELECT")>0) 
 		{
-			if (mysqli_num_rows($this->_result) > 0) 
+			if( $this->_result ) 
 			{
-				$numOfFields = mysqli_num_fields($this->_result);
-				
-				while ($field_info = mysqli_fetch_field($this->_result)) 
+				if( mysqli_num_rows($this->_result) > 0 ) 
 				{
-					array_push($table, $field_info->table);
-					array_push($field, $field_info->name);
-				}
-				while ($row = mysqli_fetch_row($this->_result)) 
-				{
-					for ($i = 0;$i < $numOfFields; ++$i) {
-						$table[$i] = $inflect->singularize($table[$i]);
-						$tempResults[$table[$i]][$field[$i]] = $row[$i];
+					$numOfFields = mysqli_num_fields($this->_result);
+					
+					while ($field_info = mysqli_fetch_field($this->_result)) 
+					{
+						array_push($table, $field_info->table);
+						array_push($field, $field_info->name);
 					}
-					array_push($result,$tempResults);
+					while ($row = mysqli_fetch_row($this->_result)) 
+					{
+						for ($i = 0;$i < $numOfFields; ++$i) {
+							$table[$i] = $inflect->singularize($table[$i]);
+							$tempResults[$table[$i]][$field[$i]] = $row[$i];
+						}
+						array_push($result,$tempResults);
+					}
 				}
+				mysqli_free_result($this->_result);
 			}
-			mysqli_free_result($this->_result);
 		}	
 		$this->clear();
 		return($result);
+	}
+
+	protected function _modelSort( $table ) 
+	{
+		global $inflect;
+		$table = explode( '_', $table );
+		foreach( $table as $key => $value ) 
+		{
+			$model = $inflect->singularize( strtolower( $value ) );
+			$table[ $key ] = strtoupper( substr( $model, 0, 1 ) ) . substr( $model, 1 );
+		}
+		sort($table);
+		return implode( '', $table );
+	}
+
+	protected function _tableSort( &$table ) 
+	{
+		global $inflect;
+		$table = explode( '_', $table );
+		foreach( $table as $key => $value ) 
+		{
+			$table[ $key ] = $inflect->singularize( strtolower($value) );
+		}
+		sort($table);
+		$table = implode( '_', $table );
+		return $table;
 	}
 
 	/** Describes a Table **/
@@ -516,11 +1086,18 @@ abstract class SQLQuery
 
 	/** Delete an Object **/
 
-	private function _delete() 
+	private function _delete( $id=NULL ) 
 	{
-		if ( $this->id ) 
+		$delete_id = $this->id;
+
+		if( NULL!=$id ) 
 		{
-			$query = 'DELETE FROM ' . $this->_table . ' WHERE `id`=\''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\'';		
+			$delete_id = $id;
+		} 
+
+		if( $delete_id ) 
+		{
+			$query = 'DELETE FROM ' . $this->_table . ' WHERE `id`=\''.mysqli_real_escape_string( $this->_dbHandle, $delete_id ).'\''; 
 			$this->_result = mysqli_query( $this->_dbHandle, $query );
 			$this->clear(); 
 			
@@ -539,15 +1116,22 @@ abstract class SQLQuery
 
 	/** Saves an Object i.e. Updates/Inserts Query **/
 
-	private function _save() 
+	private function _save( $data=NULL ) 
 	{
+		if( NULL!==$data ) 
+		{
+			$this->_setData( $data );
+		}
+
+		$fix_id = null;
+
 		$query = '';
 		if ( isset( $this->id ) ) 
 		{
 			$updates = '';
 			foreach ( $this->_describe as $field ) 
 			{
-				if ( $this->$field ) 
+				if ( $this->$field || is_string( $this->$field ) || is_numeric( $this->$field ) ) 
 				{
 					$updates .= '`'.$field.'` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->$field ).'\',';
 				}
@@ -556,6 +1140,8 @@ abstract class SQLQuery
 			$updates = substr( $updates, 0, -1 );
 
 			$query = 'UPDATE '.$this->_table.' SET '.$updates.' WHERE `id`=\''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\''; 
+
+			$fix_id = $this->id;
 		} 
 		else 
 		{
@@ -563,7 +1149,7 @@ abstract class SQLQuery
 			$values = '';
 			foreach ($this->_describe as $field ) 
 			{
-				if ( $this->$field ) 
+				if ( $this->$field || is_string( $this->$field ) || is_numeric( $this->$field ) ) 
 				{
 					$fields .= '`'.$field.'`,';
 					$values .= '\''.mysqli_real_escape_string( $this->_dbHandle, $this->$field ).'\',';
@@ -571,39 +1157,52 @@ abstract class SQLQuery
 			}
 			$values = substr( $values, 0, -1 );
 			$fields = substr( $fields, 0, -1 );
-
 			$query = 'INSERT INTO '.$this->_table.' ('.$fields.') VALUES ('.$values.')'; 
 		} 
 		
 		$this->_result = mysqli_query( $this->_dbHandle, $query );
 		$this->clear();
+
 		if ( $this->_result == 0 ) 
 		{
 			/** Error Generation **/
-			return -1;
+			return $this->_getError();
 		} 
 		else 
 		{
-			return ( int ) mysqli_insert_id( $this->_dbHandle );
+			if( is_null( $fix_id ) ) 
+			{
+				return array( 'id'=> mysqli_insert_id( $this->_dbHandle ) );
+			} 
+			else 
+			{
+				return array( 'id'=> $fix_id );
+			}
 		}
 	}
 
 	/** Clear All Variables **/
 
-	private function _clear() 
+	private function _clear( $deep=false ) 
 	{
 		foreach( $this->_describe as $field ) 
 		{
 			$this->$field = null;
-		}
+		} 
 
 		$this->_order_by = null;
 		$this->_extraConditions = null;
+
 		$this->_hO = null;
 		$this->_hM = null;
 		$this->_hMABTM = null;
 		$this->_page = null;
 		$this->_order = null;
+		$this->_imerge = null;
+		
+		if( $deep ) 
+			$this->_querySQL = null; 
+		
 		return $this;
 	}
 
@@ -611,20 +1210,46 @@ abstract class SQLQuery
 
 	private function _totalPages() 
 	{
-		if ( $this->_query && $this->_limit ) 
+		if ( $this->_querySQL && $this->_limit ) 
 		{
-			$pattern = '/SELECT (.*?) FROM (.*)LIMIT(.*)/i';
-			$replacement = 'SELECT COUNT(*) FROM $2';
-			$countQuery = preg_replace( $pattern, $replacement, $this->_query );
-			$this->_result = mysqli_query( $this->_dbHandle, $countQuery );
-			$count = mysqli_fetch_row( $this->_result );
-			$totalPages = ceil( $count[0]/$this->_limit );
+			$count = $this->_total();
+			$totalPages = ceil( $count/$this->_limit );
 			return $totalPages;
 		} 
 		else 
 		{
 			/* Error Generation Code Here */
 			return -1;
+		}
+	} 
+
+	private function _total() 
+	{
+		if ( $this->_querySQL ) 
+		{
+			$pattern = '/SELECT (.*?) FROM (.*)/i'; 
+
+			if( $this->_limit ) 
+			{
+				$pattern = '/SELECT (.*?) FROM (.*)LIMIT(.*)/i';
+			}
+
+			$replacement = 'SELECT COUNT(*) AS `size` FROM $2';
+			
+			$countQuery = preg_replace( $pattern, $replacement, $this->_querySQL );
+			$this->_result = mysqli_query( $this->_dbHandle, $countQuery ); 
+			$this->_clear();
+
+			if( $this->_result ) 
+				return mysqli_fetch_assoc( $this->_result ); 
+			else 
+				return array( 'size'=>'0' );
+		} 
+		else 
+		{
+			/* Error Generation Code Here */
+			$this->buildMainQuery( $this->_retrivePrefix() );
+			return $this->_total();
 		}
 	}
 	
@@ -648,12 +1273,7 @@ abstract class SQLQuery
 	/** Count rows */
 	private function _length() 
 	{
-		$cond = 'WHERE "1" = "1" AND ';
-		$cond .= $this->_extraConditions;
-		$query = 'SELECT COUNT(*) AS \'length\' FROM `' . $this->_table . '` AS `' . $this->_model . '`' . substr( $cond, 0, -4 );
-		$this->_result = mysqli_query( $this->_dbHandle, $query );
-		$data = mysqli_fetch_assoc( $this->_result );
-		return (int) $data[ 'length' ];
+		return $this->_total();
 	}
 	
 	/** Set row data */ 
@@ -665,6 +1285,7 @@ abstract class SQLQuery
 			{
 				$this->{$key} = $value;
 			}
+
 			return $this;
 		}
 		elseif( is_string( $data ) && !is_null( $value ) ) 
@@ -704,6 +1325,17 @@ abstract class SQLQuery
 		}
 	
 		return $this;
+	} 
+
+	protected function _retrivePrefix() 
+	{
+		global $inflect;
+		if( !is_null( $this->_prefix ) ) 
+		{
+			return $this->_getPrefix();
+		} 
+		$pluralAliasTable = strtolower( $inflect->pluralize( $this->_alias ) );
+		$this->_prefix = str_replace( $pluralAliasTable, '', $this->_table );
 	}
 	
 	/** Get Lasted Data */
@@ -728,7 +1360,7 @@ abstract class SQLQuery
 			return NULL;
 		}
 		
-		return $this->_where( 'id', $wid )->_setLimit( 1 )->_search();
+		return $this->_setLimit( 1 )->_search();
 	}
 	
 	/** Get database list */
@@ -774,6 +1406,9 @@ abstract class SQLQuery
 
 	function _getError() 
 	{
-		return mysqli_error( $this->_dbHandle );
+		return array(
+			'error_msg'	=>mysqli_error( $this->_dbHandle ), 
+			'error_no'	=>mysqli_errno( $this->_dbHandle ) 
+		); 
 	}
 }
