@@ -8,7 +8,7 @@ const HEADER_LAYOUT = 'header';
 const FOOTER_LAYOUT = 'footer';
 const MAIN_LAYOUT = 'main'; 
 
-use Kuwamoto;
+use Kuwamoto; 
 
 class Application 
 {
