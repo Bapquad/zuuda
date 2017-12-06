@@ -9,7 +9,7 @@ const FOOTER_LAYOUT = 'footer';
 const MAIN_LAYOUT = 'main'; 
 
 use Kuwamoto; 
-
+die();
 class Application 
 {
 	private static $_data = array();
