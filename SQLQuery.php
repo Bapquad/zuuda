@@ -1185,24 +1185,23 @@ abstract class SQLQuery
 
 	private function _clear( $deep=false ) 
 	{
-		if( $deep )
+		if( $deep ) 
+		{
 			foreach( $this->_describe as $field ) 
 			{
 				$this->$field = null;
-			} 
-		
-		if( $deep ) 
-			$this->_extraConditions = null;
-
-		if( $deep ) 
+			}
 			$this->_querySQL = null; 
-		
+			$this->_extraConditions = null;
+			$this->_order = null;
+			$this->_order_by = null;
+			$this->_limit = null;
+		}
+
 		$this->_hO = null;
 		$this->_hM = null;
 		$this->_hMABTM = null;
 		$this->_page = null;
-		$this->_order = null;
-		$this->_order_by = null;
 		$this->_imerge = null;
 		
 		return $this;

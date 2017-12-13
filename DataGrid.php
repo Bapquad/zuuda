@@ -200,6 +200,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 				$extra_printer .= 'sort={sort}&';
 				$extra_printer .= 'order={order}&';
 			}
+			$model->orderBy( $order, $sort );
 		}
 
 		// Building page printer.
@@ -217,6 +218,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			$num_of_rows = $default_num_rows;
 		} 
+		$model->setLimit( $num_of_rows );
 		
 		$total_pages = (int)ceil( (int)$length[ 'size' ] / $num_of_rows );
 		$this->_setTotalPages( $total_pages );
@@ -245,7 +247,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		}
 
 		// Final building the data
-		return $this->_setData( $model->orderBy( $order, $sort )->setLimit( $num_of_rows )->setPage( $current_page )->query() );
+		return $this->_setData( $model->setPage( $current_page )->query() );
 	}
 	
 	protected function _buildColumns() 
