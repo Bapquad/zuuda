@@ -95,7 +95,7 @@ abstract class SQLQuery
 	public function NotEqual( $field, $value ) { return $this->_notEqual( $field, $value ); }
 	public function NotIn( $field, $values ) { return $this->_notIn( $field, $values ); }
 	public function NotLike( $field, $value ) { return $this->_notLike( $field, $value ); }
-	public function Where( $field, $value ) { return $this->_where( $field, $value ); }
+	public function Where( $field, $value, $operaion='=' ) { return $this->_where( $field, $value, $operaion ); }
 	public function ShowHasOne() { return $this->_showHasOne(); }
 	public function ShowHasMany() { return $this->_showHasMany(); }
 	public function ShowHMABTM() { return $this->_showHMABTM(); }
@@ -1185,23 +1185,25 @@ abstract class SQLQuery
 
 	private function _clear( $deep=false ) 
 	{
-		foreach( $this->_describe as $field ) 
-		{
-			$this->$field = null;
-		} 
+		if( $deep )
+			foreach( $this->_describe as $field ) 
+			{
+				$this->$field = null;
+			} 
+		
+		if( $deep ) 
+			$this->_extraConditions = null;
 
-		$this->_order_by = null;
-		$this->_extraConditions = null;
-
+		if( $deep ) 
+			$this->_querySQL = null; 
+		
 		$this->_hO = null;
 		$this->_hM = null;
 		$this->_hMABTM = null;
 		$this->_page = null;
 		$this->_order = null;
+		$this->_order_by = null;
 		$this->_imerge = null;
-		
-		if( $deep ) 
-			$this->_querySQL = null; 
 		
 		return $this;
 	}
