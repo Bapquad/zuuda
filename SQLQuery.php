@@ -65,6 +65,7 @@ abstract class SQLQuery
 	protected function _setPage( $value ) { $this->_page = $value; return $this; }
 	/** private function _setLimit */
 	protected function _setPrefix( $value ) { $this->_prefix = $value; return $this; }
+	protected function _new() { return $this->clear( true ); } 
 	
 	/** Connects to database **/
 	public function Connect( $address, $account, $pwd, $name ) { return $this->_connect( $address, $account, $pwd, $name ); }
@@ -151,6 +152,7 @@ abstract class SQLQuery
 	public function Merge( $value ) { return $this->_merge( $value ); }
 	public function Bind( $value ) { return $this->_bind( $value ); } 
 	public function Find( $id ) { return $this->_find( $id ); } 
+	public function New() { return $this->_new(); }
 	
 	abstract protected function _startConn();
 	abstract protected function setTable();
@@ -1205,7 +1207,7 @@ abstract class SQLQuery
 		$this->_imerge = null;
 		
 		return $this;
-	}
+	} 
 
 	/** Pagination Count **/
 
