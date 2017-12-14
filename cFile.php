@@ -70,41 +70,53 @@ class cFile implements iFile
 						continue;
 					}
 
-					if( $dl = self::_openDir( $path . $com_name ) ) 
+					if( self::_isDir( $path . $com_name ) ) 
 					{
-						while( ( $name = self::_readDir( $dl ) ) !== false ) 
-						{
-							if( in_array( $name, $ignoreDirs ) ) 
-							{
-								continue;
-							}
 
-							if( NULL==$file ) 
+						if( $dl = self::_openDir( $path . $com_name ) ) 
+						{
+							while( ( $name = self::_readDir( $dl ) ) !== false ) 
 							{
-								$post_name = $name; 
-							} 
-							else 
-							{
-								$need_path = $path . $com_name . DS . $file;
-								$real_path = $path . $com_name . DS . $name;
-								if( file_exists( $need_path ) && ( $real_path == $need_path ) ) 
+								if( in_array( $name, $ignoreDirs ) ) 
 								{
-									$post_name = $file;
+									continue;
+								}
+
+								if( NULL==$file ) 
+								{
+									$post_name = $name; 
 								} 
 								else 
 								{
-									$post_name = $name . PS . $file;
+									$need_path = $path . $com_name . DS . $file;
+									$real_path = $path . $com_name . DS . $name;
+									if( file_exists( $need_path ) && ( $real_path == $need_path ) ) 
+									{
+										$post_name = $file;
+									} 
+									else 
+									{
+										$post_name = $name . PS . $file;
+									}
 								}
-							}
 
-							$result_path = $path . $com_name . DS . $post_name; 
+								$result_path = $path . $com_name . DS . $post_name; 
 
-							if( file_exists( $result_path ) ) 
-							{
-								$out_path = array_merge( $out_path, (array) $result_path );
+								if( file_exists( $result_path ) ) 
+								{
+									$out_path = array_merge( $out_path, (array) $result_path );
+								}
 							}
 						}
 					}
+					else 
+					{
+						if( file_exists( $path . $com_name ) ) 
+						{
+							$result_path = $com_name;
+							$out_path = array_merge( $out_path, (array) $result_path );
+						}
+					}	
 				} 
 			}
 		}
