@@ -181,10 +181,8 @@ function _bugDie( $var )
 
 function _watch( $var ) 
 {
-	echo '<pre>' . nl;
 	// Zuuda\RequestHeader::displayText();
 	var_dump( $var ); 
-	echo '</pre>' . nl;
 } 
 
 function watch( $var ) 
@@ -207,6 +205,34 @@ function _move( $old, $target )
 	if( copy( $old, $target ) ) 
 		unlink( $old );
 } 
+
+function _trace(Exception $e) 
+{
+	echo "ERROR Message: ".$e->getMessage().nl;
+	echo "In the line ".$e->getLine()." of file :".$e->getFile().nl."The trace:".nl;
+	$traces = $e->getTrace();
+	foreach($traces as $trace) 
+	{
+		if( isset($trace[ 'file' ]) )
+			echo "Line: ".$trace['line']." File:".$trace[ 'file' ].nl;
+	} 
+} 
+
+function _trace_once(Exception $e) 
+{
+	_trace( $e );
+	exit;
+} 
+
+function trace( Exception $e ) 
+{
+	_trace( $e ); 
+}
+
+function trace_once( Exception $e ) 
+{
+	_trace_once( $e );
+}
 
 function move( $old, $target ) 
 {

@@ -168,11 +168,16 @@ class Application
 		if( Config::get( 'COM' ) ) 
 		{
 			$_instance->_bootServices( BTShipnelService::getInstance() );
-			$_instance->_bootServices( ThemeService::getInstance() );
-			$_instance->_bootServices( ComService::getInstance(), $_instance );
-			$_instance->_bootServices( CateService::getInstance(), $_instance );
 			$_instance->_bootServices( RouteService::getInstance(), $_instance );
-			$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
+			
+			// MISSING API
+			// if( $_GET["url"] != "admin/user/search" ) 
+			// {
+				$_instance->_bootServices( ThemeService::getInstance() );
+				$_instance->_bootServices( ComService::getInstance(), $_instance );
+				$_instance->_bootServices( CateService::getInstance(), $_instance );
+				$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
+			// }
 		}
 		$_instance->_bootParams();
 		return $_instance;
