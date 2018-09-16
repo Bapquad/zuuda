@@ -1,21 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <servicebooter>
-	<themeservice>
-		<name prefix="couka_" model="Theme">Zuuda\ThemeService</name>
-		<bootcb></bootcb>
-	</themeservice>
 	<comservice>
 		<name driver="driver" basename="route" extension="xml">Zuuda\ComService</name>
 		<bootcb></bootcb>
 	</comservice>
-	<cateservice>
-		<name prefix="couka_" model="Category">Zuuda\CateService</name>
-		<bootcb></bootcb>
-	</cateservice>
-	<routeservice>
-		<name prefix="couka_" model="Com Route" layout="com_layout">Zuuda\RouteService</name>
-		<bootcb></bootcb>
-	</routeservice>
 	<extensioninformationservice>
 		<name driver="driver" basename="about" extension="xml">Zuuda\ExtensionInformationService</name>
 		<bootcb></bootcb>
@@ -24,4 +12,16 @@
 		<name route="shipnel" class="info" ship="097370591949c9e67f2d54e4403fe1b7">Zuuda\BTShipnelService</name>
 		<bootcb></bootcb>
 	</btshipnelservice>
+	<themeservice>
+		<name prefix="zuuka_" alias="theme" model="Theme">Zuuda\ThemeService</name>
+		<bootcb></bootcb>
+	</themeservice>
+	<cateservice>
+		<name prefix="zuuka_" alias="category" model="Category">Zuuda\CateService</name>
+		<bootcb></bootcb>
+	</cateservice>
+	<routeservice>
+		<name prefix="zuuka_" alias="com_route" model="ComRoute" layout="coms_layout">Zuuda\RouteService</name>
+		<bootcb></bootcb>
+	</routeservice>
 </servicebooter>

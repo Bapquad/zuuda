@@ -11,7 +11,7 @@ abstract class SQLQuery
 	protected $_querySQL;
 	protected $_querySQLs = array();
 	protected $_table;
-	protected $_describe = array(); 
+	protected $_describe = array(); 	// hold the field info (collumns of table), Don't NULL to it
 	protected $_undescrible = array();
 	protected $_order_by;
 	protected $_order;
@@ -27,6 +27,7 @@ abstract class SQLQuery
 	protected $_hasManyAndBelongsToManyBlind = array();
 	protected $_page;
 	protected $_limit;
+	protected $_offset;
 	protected $_imerge;
 	protected $_expresion;
 	// protected $_ibind;
@@ -37,6 +38,7 @@ abstract class SQLQuery
 	protected function _getQuerySQL() { return $this->_querySQL; }
 	protected function _getQuerySQLs() { return $this->_querySQLs; }
 	protected function _getModel() { return ( isset( $this->_model ) ) ? $this->_model : NULL; }
+	protected function _getAlias() { return ( isset( $this->_alias ) ) ? $this->_alias : NULL; }
 	protected function _getModelName() { return $this->_getModel(); }
 	protected function _getTable() { return ( isset( $this->_table ) ) ? $this->_table : NULL; }
 	protected function _getTableName() { return $this->_getTable(); }
@@ -57,6 +59,7 @@ abstract class SQLQuery
 	protected function _setQuery( $value ) { $this->_querySQL = $value; return $this; }
 	protected function _setTable( $value ) { return $this->_setTableName( $value ); }
 	protected function _setModel( $value ) { return $this->_setModelName( $value ); }
+	protected function _setAlias( $value ) { return $this->_setAliasName( $value ); }
 	protected function _setOrderBy( $value ) { $this->_order_by = $value; return $this; }
 	protected function _setOrder( $value ) { $this->_order = $value; return $this; }
 	protected function _setExtraConditions( $value ) { $this->_extraConditions = $value; return $this; }
@@ -84,6 +87,8 @@ abstract class SQLQuery
 	public function GetModelName() { return $this->_getModel(); }
 	public function GetTable() { return $this->_getTable(); }
 	public function GetTableName() { return $this->_getTable(); }
+	public function GetAlias() { return $this->_getAlias(); }
+	public function GetAliasName() { return $this->_getAlias(); }
 	public function Parse( $result ) { return $this->_parse( $result ); }
 	public function Item( $result, $index = NULL ) { return $this->_item( $result, $index ); }
 	public function GetCollectionString() { return $this->_getCollectionString(); }
@@ -97,11 +102,13 @@ abstract class SQLQuery
 	public function In( $field, $values ) { return $this->_in( $field, $values ); }
 	public function Is( $field, $value ) { return $this->_is( $field, $value ); }
 	public function IsNot( $field, $value ) { return $this->_isNot( $field, $value ); }
+	public function IsNotNull( $field ) { return $this->_isNotNull( $field ); }
 	public function IsNull( $field ) { return $this->_isNull( $field ); }
 	public function Less( $field, $value ) { return $this->_less( $field, $value ); } 
 	public function LessThanOrEqual( $field, $value ) { return $this->_lessThanOrEqual( $field, $value ); } 
 	public function Like( $field, $value ) { return $this->_like( $field, $value ); }
 	public function Not( $field, $value ) { return $this->_not( $field, $value ); }
+	public function NotNull( $field ) { return $this->_notNull( $field ); }
 	public function NotEqual( $field, $value ) { return $this->_notEqual( $field, $value ); }
 	public function NotIn( $field, $values ) { return $this->_notIn( $field, $values ); }
 	public function NotLike( $field, $value ) { return $this->_notLike( $field, $value ); }
@@ -116,11 +123,13 @@ abstract class SQLQuery
 	public function In_HMABTM( $model, $field, $values ) { return $this->_in_HMABTM( $model, $field, $values ); } 
 	public function Is_HMABTM( $model, $field, $value ) { return $this->_is_HMABTM( $model, $field, $value ); } 
 	public function IsNot_HMABTM( $model, $field, $value ) { return $this->_isNot_HMABTM( $model, $field, $value ); } 
+	public function IsNotNull_HMABTM( $model, $field ) { return $this->_isNotNull_HMABTM( $model, $field ); } 
 	public function IsNull_HMABTM( $model, $field ) { return $this->_isNull_HMABTM( $model, $field ); } 
 	public function Less_HMABTM( $model, $field, $value ) { return $this->_less_HMABTM( $model, $field, $value ); } 
 	public function LessThanOrEqual_HMABTM( $model, $field, $value ) { return $this->_lessThanOrEqual_HMABTM( $model, $field, $value ); } 
 	public function Like_HMABTM( $model, $field, $value ) { return $this->_like_HMABTM( $model, $field, $value ); } 
 	public function Not_HMABTM( $model, $field, $value ) { return $this->_not_HMABTM( $model, $field, $value ); } 
+	public function NotNull_HMABTM( $model, $field ) { return $this->_notNull_HMABTM( $model, $field ); } 
 	public function NotEqual_HMABTM( $model, $field, $value ) { return $this->_notEqual_HMABTM( $model, $field, $value ); } 
 	public function NotIn_HMABTM( $model, $field, $values ) { return $this->_notIn_HMABTM( $model, $field, $values ); } 
 	public function NotLike_HMABTM( $model, $field, $value ) { return $this->_notLike_HMABTM( $model, $field, $value ); } 
@@ -128,8 +137,11 @@ abstract class SQLQuery
 	public function Limit_HMABTM( $model, $numrows = 1000 ) { return $this->_limit_HMABTM( $model, $numrows ); }
 	public function Reverse_HMABTM( $model, $field = "id" ) { return $this->_reverse_HMABTM( $model, $field ); }
 	public function Hide_Relative_HMABTM( $model ) { return $this->_hide_Relative_HMABTM( $model ); }
-	public function Show_Relative_HMABTM( $model ) { return $this->_show_Relative_HMABTM( $model ); }
+	public function Show_Relative_HMABTM( $model ) { return $this->_show_Relative_HMABTM( $model ); } 
 
+	public function Select_HasOne( $model, $field, $label = NULL ) { return $this->_select_HasOne( $model, $field, $label ); }
+	public function Unselect_HasOne( $model, $fields ) { return $this->_unselect_HasOne( $model, $fields ); } 
+	
 	public function Select_HasMany( $model, $field, $label = NULL ) { return $this->_select_HasMany( $model, $field, $label ); }
 	public function Unselect_HasMany( $model, $fields ) { return $this->_unselect_HasMany( $model, $fields ); } 
 	public function Between_HasMany( $model, $field, $start, $end ) { return $this->_between_HasMany( $model, $field, $start, $end ); }
@@ -139,11 +151,13 @@ abstract class SQLQuery
 	public function In_HasMany( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
 	public function Is_HasMany( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
 	public function IsNot_HasMany( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
+	public function IsNotNull_HasMany( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
 	public function IsNull_HasMany( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
 	public function Less_HasMany( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
 	public function LessThanOrEqual_HasMany( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
 	public function Like_HasMany( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
 	public function Not_HasMany( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
+	public function NotNull_HasMany( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
 	public function NotEqual_HasMany( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
 	public function NotIn_HasMany( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
 	public function NotLike_HasMany( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
@@ -160,11 +174,13 @@ abstract class SQLQuery
 	public function In_HM( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
 	public function Is_HM( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
 	public function IsNot_HM( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
+	public function IsNotNull_HM( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
 	public function IsNull_HM( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
 	public function Less_HM( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
 	public function LessThanOrEqual_HM( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
 	public function Like_HM( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
 	public function Not_HM( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
+	public function NotNull_HM( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
 	public function NotEqual_HM( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
 	public function NotIn_HM( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
 	public function NotLike_HM( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
@@ -193,6 +209,8 @@ abstract class SQLQuery
 
 	public function SetLimit( $value ) { return $this->_setLimit( $value ); }
 	public function Limit( $value ) { return $this->_setLimit( $value ); }
+	public function Offset( $position ) { return $this->_seek( $position ); }
+	public function Seek( $position ) { return $this->_seek( $position ); }
 	public function SetPage( $value ) { return $this->_setPage( $value ); }
 	public function Page( $value ) { return $this->_setPage( $value ); }
 	public function OrderBy( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
@@ -211,6 +229,7 @@ abstract class SQLQuery
 	public function Custom( $query ) { return $this->_custom( $query ); }
 	public function Delete( $id=NULL ) { return $this->_delete( $id ); }
 	public function Save( $data=NULL ) { return $this->_save( $data ); }
+	public function Update( $data=NULL ) { return $this->_update( $data ); }
 	public function Clear( $deep=false ) { return $this->_clear( $deep ); }
 	public function TotalPages() { return $this->_totalPages(); } 
 	public function Total() { return $this->_total(); } 
@@ -219,15 +238,19 @@ abstract class SQLQuery
 	public function SetIncreament( $value ) { $this->_setIncreament( $value ); }
 	public function GetId() { return $this->_getId(); }
 	public function SetId( $id ) { return $this->_setId( $id ); } 
+	public function UnsetId() { return $this->_setId(); }
 	public function MaxId( $label = NULL ) { return $this->_maxId( $label ); }
 	public function GetMaxId( $label = NULL ) { return $this->_maxId( $label ); }
 	public function GetData( $id = NULL ) { return $this->_getData( $id ); }
 	public function GetLastedData() { return $this->_getLastedData(); }
 	public function GetError() { return $this->_getError(); } 
 	public function SetData( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
+	public function Set( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
+	public function Assign( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
 	public function SetPrefix( $value ) { return $this->_setPrefix( $value ); }
 	public function SetTableName( $value ) { return $this->_setTableName( $value ); }
 	public function SetModelName( $value ) { return $this->_setModelName( $value ); }
+	public function SetAliasName( $value ) { return $this->_setAliasName( $value ); }
 	public function SetHasOne( $value ) { return $this->_setHasOne( $value ); }
 	public function SetHasMany( $value ) { return $this->_setHasMany( $value ); }
 	public function SetHasManyAndBelongsToMany( $value ) { return $this->_setHasManyAndBelongsToMany( $value ); }
@@ -235,7 +258,7 @@ abstract class SQLQuery
 	public function AddHasMany( $value ) { return $this->_addHasMany( $value ); }
 	public function AddHasManyAndBelongsToMany( $value ) { return $this->_addHasManyAndBelongsToMany( $value ); }
 	public function Merge( $value ) { return $this->_merge( $value ); }
-	public function Bind( $value ) { return $this->_bind( $value ); } 
+	public function Bind( $value ) { return $this->_merge( $value ); } 
 	public function Find( $id ) { return $this->_find( $id ); } 
 	public function FindData( $id ) { return $this->_findData( $id ); }
 	public function New() { return $this->_new(); }
@@ -309,7 +332,7 @@ abstract class SQLQuery
 		
 		$model = $inflect->singularize( (string) $this->_model );
 		
-		if( !is_null( $index ) ) 
+		if( $index ) 
 		{
 			return ( isset( $result[ $index ][ $model ] ) ) ? $result[ $index ][ $model ] : $result[ $index ][ $this->_model ];
 		}
@@ -478,6 +501,11 @@ abstract class SQLQuery
 		return $this->_where( $field, $value, 'IS NOT' );
 	} 
 
+	private function _isNotNull( $field ) 
+	{
+		return $this->_where( $field, NULL, 'IS NOT' );
+	} 
+
 	private function _isNull( $field ) 
 	{
 		return $this->_where( $field, NULL, 'IS' );
@@ -506,6 +534,11 @@ abstract class SQLQuery
 	private function _not( $field, $value ) 
 	{
 		return $this->_notEqual( $field, $value );
+	} 
+
+	private function _notNull( $field ) 
+	{
+		return $this->_isNotNull( $field );
 	} 
 
 	private function _notEqual( $field, $value ) 
@@ -624,6 +657,11 @@ abstract class SQLQuery
 	private function _not_HMABTM( $model, $field, $value ) 
 	{
 		return $this->_notEqual_HMABTM( $model, $field, $value );
+	}
+
+	private function _notNull_HMABTM( $model, $field ) 
+	{
+		return $this->_isNotNull_HMABTM( $model, $field );
 	} 
 
 	private function _notEqual_HMABTM( $model, $field, $value ) 
@@ -639,6 +677,11 @@ abstract class SQLQuery
 	private function _isNot_HMABTM( $model, $field, $value ) 
 	{
 		return $this->_where_HMABTM( $model, $field, $value, "IS NOT" );
+	} 
+
+	private function _isNotNull_HMABTM( $model, $field ) 
+	{
+		return $this->_where_HMABTM( $model, $field, NULL, "IS NOT" );
 	} 
 
 	private function _greater_HMABTM( $model, $field, $value ) 
@@ -790,7 +833,53 @@ abstract class SQLQuery
 			}
 		}
 		return $this;
-	}
+	} 
+
+	private function _select_HasOne( $model, $field, $label ) 
+	{
+		if( isset($this->_hasOne) && NULL!==$this->_hO ) 
+		{
+			if( isset($this->_hasOne[ $model ]) ) 
+			{
+				if( is_array($this->_hasOne[ $model ]) ) 
+				{
+					if( !isset($this->_hasOne[ $model ][ 'describe' ]) ) 
+					{
+						$this->_hasOne[ $model ][ 'describe' ] = array();
+					}
+
+					$field_agrs = array("field"	=> (array)$field);
+
+					if( !is_null($label) ) 
+					{
+						$field_name = (is_array($field))?$field[ 0 ]:$field;
+						$field_agrs[ "label" ] = array($field_name=>$label);
+					}
+					array_push( $this->_hasOne[ $model ][ 'describe' ], $field_agrs );
+				}
+			}
+		}
+		return $this;
+	} 
+
+	private function _unselect_HasOne( $model, $fields ) 
+	{
+		if( isset($this->_hasOne) && NULL!==$this->_hO ) 
+		{
+			if( isset($this->_hasOne[ $model ]) ) 
+			{
+				if( is_array($this->_hasOne[ $model ]) ) 
+				{
+					if( !isset($this->_hasOne[ $model ][ 'undescribe' ]) ) 
+					{
+						$this->_hasOne[ $model ][ 'undescribe' ] = array();
+					}
+					$this->_hasOne[ $model ][ 'undescribe' ] = array_merge( $this->_hasOne[ $model ][ 'undescribe' ], (array)$fields );
+				}
+			}
+		}
+		return $this;
+	} 
 
 	private function _select_HasMany( $model, $field, $label ) 
 	{
@@ -872,6 +961,11 @@ abstract class SQLQuery
 		return $this->_notEqual_HasMany( $model, $field, $value );
 	} 
 
+	private function _notNull_HasMany( $model, $field ) 
+	{
+		return $this->_isNotNull_HasMany( $model, $field );
+	} 
+
 	private function _notEqual_HasMany( $model, $field, $value ) 
 	{
 		return $this->_where_HasMany( $model, $field, $value, "!=" );
@@ -885,6 +979,11 @@ abstract class SQLQuery
 	private function _isNot_HasMany( $model, $field, $value ) 
 	{
 		return $this->_where_HasMany( $model, $field, $value, "IS NOT" );
+	} 
+
+	private function _isNotNull_HasMany( $model, $field ) 
+	{
+		return $this->_where_HasMany( $model, $field, NULL, "IS NOT" );
 	} 
 
 	private function _greater_HasMany( $model, $field, $value ) 
@@ -1020,19 +1119,19 @@ abstract class SQLQuery
 
 	private function _hideHasOne() 
 	{
-		$this->_hO = null;
+		$this->_hO = NULL;
 		return $this;
 	} 
 
 	private function _hideHasMany() 
 	{
-		$this->_hM = null;
+		$this->_hM = NULL;
 		return $this;
 	}
 
 	private function _hideHMABTM() 
 	{
-		$this->_hMABTM = null;
+		$this->_hMABTM = NULL;
 		return $this;
 	} 
 
@@ -1057,7 +1156,7 @@ abstract class SQLQuery
 	private function _blindHasOne( $blink_data ) 
 	{
 		return $this->_blindRelative( 
-			$this->_hasManyBlind, 
+			$this->_hasOneBlind, 
 			$blink_data 
 		);
 	} 
@@ -1085,7 +1184,7 @@ abstract class SQLQuery
 		{
 			foreach( $needle_data as $key => $value ) 
 			{
-				if( !in_array( $value, $data_current ) ) 
+				if( in_array( $value, $data_current ) ) 
 				{
 					continue;
 				} 
@@ -1183,71 +1282,140 @@ abstract class SQLQuery
 
 	protected function _orderHasOne( $hasOne ) 
 	{
-		foreach( $hasOne as $alias_child => $table_child ) 
+		global $inflect;
+		foreach( $hasOne as $model_child => $alias_child ) 
 		{
-			$this->_hasOne[ $alias_child ] = array();
-			if( is_array($table_child) ) 
+			if( isset($this->_hasOne[ $model_child ]) && 
+				isset($this->_hasOne[ $model_child ][ 'live' ]) ) continue;
+			if( is_array($alias_child) ) 
 			{
-				list( $table, $key ) = each( $table_child );
-				$this->_hasOne[ $alias_child ][ 'key' ] = $key; 
-				$this->_hasOne[ $alias_child ][ 'table' ] = $table;
+				list( $alias, $key ) = each( $alias_child );
+				$alias_key = $key; 
+				$alias = explode( '_', $alias );
 			} 
 			else 
 			{
-				$this->_hasOne[ $alias_child ][ 'table' ] = $table_child;
-			}
+				if( $this->_alias===$alias_child ) 
+					$alias_key = $inflect->singularize(strtolower( $model_child )).'_id';
+				else
+					$alias_key = $alias_child.'_id';
+				$alias = explode( '_', $alias_child );
+			} 
+			foreach( $alias as $key => $value ) 
+				$alias[ $key ] = $inflect->pluralize( $value );
+			$this->_hasOne[ $model_child ] = array(
+				'key'	=> $alias_key, 
+				'table'	=> $this->_prefix.implode( '_', $alias ), 
+				'live'	=> 1, 
+			);
 		} 
 		return $this;
 	}
 
 	protected function _orderHasMany( $hasMany ) 
 	{
-		foreach( $hasMany as $alias_child => $table_child ) 
+		global $inflect;
+		foreach( $hasMany as $model_child => $alias_child ) 
 		{
-			$this->_hasMany[ $alias_child ] = array();
-			if( is_array($table_child) ) 
+			if( isset($this->_hasMany[ $model_child ]) && 
+				isset($this->_hasMany[ $model_child ][ 'live' ]) ) continue;
+			if( is_array($alias_child) ) 
 			{
-				list( $table, $key ) = each( $table_child );
-				$this->_hasMany[ $alias_child ][ 'key' ] = $key;
-				$this->_hasMany[ $alias_child ][ 'table' ] = $table;
+				list( $alias, $key ) = each( $alias_child );
+				$alias_key = $key; 
+				$alias = explode( '_', $alias );
 			} 
 			else 
 			{
-				$this->_hasMany[ $alias_child ][ 'table' ] = $table_child;
+				$alias_key = $this->_alias.'_id';
+				$alias = explode( '_', $alias_child );
 			}
+			foreach( $alias as $key => $value ) 
+				$alias[ $key ] = $inflect->pluralize( $value );
+			$this->_hasMany[ $model_child ] = array( 
+				'key'	=> $alias_key, 
+				'table'	=> $this->_prefix.implode( '_', $alias ), 
+				'live'	=> 1,
+			);
+			$this->_hasMany[ $model_child ][ 'live' ] = 1;
 		} 
 		return $this;
 	} 
 
 	protected function _orderHMABTM( $hasMABTM ) 
 	{
-		foreach( $hasMABTM as $alias_child => $table_child ) 
+		global $inflect;
+		foreach( $hasMABTM as $model_child => $alias_child ) 
 		{
-			$this->_hasManyAndBelongsToMany[ $alias_child ] = array();
-			if( is_array( $table_child ) ) 
+			if( isset($this->_hasManyAndBelongsToMany[ $model_child ]) && 
+				isset($this->_hasManyAndBelongsToMany[ $model_child ][ 'live' ]) ) continue;
+			$this->_hasManyAndBelongsToMany[ $model_child ] = array();
+			if( is_array( $alias_child ) ) 
 			{
-				list( $table, $key ) = each( $table_child[0] );
-				$table_child['data'] = array( 
-					'key'	=> $key, 
-					'table' => $this->_tableSort( $table )  
-				);
-				unset($table_child[0]);
-
-				list( $table, $key ) = each( $table_child[1] );
-				$table_child['join'] = array( 
-					'key'	=> $key, 
-					'table' => $this->_tableSort( $table )  
-				);
-				unset($table_child[1]);
-
-				$this->_hasManyAndBelongsToMany[ $alias_child ] = $table_child;
+				if( count( $alias_child )===1 ) 
+				{
+					list( $alias_child, $foreign_key ) = each( $alias_child ); 
+					$table_child = explode( '_', $alias_child ); 
+					foreach( $table_child as $key => $value ) 
+						$table_child[ $key ] = $inflect->pluralize( $value );
+					$data_child = array(
+						'key'	=> $foreign_key, 
+						'table' => $this->_prefix . implode( '_', $table_child ) 
+					);
+					$table_child = array( $this->_alias, $alias_child );
+					sort($table_child);
+					$table_child = explode( '_', implode( '_', $table_child ) );
+					foreach( $table_child as $key => $value ) 
+						$table_child[ $key ] = $inflect->pluralize( $value );
+					$join_child = array( 
+						'key'	=> $this->_alias.'_id', 
+						'table' => $this->_prefix . implode( '_', $table_child ) 
+					);
+				} 
+				elseif( count( $alias_child )===2 ) 
+				{
+					list( $alias_data, $foreign_key ) = each( $alias_child ); 
+					$table_child = explode( '_', $alias_data ); 
+					foreach( $table_child as $key => $value ) 
+						$table_child[ $key ] = $inflect->pluralize( $value );
+					$data_child = array(
+						'key'	=> $foreign_key, 
+						'table' => $this->_prefix . implode( '_', $table_child ) 
+					);
+					list( $alias_join, $foreign_key ) = each( $alias_child ); 
+					$table_child = explode( '_', $alias_join ); 
+					foreach( $table_child as $key => $value ) 
+						$table_child[ $key ] = $inflect->pluralize( $value );
+					$join_child = array(
+						'key'	=> $foreign_key, 
+						'table' => $this->_prefix . implode( '_', $table_child ) 
+					);
+				}
 			} 
 			else 
 			{
-				$this->_hasManyAndBelongsToMany[ $alias_child ][ 'data' ] = array( 
-					'table' => $table_child 
+				$table_child = explode( '_', $alias_child ); 
+				foreach( $table_child as $key => $value ) 
+					$table_child[ $key ] = $inflect->pluralize( $value );
+				$data_child = array(
+					'key'	=> $alias_child.'_id', 
+					'table' => $this->_prefix . implode( '_', $table_child ) 
+				); 
+				$table_child = array( $this->_alias, $alias_child );
+				sort($table_child);
+				$table_child = explode( '_', implode( '_', $table_child ) );
+				foreach( $table_child as $key => $value ) 
+					$table_child[ $key ] = $inflect->pluralize( $value );
+				$join_child = array( 
+					'key'	=> $this->_alias.'_id', 
+					'table' => $this->_prefix . implode( '_', $table_child ) 
 				);
 			}
+			$this->_hasManyAndBelongsToMany[ $model_child ] = array(
+				'live'	=> 1, 
+				'data'	=> $data_child, 
+				'join'	=> $join_child, 
+			); 
 		}
 		return $this;
 	}
@@ -1261,6 +1429,12 @@ abstract class SQLQuery
 			$this->_page = 1;
 		}
 		
+		return $this;
+	} 
+
+	private function _seek( $position ) 
+	{
+		$this->_offset = $position; 
 		return $this;
 	}
 
@@ -1303,20 +1477,21 @@ abstract class SQLQuery
 
 		if( is_string($models) ) 
 		{
-			foreach( $this->_hasOne as $modelChild => $tableChild ) 
+			if( isset($this->_hasOne[ $models ]) )
 			{
-				if( $models != $modelChild ) 
+				$aliasChild = $this->_hasOne[ $models ];
+				$tableChild = $aliasChild[ 'table' ];
+
+				$modelChild = explode( '_', $tableChild ); 
+				if( ($modelChild[0].'_')===$prefix ) unset($modelChild[0]);
+				$aliasKey = $aliasChild[ 'key' ];
+				foreach( $modelChild as $key => $value ) 
 				{
-					continue;
-				} 
+					$modelChild[ $key ] = ucfirst( $inflect->singularize( $value ) );
+				}
+				$modelChild = implode( '', $modelChild );
 
-				$childTableData = $tableChild;
-
-				$tableChild = $tableChild[ 'table' ];
-
-				$tableChild = $prefix . $inflect->pluralize( $tableChild );
-
-				$this->_imerge .= "INNER JOIN `" . $tableChild . "` AS `" . $modelChild . "` ON `" . $modelChild . "`.`id` = `" . $this->_model . "`.`" . strtolower($modelChild) . "_id`" . NL;
+				$this->_imerge .= "INNER JOIN `" . $tableChild . "` AS `" . $modelChild . "` ON `" . $modelChild . "`.`id` = `" . $this->_model . "`.`" . $aliasKey . "`" . NL;
 			}
 		} 
 		else 
@@ -1352,53 +1527,25 @@ abstract class SQLQuery
 		return $this;
 	}
 
-	// private function _bind( $models ) 
-	// {
-	// 	global $inflect;
-
-	// 	$prefix = $this->_retrivePrefix();
-
-	// 	$this->_ibind = NL;
-
-	// 	$this->_ibind -= "INNER JOIN `Table1` AS Alias ON Alias.`id` = Model.`id`";
-
-	// 	return $this;
-	// } 
-
 	private function buildMainQuery( $prefix ) 
 	{
 		global $inflect;
 
 		$from = '`'.$this->_table.'` as `'.$this->_model.'` ';
 		$conditions = '\'1\'=\'1\' AND ';
-		
+
 		if( $this->_hO == 1 && isset( $this->_hasOne ) ) 
 		{
-			foreach ( $this->_hasOne as $modelChild => $tableChild ) 
+			foreach ( $this->_hasOne as $modelChild => $aliasChild ) 
 			{
 				if( in_array( $modelChild, $this->_hasOneBlind ) ) 
 				{
 					continue;
 				} 
-
-				$aliasKey = '';
-
-				if( isset($tableChild[ 'key' ]) )
-					$aliasKey = $tableChild[ 'key' ];
-
-				$childTableData = $tableChild;
-
-				$tableChild = $tableChild[ 'table' ];
-
-				$this->_tableSort($tableChild);
-
-				if( $aliasKey=='' ) 
-					$aliasKey = $tableChild . '_id';
-
-				$tableChild = $prefix . $inflect->pluralize( $tableChild );
-
+				$aliasKey = $aliasChild[ 'key' ]; 
+				$tableChild = $aliasChild[ 'table' ];
 				$from .= 'LEFT JOIN `'.$tableChild.'` as `'.$modelChild.'` ';
-				$from .= 'ON `'.$this->_model.'`.`'.$aliasKey.'` = `'.$modelChild.'`.`id`  ';
+				$from .= 'ON `'.$this->_model.'`.`'.$aliasKey.'` = `'.$modelChild.'`.`id` ';
 			}
 		}
 
@@ -1428,7 +1575,10 @@ abstract class SQLQuery
 
 		if ( isset( $this->_page ) ) 
 		{
-			$offset = ( $this->_page-1 ) * $this->_limit;
+			if( isset($this->_offset) ) 
+				$offset = $this->_offset;
+			else
+				$offset = ( $this->_page-1 ) * $this->_limit;
 			$conditions .= ' LIMIT '.$this->_limit.' OFFSET '.$offset;
 		} 
 
@@ -1540,10 +1690,14 @@ abstract class SQLQuery
 					{
 						if( $table[ $i ]!==0 && $field[ $i ]!==0 ) 
 						{
-							$tempResults[ $table[ $i ] ][ $field [ $i ] ] = $row[ $i ];
+							if( isset($this->_hasOne[ $table[ $i ] ]) ) 
+								if( isset($this->_hasOne[ $table[ $i ] ][ 'undescribe' ]) )
+									if( in_array( $field[ $i ], $this->_hasOne[ $table[ $i ] ][ 'undescribe' ] ) ) 
+										continue;
+							
+							$tempResults[ $table[ $i ] ][ $field[ $i ] ] = $row[ $i ];
 						}
 					}
-
 					if( $this->_hM == 1 && isset( $this->_hasMany ) ) 
 					{
 						foreach ( $this->_hasMany as $modelChild => $aliasChild ) 
@@ -1558,34 +1712,13 @@ abstract class SQLQuery
 							$limitChild = NL."LIMIT 1000";
 							$orderChild = "";
 							$fromChild = '';
-							$aliasKey = '';
-
-							$childTableData = $aliasChild;
-
-							$aliasChild = $aliasChild[ 'table' ];
-
-							if( isset($aliasChild[ 'key' ]) ) 
-							{
-								$aliasKey = $aliasChild[ 'key' ];
-							} 
-							else 
-							{
-								$aliasKey = $this->_alias . '_id';
-							}
-							
-							$aliasChild = explode( '_', $aliasChild );
-							sort($aliasChild);
-							$modelAlias = array();
-							foreach( $aliasChild as $key => $value )  
-							{
-								array_push( $modelAlias, ucfirst(strtolower($inflect->pluralize($value))) );
-								$aliasChild[ $key ] = $inflect->pluralize($value);
-							}
-
-							$modelAlias = implode( '', $modelAlias );
-							$aliasChild = strtolower(implode( '_', $aliasChild ));
-							$tableChild = $prefix . $aliasChild;
-
+							$aliasKey = $aliasChild[ 'key' ];
+							$tableChild = $aliasChild[ 'table' ];
+							$aliasChild = explode( '_', $aliasChild[ 'table' ] );
+							if( ($aliasChild[0].'_')===$prefix ) unset($aliasChild[0]);
+							foreach( $aliasChild as $key => $value ) 
+								$aliasChild[ $key ] = ucfirst( $inflect->singularize( $value ) );
+							$modelAlias = implode( '', $aliasChild );
 							$fromChild .= '`'.$tableChild.'` as `'.$modelAlias.'`';
 							$conditionsChild .= '`'.$modelAlias.'`.`'.$aliasKey.'` = \''.$tempResults[$this->_model][ID].'\' '.NL;
 
@@ -1747,7 +1880,7 @@ abstract class SQLQuery
 								
 								mysqli_free_result($resultChild);
 							}
-						}
+						} 
 					}
 
 					if ($this->_hMABTM == 1 && isset($this->_hasManyAndBelongsToMany)) 
@@ -1761,38 +1894,50 @@ abstract class SQLQuery
 							$fromChild = '';
 
 							$cacheChild = $aliasChild;
-
-							$aliasChild = $aliasChild[ 'data' ][ 'table' ];
-
-							if( isset( $cacheChild[ 'join' ] ) ) 
-							{
-								$singularAliasChild = $cacheChild['data']['key'];
-								$tableModel = $this->_modelSort( $cacheChild['data']['table'] );
-								$tableChild = $prefix . $inflect->pluralize( $cacheChild['data']['table'] );
-								$joinTable = $prefix . $inflect->pluralize( $cacheChild['join']['table'] );
-								$joinAlias = $this->_modelSort( $cacheChild['join']['table'] );
-								$aliasKey = $cacheChild['join']['key'];
-							} 
-							else 
-							{
-								$singularAliasChild = strtolower($inflect->singularize($aliasChild)).'_id';
-								$pluralAliasTable = strtolower($inflect->pluralize($this->_alias));
-								$pluralAliasChild = strtolower($inflect->pluralize($aliasChild));
-								$sortTables = array( $pluralAliasTable ,$pluralAliasChild );
-								sort($sortTables);
-								$joinTable = $prefix . implode('_',$sortTables);
-								$tableModel = $this->_modelSort( $aliasChild );
-								$tableChild = $prefix . strtolower($inflect->pluralize($aliasChild));
-								$sortAliases = array( $this->_model, $tableModel );
-								sort($sortAliases);
-								$joinAlias = implode('', $sortAliases);
-								$aliasKey = $this->_alias.'_id';
-							}
 							
+							// $joinKey = strtolower($inflect->singularize($aliasChild)).'_id';
+							// if( isset( $cacheChild[ 'join' ] ) ) 
+							// {
+							// 	$tableModel = $this->_modelSort( $cacheChild['data']['table'] );
+							// 	$joinTable = $prefix . $this->_tableSort( $cacheChild['join']['table'] );
+							// 	$joinModel = $this->_modelSort( $cacheChild['join']['table'] );
+							// 	$aliasKey = $cacheChild['join']['key'];
+							// } 
+							// else 
+							// {
+							// 	$pluralAliasTable = strtolower($this->_alias);
+							// 	$pluralAliasChild = strtolower($aliasChild);
+							// 	$sortTables = explode( '_', $pluralAliasTable.'_'.$pluralAliasChild );
+							// 	sort($sortTables);
+							// 	foreach( $sortTables as $key => $value ) 
+							// 	{
+									
+							// 	}
+							// 	$joinTable = $prefix . implode('_',$sortTables);
+							// 	$tableModel = $this->_modelSort( $aliasChild );
+							// 	$tableChild = $prefix . $this->_tableSort( $aliasChild );
+							// 	$sortAliases = array( $this->_model, $tableModel );
+							// 	sort($sortAliases);
+							// 	$joinModel = implode('', $sortAliases);
+							// 	$aliasKey = $this->_alias.'_id';
+							// }
+							
+							$tableChild = $cacheChild['data']['table'];
+							$aliasChild = explode( '_', $tableChild );
+							if( ($aliasChild[0].'_')===$prefix ) unset($aliasChild[0]);
+							foreach( $aliasChild as $key => $value )
+								$aliasChild[ $key ] = ucfirst( $inflect->singularize( $value ) ); 
+							$tableModel = implode( '', $aliasChild ); 
+							$joinTable = $cacheChild['join']['table'];
+							$joinAlias = explode( '_', $joinTable );
+							if( ($joinAlias[0].'_')===$prefix ) unset($joinAlias[0]);
+							foreach( $joinAlias as $key => $value )
+								$joinAlias[ $key ] = ucfirst( $inflect->singularize( $value ) ); 
+							$joinModel = implode( '', $joinAlias ); 
 							$fromChild .= '`'.$tableChild.'` as `'.$tableModel.'`,';
-							$fromChild .= '`'.$joinTable.'` as `'.$joinAlias.'`,';
-							$conditionsChild .= "`".$joinAlias."`.`".$singularAliasChild."` = `".$tableModel."`.`id`"." ".NL;
-							$conditionsChild .= "AND `".$joinAlias."`.`".$aliasKey."` = '".$tempResults[$this->_model]['id']."'"." ".NL;
+							$fromChild .= '`'.$joinTable.'` as `'.$joinModel.'`,';
+							$conditionsChild .= "`".$joinModel."`.`".$cacheChild['data']['key']."` = `".$tableModel."`.`id`"." ".NL;
+							$conditionsChild .= "AND `".$joinModel."`.`".$cacheChild['join']['key']."` = '".$tempResults[$this->_model]['id']."'"." ".NL;
 
 							if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'conds' ]) ) 
 							{
@@ -1903,7 +2048,6 @@ abstract class SQLQuery
 							$fromChild = substr($fromChild,0,-1);
 							$queryChild =  'SELECT '.$includeColume.' FROM '.$fromChild.' WHERE '.$conditionsChild.$orderChild.$limitChild;
 							$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
-
 							$tableChild = array();
 							$fieldChild = array();
 							$temp_results_child = array();
@@ -1940,7 +2084,7 @@ abstract class SQLQuery
 										for ( $j = 0;$j < $numOfFieldsChild; ++$j ) 
 										{
 											if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'hide_rel' ]) ) 
-												$showRelative = $joinAlias !== $tableChild[$j];
+												$showRelative = $joinModel !== $tableChild[$j];
 											else
 												$showRelative = true;
 
@@ -1972,11 +2116,10 @@ abstract class SQLQuery
 		$this->clear();
 
 		// Make eloquent item
-		if( $rsNumRows == 1 && $this->id != null ) 
+		if( $rsNumRows == 1 && $this->id != NULL ) 
 		{
 			return $this->_setData( $result[ 0 ][ $this->_model ] );
 		}
-
 		return $result;
 	}
 
@@ -2022,32 +2165,6 @@ abstract class SQLQuery
 		return($result);
 	}
 
-	protected function _modelSort( $table ) 
-	{
-		global $inflect;
-		$table = explode( '_', $table );
-		foreach( $table as $key => $value ) 
-		{
-			$model = $inflect->singularize( strtolower( $value ) );
-			$table[ $key ] = strtoupper( substr( $model, 0, 1 ) ) . substr( $model, 1 );
-		}
-		sort($table);
-		return implode( '', $table );
-	}
-
-	protected function _tableSort( &$table ) 
-	{
-		global $inflect;
-		$table = explode( '_', $table );
-		foreach( $table as $key => $value ) 
-		{
-			$table[ $key ] = $inflect->singularize( strtolower($value) );
-		}
-		sort($table);
-		$table = implode( '_', $table );
-		return $table;
-	}
-
 	/** Describes a Table **/
 
 	protected function _describe() 
@@ -2072,7 +2189,7 @@ abstract class SQLQuery
 		
 		foreach ($this->_describe as $field) 
 		{
-			$this->$field = null;
+			$this->$field = NULL;
 		}
 	}
 
@@ -2080,58 +2197,104 @@ abstract class SQLQuery
 
 	private function _delete( $id=NULL ) 
 	{
-		$delete_id = $this->id;
+		$cond_clause = ' WHERE 1 AND '.preg_replace("/`".$this->_model."`./", '', $this->_extraConditions);
+		$limit_clause = '';
 
-		if( NULL!=$id ) 
+		if( isset($this->_limit) ) 
 		{
-			$delete_id = $id;
-		} 
-
-		if( $delete_id ) 
+			$limit_clause = 'LIMIT '.$this->_limit.' ';
+		}
+		
+		if( NULL===$id ) 
 		{
-			$query = 'DELETE FROM ' . $this->_table . ' WHERE `id`=\''.mysqli_real_escape_string( $this->_dbHandle, $delete_id ).'\''; 
-			$this->_result = mysqli_query( $this->_dbHandle, $query );
-			$this->clear(); 
-			
-			if ( $this->_result == 0 ) 
+			if( isset($this->id) ) 
 			{
-				/** Error Generation **/
-				return -1;
-			} 
-		} 
-		else 
+				$id = $this->id;
+			}
+		}
+
+		if( $id ) 
+		{
+			if( is_string($id) )
+				$id = "'".mysqli_real_escape_string( $this->_dbHandle, $id )."'";
+			$cond_clause .= '`id`='.$id.' AND ';
+		}
+
+		$cond_clause = substr( $cond_clause, 0, -4 );
+
+		$query = 'DELETE FROM `'.$this->_table.'`'.$cond_clause.$limit_clause; 
+
+		$this->_result = mysqli_query( $this->_dbHandle, $query );
+		array_push( $this->_querySQLs, $query );
+		$this->clear(); 
+		if ( $this->_result == 0 ) 
 		{
 			/** Error Generation **/
 			return -1;
-		}
+		} 
 	}
 
 	/** Saves an Object i.e. Updates/Inserts Query **/
+	private function _update( $data=NULL ) 
+	{
+		$this->_updates = "d4adf8b7f2ac";
+		return $this->_save( $data );
+	}
 
 	private function _save( $data=NULL ) 
 	{
+		$save_all = NULL;
+		
+		if( isset($this->_updates) && $this->_updates==="d4adf8b7f2ac" ) 
+		{
+			$save_all = $this->_updates;
+			unset($this->_updates);
+		} 
+
 		if( NULL!==$data ) 
 		{
 			$this->_setData( $data );
 		}
 
-		$fix_id = null;
+		$fix_id = NULL;
 
 		$query = '';
-		if ( isset( $this->id ) ) 
+
+		if( NULL!==$save_all || $this->_extraConditions || isset($this->id) ) 
 		{
-			$updates = '';
+			$cond_clause = 'WHERE 1 AND '.$this->_extraConditions;
+			$limit_clause = '';
+			$updates = EMPTY_CHAR;
+
+			if( isset($this->_limit) ) 
+			{
+				$limit_clause = 'LIMIT '.$this->_limit.' ';
+			}
+			
 			foreach ( $this->_describe as $field ) 
 			{
+				if( $field == "id" ) continue; 
+				if( !isset($this->$field) ) continue;
 				if ( $this->$field || is_string( $this->$field ) || is_numeric( $this->$field ) ) 
 				{
-					$updates .= '`'.$field.'` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->$field ).'\',';
-				}
+					$updates .= '`'.$this->_model.'`.`'.$field.'` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->$field ).'\',';
+				} 			}
+
+			if( $updates == EMPTY_CHAR ) 
+				return $this;
+
+			$updates = substr( $updates, 0, -1 ).' '; 
+
+			if( isset($this->id) ) 
+			{
+				$cond_clause .= '`'.$this->_model.'`.`id`=\''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\' ';
+			} 
+			else 
+			{
+				$cond_clause = substr( $cond_clause, 0, -4 );
 			}
 
-			$updates = substr( $updates, 0, -1 );
-
-			$query = 'UPDATE '.$this->_table.' SET '.$updates.' WHERE `id`=\''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\''; 
+			$query = 'UPDATE `'.$this->_table.'` AS `'.$this->_model.'` SET '.$updates.$cond_clause.$limit_clause; 
 
 			$fix_id = $this->id;
 		} 
@@ -2151,8 +2314,9 @@ abstract class SQLQuery
 			$fields = substr( $fields, 0, -1 );
 			$query = 'INSERT INTO '.$this->_table.' ('.$fields.') VALUES ('.$values.')'; 
 		} 
-		
+
 		$this->_result = mysqli_query( $this->_dbHandle, $query );
+		array_push( $this->_querySQLs, $query );
 		$this->clear();
 
 		if ( $this->_result == 0 ) 
@@ -2182,23 +2346,25 @@ abstract class SQLQuery
 		{
 			foreach( $this->_describe as $field ) 
 			{
-				$this->$field = null;
+				$this->$field = NULL;
 			}
-			$this->_querySQL = null; 
+			if( isset( $this->id ) ) 
+				$this->id = NULL;
+			$this->_querySQL = NULL; 
 			$this->_querySQLs = array();
-			$this->_limit = null;
+			$this->_limit = NULL;
+			$this->_offset = NULL;
 
 			// Be store to vertical processing.
-			$this->_order_by = null;			
-			$this->_order = null;
+			$this->_order_by = NULL;			
+			$this->_order = NULL;
 		}
 
-		$this->_hO = null;
-		$this->_hM = null;
-		$this->_hMABTM = null;
-		$this->_page = null;
-		$this->_imerge = null;
-		$this->_describe = array(); 
+		$this->_hO = NULL;
+		$this->_hM = NULL;
+		$this->_hMABTM = NULL;
+		$this->_page = NULL;
+		$this->_imerge = NULL;
 		$this->_undescrible = array();
 		$this->_extraConditions = EMPTY_CHAR;
 
@@ -2237,7 +2403,7 @@ abstract class SQLQuery
 			
 			$countQuery = preg_replace( $pattern, $replacement, $this->_querySQL );
 			$this->_result = mysqli_query( $this->_dbHandle, $countQuery ); 
-			$this->_clear();
+			$this->_clear( true );
 
 			if( $this->_result ) 
 				return mysqli_fetch_assoc( $this->_result ); 
@@ -2253,11 +2419,11 @@ abstract class SQLQuery
 	}
 	
 	/** Set id for model */
-	private function _setId( $id ) 
+	private function _setId( $id=NULL ) 
 	{
 		$this->id = $id;
 		return $this;
-	}
+	} 
 	
 	/** Get id for model */
 	private function _getId() 
@@ -2291,6 +2457,15 @@ abstract class SQLQuery
 		{
 			$this->{$data} = $value;
 		}
+		return $this;
+	} 
+
+	private function _setAliasName( $value ) 
+	{
+		if( $this->setTable() == MODEL_SFREE && _hasBase() ) 
+		{
+			$this->_alias = $value;
+		} 
 		return $this;
 	}
 	

@@ -13,7 +13,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 	protected function _getControler() { return $this->_controller; }
 	protected function _getAction() { return $this->_action; }
 	protected function _getView() { return $this->_view; }
-	protected function _getModel() { return $this->_model; }
+	protected function _getModel() { return $this->_model; } 
+
+	private function _resting( $seconds ) { sleep( $seconds ); } 
 	
 	private function _setModule( $value ) { $this->_module = $value; return $this; }
 	private function _setController( $value ) { $this->_controller = $value; return $this; }
@@ -65,7 +67,8 @@ abstract class Controller implements iController, iDeclare, iBlock
 	/** Implement Interface iController */
 	public function BeforeAction( $query = NULL ) {}
 	public function AfterAction( $query = NULL ) {} 
-	public function CheckMass( $query = NULL ) { return $this->_checkMass(); }
+	public function CheckMass( $query = NULL ) { return $this->_checkMass(); } 
+	public function Resting( $seconds=2 ) { $this->_resting( $seconds ); }
 	
 	final public function rootName() { return __CLASS__; }
 

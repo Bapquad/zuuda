@@ -120,7 +120,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	public function SetMainLayout( $layout ) { return $this->_setMainLayout( $layout ); }
 	public function EngineLayout( $layout_content = NULL, $vars = NULL ) { return $this->_engineLayout( $layout_content, $vars ); }
 	public function RenderLayout( $vars = NULL ) { return $this->_renderLayout( $vars ); } 
-	public function RenderBlock( $block, $aggrs = NULL ) { return $this->_renderBlock( $block, $aggrs ); }
+	public function RenderBlock( $block, $args = NULL ) { return $this->_renderBlock( $block, $args ); }
 	public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); } 
 	public function SetLayout( $tpl_path, $type ) { return $this->_setLayout( $tpl_path, $type ); } 
 	public function LoadHeader() { return $this->_loadHeader(); }
@@ -231,13 +231,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		}
 	}
 	
-	private function _renderLayout( $aggrs = NULL ) 
+	private function _renderLayout( $args = NULL ) 
 	{
 		global $configs; 
 		global $html, $file;
 		
 		extract( $this->_vars );
-		$this->_packageVars( $aggrs );
+		$this->_packageVars( $args );
 		extract( $this->_blocks );
 		
 		if( $this->_layout_engine_path ) 
@@ -259,13 +259,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		}
 	}
 	
-	private function _renderBlock( $block, $aggrs = NULL ) 
+	private function _renderBlock( $block, $args = NULL ) 
 	{
 		$blocks = $this->_getBlocks();
 		
 		if( in_array( $blocks, $block ) ) 
 		{
-			$blocks[ $block ]->render( $aggrs );
+			$blocks[ $block ]->render( $args );
 		}
 		
 		return $this;
@@ -381,14 +381,12 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function _contentScript( $value ) 
 	{
-		$path = 'js/' . $value . '.js';
-		return $this->_contentAsset( SCRIPT_ASSET, $path );
+		return $this->_contentAsset( SCRIPT_ASSET, $value );
 	}
 	
 	private function _contentStyle( $value ) 
 	{
-		$path = 'skin/css/' . $value . '.css';
-		return $this->_headAsset( STYLE_ASSET, $path );
+		return $this->_headAsset( STYLE_ASSET, $value );
 	}
 	
 	private function _contentHtml( $value ) 
@@ -438,14 +436,12 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function _headScript( $value ) 
 	{
-		$path = 'js/' . $value . '.js';
-		return $this->_headAsset( SCRIPT_ASSET, $path );
+		return $this->_headAsset( SCRIPT_ASSET, $value );
 	}
 	
 	private function _headStyle( $value ) 
 	{
-		$path = 'skin/css/' . $value . '.css';
-		return $this->_headAsset( STYLE_ASSET, $path );
+		return $this->_headAsset( STYLE_ASSET, $value );
 	}
 	
 	private function _headHtml( $value ) 
@@ -477,7 +473,10 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		
 		foreach( $assets[ STYLE_ASSET ] as $href ) 
 		{
-			$css_path = getSingleton( 'Html' )->assetPath( $href );
+			if( preg_match( '/(https)|(http):\/\//', $href ) ) 
+				$css_path = $href;
+			else 
+				$css_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $href))?'':'skin/css/').$href.'.css' ); 
 $str = <<<EOD
 <link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
@@ -486,7 +485,10 @@ EOD;
 		
 		foreach( $assets[ SCRIPT_ASSET ] as $src ) 
 		{
-			$js_path = getSingleton( 'Html' )->assetPath( $src );
+			if( preg_match( '/(https)|(http):\/\//', $src ) ) 
+				$js_path = $src; 
+			else 
+				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?'':'js/').$src.'.js' );
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;
@@ -503,15 +505,15 @@ EOD;
 	
 	private function _preloadJui( $value ) 
 	{
-		$this->_headAsset( STYLE_ASSET, 'jui/' . $value . '.css' );
-		$this->_headAsset( SCRIPT_ASSET, 'jui/' . $value . '.js' );
+		$this->_headAsset( STYLE_ASSET, 'jui/' . $value );
+		$this->_headAsset( SCRIPT_ASSET, 'jui/' . $value );
 		return $this;
 	}
 
 	private function _includeJui( $value ) 
 	{
-		$this->_headAsset( STYLE_ASSET, 'jui/' . $value . '.css' );
-		$this->_contentAsset( SCRIPT_ASSET, 'jui/' . $value . '.js' );
+		$this->_headAsset( STYLE_ASSET, 'jui/' . $value );
+		$this->_contentAsset( SCRIPT_ASSET, 'jui/' . $value );
 		return $this;
 	}
 

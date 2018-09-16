@@ -36,13 +36,13 @@ class RouteService implements iTaskService, iRouteService
 	
 	private static function _routing( Model $model, $prefix, $url ) 
 	{
-		$model->setHasOne( array( 'com_layout' => 'com_layout' ) );
+		$model->setHasOne( array( 'coms_layout' => 'coms_layout' ) );
 		$routes = $model->showHasOne()->query();
 		foreach( $routes as $route ) 
 		{
-			if( $route[ 'com_route' ][ 'url' ] == $url ) 
+			if( $route[ 'coms_route' ][ 'url' ] == $url ) 
 			{
-				return $route[ 'com_layout' ][ 'name' ] . PS . $route[ 'com_route' ][ 'id' ];
+				return $route[ 'coms_layout' ][ 'name' ] . PS . $route[ 'coms_route' ][ 'id' ];
 			}
 		}
 		return false;
@@ -64,11 +64,20 @@ class RouteService implements iTaskService, iRouteService
 			{
 				$model = new Model();
 				$prefix = $program->name[ 'prefix' ];
-				$model_name = str_replace( ' ', '_', strtolower( $program->name[ 'model' ] ) );
-				$table_name = getSingleton( 'Inflect' )->pluralize( strtolower( str_replace( ' ', '_', $program->name[ 'model' ] ) ) );
+				$model_name = (string) $program->name[ 'model' ];
+
+				$alias_name = preg_replace( '/[\-\_\s]/', '_', strtolower( $program->name[ 'alias' ] ) );
+				
+				$table_name = explode( '_', $alias_name );
+				foreach( $table_name as $key => $value ) 
+				{
+					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value );
+				}
+				$table_name = implode( '_', $table_name );
+
 				if( Config::get( 'COM' ) && !$app::hasUrl() ) 
 				{
-					if( $path = self::_routing( $model->setModelName( $model_name )->setPrefix( $prefix)->setTableName( $table_name ), $prefix, $url ) ) 
+					if( $path = self::_routing( $model->setAliasName( $alias_name )->setModelName( $model_name )->setPrefix( $prefix)->setTableName( $table_name ), $prefix, $url ) ) 
 					{
 						$app->setUrl( $path );
 					}

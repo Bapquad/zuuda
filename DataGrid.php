@@ -540,7 +540,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		return $this->_renderLayout( $data );
 	}
 	
-	protected function _renderLayout( $aggrs = NULL ) 
+	protected function _renderLayout( $args = NULL ) 
 	{
 		global $configs;
 		global $html, $file;
@@ -553,9 +553,9 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			extract( $vars );
 		}
 		
-		if( !is_null( $aggrs ) && is_array( $aggrs ) ) 
+		if( !is_null( $args ) && is_array( $args ) ) 
 		{
-			extract( $aggrs );
+			extract( $args );
 		}
 		
 		if( is_null( $template ) ) 

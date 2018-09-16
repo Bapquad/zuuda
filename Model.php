@@ -17,30 +17,19 @@ class Model extends SQLQuery
 		{
 			if( _hasBase() )
 			{
-				$prefix = $this->_getPrefix();
-				
-				if( $this->setTable() == MODEL_SFREE ) 
-				{
+				if( $this->setTable()===MODEL_SFREE ) 
 					return;
-				}
 
 				if( isset( $this->_hasOne ) ) 
-				{
 					$this->_orderHasOne( $this->_hasOne );
-				}
 
 				if( isset( $this->_hasMany ) ) 
-				{
 					$this->_orderHasMany( $this->_hasMany );
-				}
 
-				if( isset( $this->_hasManyAndBelongsToMany ) ) 
-				{
+				if( isset( $this->_hasManyAndBelongsToMany ) )
 					$this->_orderHMABTM( $this->_hasManyAndBelongsToMany );
-				}
 
-				$this->_table = $prefix . $this->_table;
-
+				$this->_table = $this->_getPrefix() . $this->_table;
 				$this->_startConn();
 			}
 		}

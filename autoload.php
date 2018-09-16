@@ -163,7 +163,8 @@ function _stripSlashesDeep( $value )
  */
 function _revealBug( $value ) 
 {
-	echo $value . '<br>'; 
+	Zuuda\RequestHeader::DisplayText();
+	echo $value . "\n"; 
 	return $value;
 } 
 
@@ -176,12 +177,13 @@ function _revealBug( $value )
  */
 function _bugDie( $var ) 
 {
+	Zuuda\RequestHeader::DisplayText();
 	die( var_dump( $var ) ); 
 } 
 
 function _watch( $var ) 
 {
-	// Zuuda\RequestHeader::displayText();
+	Zuuda\RequestHeader::displayText();
 	var_dump( $var ); 
 } 
 
@@ -192,12 +194,28 @@ function watch( $var )
 
 function _watch_once( $var ) 
 {
+	Zuuda\RequestHeader::DisplayText();
 	die( _watch( $var ) );
 } 
 
 function watch_once( $var ) 
 {
 	_watch_once( $var ); 
+} 
+
+function stop( $var=NULL ) 
+{
+	_stop( $var );
+}
+
+function _stop( $var=NULL ) 
+{
+	if(NULL!==$var) 
+	{
+		Zuuda\RequestHeader::DisplayText();
+		_watch( $var );
+	}
+	exit;
 }
 
 function _move( $old, $target ) 
@@ -206,7 +224,7 @@ function _move( $old, $target )
 		unlink( $old );
 } 
 
-function _trace(Exception $e) 
+function _trace( Exception $e ) 
 {
 	echo "ERROR Message: ".$e->getMessage().nl;
 	echo "In the line ".$e->getLine()." of file :".$e->getFile().nl."The trace:".nl;
@@ -218,8 +236,9 @@ function _trace(Exception $e)
 	} 
 } 
 
-function _trace_once(Exception $e) 
+function _trace_once( Exception $e ) 
 {
+	Zuuda\RequestHeader::DisplayText();
 	_trace( $e );
 	exit;
 } 

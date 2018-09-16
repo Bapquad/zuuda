@@ -7,7 +7,7 @@ interface iDeclare
 	
 	public function Assign( $name, $value );
 	public function Set( $name, $value );
-	public function Render( $template, $aggrs );
+	public function Render( $template, $args );
 	
 	public function IncludeMeta( $value );
 	public function IncludeHtml( $value );

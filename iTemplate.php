@@ -7,5 +7,5 @@ interface iTemplate
 	public function GetVars();
 	public function Assign( $name, $value );
 	public function Set( $name, $value );
-	public function Render( $template, $aggrs );
+	public function Render( $template, $args );
 }

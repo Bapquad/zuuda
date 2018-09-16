@@ -9,5 +9,5 @@ interface iSection
 	public function SetName( $section_name );
 	public function SetTemplate( $section_tpl_name );
 	public function SetLayout( $section_tpl_name );
-	public function Render( $data, $aggrs );
+	public function Render( $data, $args );
 }

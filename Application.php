@@ -148,11 +148,11 @@ class Application
 				$controller = 'Index';
 			}
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
-			$configs["CONTROLLER"] = $controller;
+			$configs["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
 			
 			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
 
-			$_extract = $module.BS.CTRLER_PRE.BS.$controller.CONTROLLER;
+			$_extract = $module.BS.CTRLER_PRE.BS.$configs["CONTROLLER"].CONTROLLER;
 
 			return $_extract;
 		}

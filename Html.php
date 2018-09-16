@@ -35,6 +35,7 @@ class Html implements iHTML
 	public static function IncludeImg( $file_name, $alt_text ) { return self::_includeImg( $file_name, $alt_text ); }
 	public static function IncludeGif( $file_name, $alt_text ) { return self::_includeGif( $file_name, $atl_text ); }
 	public static function IncludePng( $file_name, $alt_text ) { return self::_includePng( $file_name, $alt_text ); }
+	public static function IncludeJpg( $file_name, $alt_text ) { return self::_includeJpeg( $file_name, $alt_text ); }
 	public static function IncludeJpeg( $file_name, $alt_text ) { return self::_includeJpeg( $file_name, $alt_text ); }
 	public static function Write( $content ) { echo ( $content ); }
 	public static function Assign( $name, $value, $template ) { return self::_assign( $name, $value, $template ); }
@@ -55,55 +56,45 @@ class Html implements iHTML
 	{
 		$path = str_replace( ' ', '-', $path );
 		if ($prompt) 
-		{
 			$data = '<a href="javascript:void(0);" onclick="javascript:jumpTo(\''.$path.'\',\''.$confirm_msg.'\')">'.$text.'</a>';
-		} else 
-		{
+		else 
 			$data = '<a href="'.$path.'">'.$text.'</a>';	
-		}
 		return $data;
 	} 
 
 	private static function _assetPath( $file_path ) 
 	{
-		$data = _assetPath( $file_path );
-		return $data;
+		return _assetPath( $file_path );
 	}
 	
 	private static function _includeJs( $file_name ) 
 	{
-		$data = '<script type="text/javascript" src="' . cFile::assetPath( 'js/'.$file_name . '.js', false ) . '"></script>' . "\n";
-		return $data;
+		return '<script type="text/javascript" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('js/'.$file_name.'.js', false)).'"></script>'."\n";
 	}
 	
 	private static function _includeCss( $file_name ) 
 	{
-		$data = '<link rel="stylesheet" type="text/css" href="'. cFile::assetPath( 'skin/css/' . $file_name . '.css', false ) . '" />' . "\n";
-		return $data;
+		return '<link rel="stylesheet" type="text/css" href="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('skin/css/'.$file_name.'.css', false)).'" />'."\n";
 	}
 	
 	private static function _includeImg( $file_name, $atl_text ) 
 	{
-		$data = '<img alt="'.$alt_text.'" href="'. cFile::assetPath( 'skin/img/' . $file_name, false ) .'" />';
-		return $data;
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name, false)).'" />';
 	}
 	
 	private static function _includeGif( $file_name, $alt_text ) 
 	{
-		$data = '<img alt="'.$alt_text.'" href="'. cFile::assetPath( 'skin/img/' . $file_name . '.gif', false ) . '" />';
-		return $data;
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.gif', false)).'" />'; 
 	}
 	
 	private static function _includePng( $file_name, $alt_text ) 
 	{
-		$data = '<img alt="'.$alt_text.'" href="'. cFile::assetPath( 'skin/img/' . $file_name . '.png', false ) .'" />';
-		return $data;
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.png', false)).'" />';
 	}
 	
 	private static function _includeJpeg( $file_name, $alt_text ) 
 	{
-		$data = '<img alt="'.$alt_text.'" href="'. cFile::assetPath( 'skin/img/' . $file_name . '.jpg', false ) . '" />';
-		return $data;
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.jpg', false)).'" />';
 	}
 	
 	private static function _assign( $name, $value, $template ) 

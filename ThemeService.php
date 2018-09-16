@@ -81,9 +81,18 @@ class ThemeService implements iTaskService, iThemeService
 			{
 				$model = new Model();
 				$prefix = $program->name[ 'prefix' ];
-				$model_name = str_replace( ' ', '', $program->name[ 'model' ] );
-				$table_name = getSingleton( 'Inflect' )->pluralize( strtolower( str_replace( ' ', '_', $program->name[ 'model' ] ) ) );
-				self::_task( $model->setModelName( $model_name )->setPrefix( $prefix)->setTableName( $table_name ) );
+				$model_name = (string) $program->name[ 'model' ];
+
+				$alias_name = preg_replace( '/[\-\_\s]/', '_', $program->name[ 'alias' ] ); 
+				
+				$table_name = explode( '_', $alias_name );
+				foreach( $table_name as $key => $value ) 
+				{
+					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value );
+				}
+				$table_name = implode( '_', $table_name );
+
+				self::_task( $model->setAliasName( $alias_name )->setModelName( $model_name )->setPrefix( $prefix)->setTableName( $table_name ) );
 				break;
 			}
 		}

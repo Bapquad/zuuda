@@ -57,7 +57,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	public function SetLayout( $tpl_path ) { return $this->_setLayout( $tpl_path ); } 
 	public function AddWidget( $widget, $force_name = NULL ) { return $this->_addWidget( $widget, $force_name ); }
 	public function GetWidget( $name ) { return $this->_getWidget( $name ); }
-	public function Render( $template = NULL, $aggrs = NULL ) { return $this->_render( $template, $aggrs ); }
+	public function Render( $template = NULL, $args = NULL ) { return $this->_render( $template, $args ); }
 	
 	public function HeadAsset( $type, $value ) 
 	{
@@ -124,13 +124,13 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		}
 	}
 	
-	private function _render( $template = NULL, $aggrs = NULL ) 
+	private function _render( $template = NULL, $args = NULL ) 
 	{
 		if( !is_null( $template ) ) 
 		{
 			$this->_setTemplate( $template );
 		}
-		return $this->_renderLayout( $aggrs );
+		return $this->_renderLayout( $args );
 	}
 	
 	private function _getWidget( $name ) 
@@ -212,7 +212,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		return $this->_assign( 'title', $value );
 	}
 	
-	private function _renderLayout( $aggrs = NULL ) 
+	private function _renderLayout( $args = NULL ) 
 	{
 		global $configs;
 		global $html, $file;
@@ -229,9 +229,9 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 				extract( $this->_widgets );
 			}
 			
-			if( !is_null( $aggrs ) && is_array( $aggrs ) ) 
+			if( !is_null( $args ) && is_array( $args ) ) 
 			{
-				extract( $aggrs );
+				extract( $args );
 			}
 			include( BLOCK_DIR . _correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
 		}
