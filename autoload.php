@@ -24,6 +24,11 @@ function zuuda_api_autoload( $class_name )
 
 spl_autoload_register( 'zuuda_api_autoload' );
 
+function _numeral( $number ) 
+{
+	return number_format( (int) $number, 0, ',', '.' );
+}
+
 function _correctPath( $class_path ) 
 {
 	return str_replace( BS, PS, $class_path );

@@ -93,7 +93,7 @@ abstract class SQLQuery
 	public function Item( $result, $index = NULL ) { return $this->_item( $result, $index ); }
 	public function GetCollectionString() { return $this->_getCollectionString(); }
 
-	public function Select( $field, $label = NULL ) { return $this->_select( $field, $label = NULL ); }
+	public function Select( $field, $label = NULL ) { return $this->_select( $field, $label ); }
 	public function Unselect( $fields ) { return $this->_unselect( $fields ); }
 	public function Between( $field, $start, $end ) { return $this->_between( $field, $start, $end ); }
 	public function Equal( $field, $value ) { return $this->_equal( $field, $value ); }
