@@ -223,6 +223,11 @@ function _stop( $var=NULL )
 	exit;
 }
 
+function debug( $var=NULL ) 
+{ 
+	_stop( $var );
+}
+
 function _move( $old, $target ) 
 {
 	if( copy( $old, $target ) ) 
