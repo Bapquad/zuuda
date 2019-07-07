@@ -61,7 +61,22 @@ class GlobalModifier implements iGlobalModifier
 	private static function _loadUrl() 
 	{
 		global $router;
-		$url = isset( $_GET[ 'url' ] ) ? $_GET[ 'url' ] : $router[ 'default' ][ 'url' ]; 
+		if( isset($_GET[ 'url' ]) ) 
+			$url = $_GET[ 'url' ];
+		else if( isset($_SERVER['REQUEST_URI']) ) 
+		{
+			$qmpos = stripos( $_SERVER['REQUEST_URI'], '?' ); 
+			if($qmpos) 
+			{
+				$url = substr( $_SERVER['REQUEST_URI'], 1, $qmpos ); 
+			} 
+			else 
+			{
+				$url = substr( $_SERVER['REQUEST_URI'], 1 ); 
+				$url = (PS===$url)?$router[ 'default' ][ 'url' ]:$url; 
+			}
+		}
+		
 		$GLOBALS[ 'url' ] = $url; 
 		return $url; 
 	}
