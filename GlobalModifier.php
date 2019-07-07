@@ -72,8 +72,10 @@ class GlobalModifier implements iGlobalModifier
 			} 
 			else 
 			{
-				$url = substr( $_SERVER['REQUEST_URI'], 1 ); 
-				$url = (PS===$url)?$router[ 'default' ][ 'url' ]:$url; 
+				$url = ( PS===$_SERVER['REQUEST_URI'] ) ? 
+					$router[ 'default' ][ 'url' ] 
+					: 
+					substr( $_SERVER['REQUEST_URI'], 1 ); 
 			}
 		}
 		
