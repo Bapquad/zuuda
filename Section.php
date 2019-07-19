@@ -47,7 +47,9 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	public function __view__get_head_assets() { return $this->_head_assets; }
 	public function __view__get_content_assets() { return $this->_content_assets; }
 	public function __view__merge_vars( $vars ) { $this->_vars = array_merge( $vars, $this->_vars ); return $this; }
-	
+
+	public function Share( $name, $value ) { return $this->_share( $name, $value ); }
+	public function Compact( $name, $value ) { return $this->_compact( $name, $value ); }
 	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
 	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
 	public function SetTitle( $value ) { return $this->_setTitle( $value ); }
@@ -205,6 +207,16 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 			return $this;
 		}
 		return $this->_set( $name, $value );
+	}
+	
+	private function _compact( $name, $value ) 
+	{
+		return  $this->_assign( $name, $value ); 
+	}
+	
+	private function _share( $name, $value ) 
+	{
+		return  $this->_assign( $name, $value ); 
 	}
 	
 	private function _setTitle( $value ) 

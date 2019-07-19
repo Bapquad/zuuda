@@ -54,6 +54,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function RequireJs( $value ) { return $this->_preloadJs( $value ); }
 	public function RequireJui( $value ) { return $this->_requireJui( $value ); }
 	public function IncludeJui( $value ) { return $this->_includeJui( $value ); }
+	public function Share( $name, $value ) { return $this->_share( $name, $value ); }
 	public function Compact( $name, $value ) { return $this->_compact( $name, $value ); }
 	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
 	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
@@ -206,6 +207,11 @@ abstract class Controller implements iController, iDeclare, iBlock
 			$view->includeJui( $value );
 		} 
 		return $this;
+	}
+	
+	protected function _share( $name, $value ) 
+	{
+		return $this->_set( $name, $value );
 	}
 	
 	protected function _compact( $name, $value ) 
