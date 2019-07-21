@@ -90,10 +90,11 @@ abstract class SQLQuery
 	public function GetAlias() { return $this->_getAlias(); }
 	public function GetAliasName() { return $this->_getAlias(); }
 	public function Parse( $result ) { return $this->_parse( $result ); }
-	public function Item( $result, $index = NULL ) { return $this->_item( $result, $index ); }
+	public function First()	{ return $this->_first(); }
+	public function Item( $result, $index = 0 ) { return $this->_item( $result, $index ); }
 	public function GetCollectionString() { return $this->_getCollectionString(); }
 
-	public function Select( $field, $label = NULL ) { return $this->_select( $field, $label ); }
+	public function Select( $fields, $label = NULL ) { return $this->_select( $fields, $label ); }
 	public function Unselect( $fields ) { return $this->_unselect( $fields ); }
 	public function Between( $field, $start, $end ) { return $this->_between( $field, $start, $end ); }
 	public function Equal( $field, $value ) { return $this->_equal( $field, $value ); }
@@ -233,6 +234,7 @@ abstract class SQLQuery
 	public function Clear( $deep=false ) { return $this->_clear( $deep ); }
 	public function TotalPages() { return $this->_totalPages(); } 
 	public function Total() { return $this->_total(); } 
+	public function Count() { return $this->_count(); }
 	public function Length() { return $this->_length(); }
 	public function DBList() { return $this->_dbList(); }
 	public function SetIncreament( $value ) { $this->_setIncreament( $value ); }
@@ -240,6 +242,7 @@ abstract class SQLQuery
 	public function SetId( $id ) { return $this->_setId( $id ); } 
 	public function UnsetId() { return $this->_setId(); }
 	public function MaxId( $label = NULL ) { return $this->_maxId( $label ); }
+	public function GetPrefix() { return $this->_getPrefix(); }
 	public function GetMaxId( $label = NULL ) { return $this->_maxId( $label ); }
 	public function GetData( $id = NULL ) { return $this->_getData( $id ); }
 	public function GetLastedData() { return $this->_getLastedData(); }
@@ -264,6 +267,8 @@ abstract class SQLQuery
 	public function New() { return $this->_new(); }
 	public function Reset() { return $this->_new(); }
 	public function Begin() { return $this->_new(); }
+	
+	public function GenRandString( $len=10 ) { return $this->_genRandString($len); }
 	
 	abstract protected function _startConn();
 	abstract protected function setTable();
@@ -326,24 +331,27 @@ abstract class SQLQuery
 		return $list_result;
 	}
 	
-	private function _item( $result, $index = NULL ) 
+	private function _first() 
 	{
-		global $inflect;
-		
-		$model = $inflect->singularize( (string) $this->_model );
-		
-		if( $index ) 
-		{
-			return ( isset( $result[ $index ][ $model ] ) ) ? $result[ $index ][ $model ] : $result[ $index ][ $this->_model ];
-		}
-		else 
-		{
-			if( isset( $result[ 0 ] ) ) 
-			{
-				return ( isset( $result[ $model ] ) ) ? $result[ 0 ][ $model ] : $result[ 0 ][ $this->_model ];
-			} 
-			return ( isset( $result[ $model ] ) ) ? $result[ $model ] : ( isset( $result[ $this->_model ] ) ) ? $result[ $this->_model ] : NULL;
-		}
+		$result = $this->_item( $this->_search() );
+		$this->_setData($result);
+		return $result;
+	}
+	
+	private function _item( $result, $index = 0 ) 
+	{
+		global $inflect; 
+		$model = $inflect->singularize( (string) $this->_model ); 
+		if( isset($result[$index][$model]) ) 
+			return $result[$index][$model]; 
+		else if( isset($result[$index][$this->_model]) ) 
+			return $result[$index][$this->_model]; 
+		else if( isset($result[$model]) ) 
+			return $result[$model]; 
+		else if( isset($result[$this->_model]) ) 
+			return $result[$this->_model];
+		else
+			return NULL;
 	}
 
 	/** Select Query **/
@@ -351,6 +359,11 @@ abstract class SQLQuery
 	private function _select( $fields, $label = NULL ) 
 	{
 		$model = $this->_model;
+		
+		if( strpos($this->_collection, 'COUNT') ) 
+		{ 
+			$this->_collection = EMPTY_CHAR;
+		}
 
 		if( is_array( $fields ) ) 
 		{
@@ -368,7 +381,20 @@ abstract class SQLQuery
 
 		if( is_string($fields) ) 
 		{
-			if( stripos( $fields, DOT ) ) 
+			if(strtolower($fields)==='count') 
+			{
+				if(NULL!==$label) 
+				{
+					$this->_collection = ' COUNT(*)'; 
+					goto ADD_LABEL;
+				} 
+				else 
+				{
+					$this->_collection = ' COUNT(*) AS count'; 
+					return $this;
+				}
+			}
+			else if( stripos( $fields, DOT ) ) 
 			{
 				$fields = explode( DOT, $fields );
 				if( $fields[ 0 ]!== EMPTY_CHAR ) 
@@ -381,9 +407,10 @@ abstract class SQLQuery
 		
 		$this->_collection .=  ',`' . $model . '`.`' . $fields . '`';
 		
+		ADD_LABEL:
 		if( !is_null( $label ) )
 		{
-			 $this->_collection .= ' AS \'' . $label . '\'';
+			$this->_collection .= ' AS \'' . $label . '\'';
 		}
 		return $this;
 	} 
@@ -2119,6 +2146,10 @@ abstract class SQLQuery
 		if( $rsNumRows == 1 && $this->id != NULL ) 
 		{
 			return $this->_setData( $result[ 0 ][ $this->_model ] );
+		} 
+		else if( strpos($this->_collection, 'COUNT') ) 
+		{
+			return (int)each($result[0]['command'])['value'];
 		}
 		return $result;
 	}
@@ -2130,7 +2161,8 @@ abstract class SQLQuery
 		global $inflect;
 
 		$this->_result = mysqli_query( $this->_dbHandle, $query );
-
+		$this->_querySQL = $query;
+		array_push( $this->_querySQLs, $query );
 		$result = array();
 		$table = array();
 		$field = array();
@@ -2225,6 +2257,7 @@ abstract class SQLQuery
 		$query = 'DELETE FROM `'.$this->_table.'`'.$cond_clause.$limit_clause; 
 
 		$this->_result = mysqli_query( $this->_dbHandle, $query );
+		$this->_querySQL = $query;
 		array_push( $this->_querySQLs, $query );
 		$this->clear(); 
 		if ( $this->_result == 0 ) 
@@ -2244,21 +2277,14 @@ abstract class SQLQuery
 	private function _save( $data=NULL ) 
 	{
 		$save_all = NULL;
+		$fix_id = NULL;
+		$query = '';
 		
 		if( isset($this->_updates) && $this->_updates==="d4adf8b7f2ac" ) 
 		{
 			$save_all = $this->_updates;
 			unset($this->_updates);
 		} 
-
-		if( NULL!==$data ) 
-		{
-			$this->_setData( $data );
-		}
-
-		$fix_id = NULL;
-
-		$query = '';
 
 		if( NULL!==$save_all || $this->_extraConditions || isset($this->id) ) 
 		{
@@ -2271,6 +2297,11 @@ abstract class SQLQuery
 				$limit_clause = 'LIMIT '.$this->_limit.' ';
 			}
 			
+			if( NULL!==$data ) 
+			{
+				$this->_setData( $data );
+			}
+
 			foreach ( $this->_describe as $field ) 
 			{
 				if( $field == "id" ) continue; 
@@ -2302,6 +2333,17 @@ abstract class SQLQuery
 		{
 			$fields = '';
 			$values = '';
+			
+			if(method_exists($this, 'boot')) 
+			{
+				$this->_setData( $this->boot() );
+			}
+			
+			if( NULL!==$data ) 
+			{
+				$this->_setData( $data );
+			}
+			
 			foreach ($this->_describe as $field ) 
 			{
 				if ( $this->$field || is_string( $this->$field ) || is_numeric( $this->$field ) ) 
@@ -2312,10 +2354,12 @@ abstract class SQLQuery
 			}
 			$values = substr( $values, 0, -1 );
 			$fields = substr( $fields, 0, -1 );
+			
 			$query = 'INSERT INTO '.$this->_table.' ('.$fields.') VALUES ('.$values.')'; 
 		} 
 
 		$this->_result = mysqli_query( $this->_dbHandle, $query );
+		$this->_querySQL = $query; 
 		array_push( $this->_querySQLs, $query );
 		$this->clear();
 
@@ -2328,7 +2372,12 @@ abstract class SQLQuery
 		{
 			if( is_null( $fix_id ) ) 
 			{
-				return array( 'id'=> mysqli_insert_id( $this->_dbHandle ) );
+				// Reserve the id from insert.
+				$this->id = mysqli_insert_id( $this->_dbHandle ); 
+				
+				
+				
+				return array( 'id'=> $this->id );
 			} 
 			else 
 			{
@@ -2348,8 +2397,10 @@ abstract class SQLQuery
 			{
 				$this->$field = NULL;
 			}
-			if( isset( $this->id ) ) 
+			
+			if( isset($this->id) ) 
 				$this->id = NULL;
+			
 			$this->_querySQL = NULL; 
 			$this->_querySQLs = array();
 			$this->_limit = NULL;
@@ -2416,6 +2467,11 @@ abstract class SQLQuery
 			$this->buildMainQuery( $this->_retrivePrefix() );
 			return $this->_total();
 		}
+	} 
+	
+	private function _count() 
+	{
+		return $this->_select('count')->_search();
 	}
 	
 	/** Set id for model */
@@ -2576,13 +2632,29 @@ abstract class SQLQuery
 		return (int) $result[ 'id' ];
 	}
 
-	/** Get error string **/
-
-	function _getError() 
+	/**
+	 * Get error string 
+	 */
+	private function _getError() 
 	{
 		return array(
 			'error_msg'	=>mysqli_error( $this->_dbHandle ), 
 			'error_no'	=>mysqli_errno( $this->_dbHandle ) 
 		); 
+	} 
+	
+	/**
+	 * Generation Random A String
+	 */
+	private function _genRandString( $max_len = 10 ) 
+	{
+		$chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$!';
+		$output = '';
+		$char_len = strlen($chars);
+		for ($i = 0; $i < $max_len; $i++) 
+		{
+			$output .= $chars[rand(0, $char_len - 1)];
+		}
+		return $output;
 	}
 }

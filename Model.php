@@ -39,22 +39,22 @@ class Model extends SQLQuery
 	{
 		global $configs;
 		
-		if( !isset( $configs[ 'DATABASE' ][ 'HANDLECN' ] ) ) 
+		if( !isset( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) ) 
 		{
-			$hostname = $configs['DATABASE']['HOSTNAME'];
-			$username = $configs['DATABASE']['USERNAME'];
-			$password = $configs['DATABASE']['PASSWORD'];
-			$database = $configs['DATABASE']['DATABASE'];
+			$hostname = $configs['DATASOURCE']['HOSTNAME'];
+			$username = $configs['DATASOURCE']['USERNAME'];
+			$password = $configs['DATASOURCE']['PASSWORD'];
+			$database = $configs['DATASOURCE']['DATABASE'];
 			$r = $this->connect( $hostname, $username, $password, $database ); 
 			
 			if( $r ) 
 			{
-				$configs[ 'DATABASE' ][ 'HANDLECN' ] = $this->_getDBHandle();
+				$configs[ 'DATASOURCE' ][ 'HANDLECN' ] = $this->_getDBHandle();
 			}
 		} 
 		else 
 		{
-			$this->_setDBHandle( $configs[ 'DATABASE' ][ 'HANDLECN' ] );
+			$this->_setDBHandle( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] );
 		}
 		
 		$this->_describe();

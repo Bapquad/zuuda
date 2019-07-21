@@ -24,7 +24,7 @@ class ExtensionInformationService implements iComService
 
 	private static function _applyConfigs() 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return array(
 				'basename'	=> array( 'about', 'live', 'menu' ),  

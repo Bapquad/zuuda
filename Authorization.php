@@ -99,6 +99,7 @@ abstract class Authorization implements iAuthorization
 		{
 			$this->_setData( NULL );
 			Session::unregister( AUTH_DATA );
+			Cookie::unregister( M_UUID );
 		}
 		
 		return $this;

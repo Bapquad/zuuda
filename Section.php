@@ -231,21 +231,29 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		
 		if( !is_null( $this->_tpl_name ) ) 
 		{
-			if( !is_null( $this->_vars ) )
+			try 
 			{
-				extract( $this->_vars );
+				if( !is_null( $this->_vars ) )
+				{
+					extract( $this->_vars );
+				}
+				
+				if( !empty( $this->_widgets ) ) 
+				{
+					extract( $this->_widgets );
+				}
+				
+				if( !is_null( $args ) && is_array( $args ) ) 
+				{
+					extract( $args );
+				} 
+				include( BLOCK_DIR . _correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
 			}
-			
-			if( !empty( $this->_widgets ) ) 
+			catch(Exception $e) 
 			{
-				extract( $this->_widgets );
+				$block_name = get_class( $this );
+				echo "{ $block_name is missed }";
 			}
-			
-			if( !is_null( $args ) && is_array( $args ) ) 
-			{
-				extract( $args );
-			}
-			include( BLOCK_DIR . _correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
 		}
 		
 		return $this;

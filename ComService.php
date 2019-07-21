@@ -21,7 +21,7 @@ class ComService implements iComService
 	
 	private static function _applyConfigs() 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return array (
 				'basename' 	=> 'route', 
@@ -76,7 +76,7 @@ class ComService implements iComService
 	
 	private static function _bootService( Application $app = NULL ) 
 	{
-		if( Config::get( 'COM' ) && !$app->hasUrl() ) 
+		if( Config::has( 'COM' ) && !$app->hasUrl() ) 
 		{
 			$url = getSingleton( 'Global' )->get( 'url' );
 			$configs = self::_loadConfigs();

@@ -10,7 +10,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 	
 	private static function _applyConfigs() 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return array
 			(

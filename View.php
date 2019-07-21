@@ -572,8 +572,6 @@ EOD;
 
 			exit(0);
 		}
-
-		// echo "You have CORS!";
 	} 
 
 	private function _jsonLayout( $data_json = NULL ) 
@@ -601,6 +599,10 @@ EOD;
 		
 		if( !is_null( $layout_content ) ) 
 		{
+			foreach($layout_content as $template) 
+			{
+				_assetPath(TPL_NAME_DIR . $template, true); 
+			}
 			$this->_layout_engine_vars = $layout_content;
 			$layout_route = array(
 				'/<!--@>(.*)<@-->/' => '<?php include( _assetPath( TPL_NAME_DIR . "\1", true ) ) ?>', 

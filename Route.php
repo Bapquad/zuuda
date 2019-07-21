@@ -35,15 +35,17 @@ class Route implements iRoute
 	private static function _routing( $url ) 
 	{
 		global $router;
-		
 		foreach ( $router[ 'routings' ] as $pattern => $result ) 
 		{
-			if ( preg_match( $pattern, $url ) ) 
+			if ( preg_match($pattern, $url) ) 
 			{
-				return preg_replace( $pattern, $result, $url );
+				if( FALSE!==strpos($url, $result) 
+				 || FALSE!==strpos($result, $url) )
+					return $result;
+				else
+					return preg_replace( $pattern, $result, $url );
 			}
 		}
-		
 		return $url;
 	}
 	

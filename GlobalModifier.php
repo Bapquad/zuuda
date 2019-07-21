@@ -62,7 +62,9 @@ class GlobalModifier implements iGlobalModifier
 	{
 		global $router;
 		if( isset($_GET[ 'url' ]) ) 
+		{
 			$url = $_GET[ 'url' ];
+		}
 		else if( isset($_SERVER['REQUEST_URI']) ) 
 		{
 			$qmpos = stripos( $_SERVER['REQUEST_URI'], '?' ); 
@@ -78,7 +80,6 @@ class GlobalModifier implements iGlobalModifier
 					substr( $_SERVER['REQUEST_URI'], 1 ); 
 			}
 		}
-		
 		$GLOBALS[ 'url' ] = $url; 
 		return $url; 
 	}

@@ -4,17 +4,19 @@ namespace Zuuda;
 
 class Session 
 {
+	
 	static protected $data = array();
 	
 	public static function GetInstance() { return self::_getInstance(); }
 	public static function Start() { return self::_start(); }
-	public static function Modify( $name, $var ) { return self::_modify( $name, $var ); }
-	public static function Register( $name, $var = NULL ) { return self::_register( $name, $var ); }
+	public static function Modify( $name, $value ) { return self::_modify( $name, $value ); }
+	public static function Register( $name, $value = NULL ) { return self::_register( $name, $value ); }
 	public static function Unregister( $name ) { return self::_unregister( $name ); }
 	public static function GetData() { return self::_getData(); } 
 	public static function GetAll() { return self::_getData(); }
 	public static function Get( $name = NULL ) { return self::_get( $name ); }
-	public static function Set( $name, $var ) { return self::_set( $name, $var ); }
+	public static function Set( $name, $value ) { return self::_set( $name, $value ); } 
+	public static function Has( $name ) { return self::_has( $name ); } 
 
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
@@ -36,18 +38,18 @@ class Session
 		self::$data = $_SESSION;
 	}
 	
-	private static function _modify( $name, $var ) 
+	private static function _modify( $name, $value ) 
 	{
-		$_SESSION[ $name ] = $var;
-		self::$data[ $name ] = $var;
+		$_SESSION[ $name ] = $value;
+		self::$data[ $name ] = $value;
 	}
 
-	private static function _register( $name, $var ) 
+	private static function _register( $name, $value ) 
 	{
 		if( !array_key_exists( $name, self::$data ) ) 
 		{
-			$_SESSION[ $name ] = $var;
-			self::$data[ $name ] = $var;
+			$_SESSION[ $name ] = $value;
+			self::$data[ $name ] = $value;
 			return true;
 		}
 		return false;
@@ -61,11 +63,16 @@ class Session
 			unset( self::$data[ $name ] );
 		}
 	}
-	
-	private static function _getData() 
+
+	private static function _set( $name, $value ) 
 	{
-		return self::$data;
-	}
+		if( array_key_exists( $name, self::$data ) ) 
+		{
+			self::_modify( $name, $value );
+			return true;
+		}
+		return false;
+	} 
 
 	private static function _get( $name = NULL ) 
 	{
@@ -82,14 +89,15 @@ class Session
 			return NULL;
 		}
 	}
-
-	private static function _set( $name, $var ) 
+	
+	private static function _getData() 
 	{
-		if( array_key_exists( $name, self::$data ) ) 
-		{
-			self::_modify( $name, $var );
-			return true;
-		}
-		return false;
-	}
+		return self::$data;
+	} 
+	
+	private static function _has( $name ) 
+	{ 
+		return array_key_exists( $name, self::$data );
+	} 
+	
 }

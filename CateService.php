@@ -13,7 +13,7 @@ class CateService implements  iTaskService, iCateService
 	
 	private static function _applyConfigs() 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return array
 			(
@@ -133,7 +133,7 @@ class CateService implements  iTaskService, iCateService
 				}
 				$table_name = implode( '_', $table_name );
 
-				if( Config::get( 'COM' ) && Config::get( 'SHIP' ) && !$app::hasUrl() ) 
+				if( Config::has( 'COM' ) && Config::has( 'SHIP' ) && !$app::hasUrl() ) 
 				{
 					if( $path = self::_routing( $model->setAliasName( $alias_name )->setModelName( $model_name )->setPrefix( $prefix)->setTableName( $table_name ), $url ) ) 
 					{

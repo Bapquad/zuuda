@@ -31,7 +31,7 @@ function _numeral( $number )
 
 function _correctPath( $class_path ) 
 {
-	return str_replace( BS, PS, $class_path );
+	return str_replace( PS, DS, $class_path );
 } 
 
 function _buildPath( $file_path, $file = false ) 
@@ -39,13 +39,29 @@ function _buildPath( $file_path, $file = false )
 	return _assetPath( $file_path, $file, true );
 }
 
+function __($str_name) 
+{
+	global $configs;
+	if( isset($configs['LOCATE']) ) 
+	{
+		$refs = $configs['LOCATE']['TRANS'];
+		$keys = explode('.', $str_name); 
+		foreach($keys as $key) 
+		{
+			$refs = &$refs[$key];
+		}
+		return ($refs)?$refs:$str_name;
+	} else return $str_name;
+}
+
 function _assetPath( $file_path, $file = false, $build = false ) 
 {
 	global $configs;
+	$theme_path = EMPTY_CHAR;
 	if( isset( $configs[ 'themes' ] ) && isset( $configs[ 'SHIP' ] ) ) 
 	{
-		$path = WEB_DIR . $configs[ 'themes' ] . $file_path;
-		
+		$theme_path = $configs[ 'themes' ] . $file_path;
+		$path = WEB_DIR . $theme_path;
 		if( call( Zuuda\cFile::get(), $path )->exist() || $build ) 
 		{
 			if( $file ) 
@@ -58,7 +74,15 @@ function _assetPath( $file_path, $file = false, $build = false )
 	
 	if( $file ) 
 	{
-		return WEB_DIR . $file_path;
+		$path = WEB_DIR . $file_path;
+		if( call(Zuuda\cFile::get(), $path)->exist() )
+			return $path;
+		$file_path = _correctPath($file_path);
+		$theme_path = _correctPath($theme_path);
+		if( EMPTY_CHAR!==$theme_path ) 
+			abort( 400, "<strong style=\"\">$file_path</strong> is not found.<br/><strong style=\"\">$theme_path</strong> is not found also.</p>" );
+		else 
+			abort( 400, "<strong style=\"\">$file_path</strong> is not found.</p>" );
 	}
 	else 
 	{
@@ -127,14 +151,14 @@ function _hasDomain()
 function _hasBase() 
 {
 	global $configs;
-	return !is_null( $configs[ 'DATABASE' ] ); 
+	return !is_null( $configs[ 'DATASOURCE' ] ); 
 } 
 
 function _closeDB() 
 {
-	if( isset( $configs[ 'DATABASE' ][ 'HANDLECN' ] ) ) 
+	if( isset( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) ) 
 	{
-		@mysql_close( $configs[ 'DATABASE' ][ 'HANDLECN' ] );
+		@mysql_close( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] );
 	}
 }
 
@@ -268,6 +292,194 @@ function move( $old, $target )
 	_move( $old, $target );
 }
 
+function abort( $code=404, $msg=NULL ) 
+{
+	global $configs;
+	$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
+	if($code===500) 
+	{
+		header( "HTTP/1.1 500 Internal Server Error" ); 
+		$page = WEB_DIR . "500.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! You have a internal server error.";
+		$title = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
+	}
+	else if($code===408) 
+	{
+		header( "HTTP/1.0 408 Request Timeout" ); 
+		$page = WEB_DIR . "408.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! Looks like your request is timeout.";
+		$title = "Request Timeout";
+	} 
+	else if($code===404) 
+	{
+		header( "HTTP/1.1 404 Not Found" ); 
+		$page = WEB_DIR . "404.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! Looks like your page couldn't found.";
+		$title = "Not Found";
+	} 
+	else if($code===403) 
+	{
+		header( "HTTP/1.0 403 Forbidden" ); 
+		$page = WEB_DIR . "403.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! Looks like you have deny from this request.";
+		$title = "Forbidden";
+		$try_again_link = NULL;
+	} 
+	else if($code===401) 
+	{
+		header( "HTTP/1.0 401 Unauthorized" ); 
+		$page = WEB_DIR . "401.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! Looks like you haven't authorized.";
+		$title = "Unauthorized";
+		$try_again_link = NULL;
+	} 
+	else if($code===400) 
+	{
+		header( "HTTP/1.0 400 Bad Request" ); 
+		$page = WEB_DIR . "400.html";
+		if( file_exists($page) ) 
+		{
+			include_once( $page );
+			exit;
+		}
+		if(NULL===$msg) 
+			$msg = "Woops! Looks like your request is invalid.";
+		$title = "Bad Request";
+	} 
+	$uri = $_SERVER['REQUEST_URI'];
+	$domain = $configs['DOMAIN'];
+/*HTML*/echo 
+<<<EOL
+<!DOCTYPE html>
+	<head>
+		<meta charset="UTF-8">
+		<title>$code - $title</title>
+		<style type="text/css">
+			body 
+			{
+				background-color: #dfdfdf; 
+				font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans", "Helvetica Neue", Arial, sans-serif; 
+				font-size: 0.8rem;
+				padding: 0;
+				margin: 0;
+			}
+			
+			a 
+			{
+				font-weight: bold;
+			}
+			
+			.container 
+			{
+				position: fixed;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: 100%;
+				width: 100%;
+			}
+			
+			.content 
+			{
+				background-color: #eee;
+				width: 36rem;
+				min-width: 17.5rem;
+				min-height: 18rem;
+				margin: 0 auto;
+				border-radius: 1rem;
+				border: 0.8rem dashed #ccc;
+				box-shadow: 0 0 0.5rem 0 #00000077;
+				padding: 1.3rem 2rem;
+			} 
+			
+			.title 
+			{
+				font-size: 3rem;
+				line-height: 3rem;
+				margin: 0rem;
+				margin-top: .5rem;
+				color: #b33333;
+			} 
+			
+			.name 
+			{
+				font-size: 2.2rem;
+				border-left: 0.05rem solid;
+				padding-left: 1rem;
+			}
+			
+			.url 
+			{
+				margin-top: 7rem;
+			}
+			
+			.domain 
+			{
+				text-align: right;
+			}
+			
+			.domain em 
+			{
+				color: #999;
+			}
+			
+			.domain strong
+			{
+				font-weight: bold;
+				color: #03f;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="content">
+				<h1 class="title">ERROR $code <span class="name">$title</span></h1>
+				<p class="message">$msg</p>
+				<p>You can try follow ways</p>
+				<ul>
+					$try_again_link
+					<li>Return <a href="javascript:void(0)" onclick="window.history.back()">back</a> history.</li>
+				</ul>
+				<p class="url"><em><b>URI</b>: $uri<em></p>
+				<p class="domain"><strong>Domain:</strong> <em>$domain</em></p>
+			</div>
+		</div>
+	</body>
+</html>
+EOL;
+/*HTML*/
+	exit;
+}
 
 if( Zuuda\GlobalModifier::func( 'getSingleTon' ) ) 
 {

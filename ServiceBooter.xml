@@ -4,6 +4,10 @@
 		<name driver="driver" basename="route" extension="xml">Zuuda\ComService</name>
 		<bootcb></bootcb>
 	</comservice>
+	<locateservice>
+		<name driver="configs">Zuuda\LocateService</name>
+		<bootcb></bootcb>
+	</locateservice>
 	<extensioninformationservice>
 		<name driver="driver" basename="about" extension="xml">Zuuda\ExtensionInformationService</name>
 		<bootcb></bootcb>

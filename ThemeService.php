@@ -17,7 +17,7 @@ class ThemeService implements iTaskService, iThemeService
 	
 	private static function _applyConfigs() 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return array
 			(
@@ -53,7 +53,7 @@ class ThemeService implements iTaskService, iThemeService
 	
 	private static function _task( Model $model ) 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			$data = $model->where('status', 1)->getLastedData();
 			$data = $model->item( $data, 0 );

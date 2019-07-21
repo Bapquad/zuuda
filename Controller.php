@@ -92,9 +92,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 			{
 				$this->_setModel( new $model_class_name );
 			}
-			else if( $configs[ DEVELOPER_WARNING ] ) 
+			else if( isset($configs['SHOW_MODEL_WARNING']) ) 
 			{
-				echo "<p>Your model '" . $model_class_name . "' had not found</p>";
+				echo "<div style=\"background-color:#000;color:#fff;padding:1rem;\">Your model '<b style=\"font-weight:bold\">" . $model_class_name . "</b>' had not found</div>";
 			}
 		} 
 		
@@ -103,9 +103,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 		{
 			$this->_setView( new $view_class_name() );
 		}
-		else if( $configs[ DEVELOPER_WARNING ] ) 
+		else if( isset($configs['SHOW_VIEW_WARNING']) ) 
 		{
-			echo "<p>Your view" . $view_class_name . " had not found</p>";
+			echo "<div style=\"background-color:#000;color:#fff;padding:1rem;\">Your view '<b style=\"font-weight:bold\">" . $view_class_name . "</b>' had not found</div>";
 		}
 	}
 	
@@ -268,11 +268,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 			{
 				call_user_func_array( array( $view, $render_name ), array( $agrs ) );
 			} 
-			else 
-			{
-				header( "HTTP/1.1 404 Not Found" );
-				die( "<h1>Error 404! Could not found file.</h1>" );
-			}
+			else abort();
 		}
 	}
 	

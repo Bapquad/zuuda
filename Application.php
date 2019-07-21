@@ -1,12 +1,12 @@
 <?php
 namespace Zuuda;
 
-const SCRIPT_ASSET = 'script';
-const STYLE_ASSET = 'style';
-const HTML_ASSET = 'html';
+const SCRIPT_ASSET 	= 'script';
+const STYLE_ASSET 	= 'style';
+const HTML_ASSET 	= 'html';
 const HEADER_LAYOUT = 'header';
 const FOOTER_LAYOUT = 'footer';
-const MAIN_LAYOUT = 'main'; 
+const MAIN_LAYOUT 	= 'main'; 
 
 use Kuwamoto; 
 
@@ -45,16 +45,14 @@ class Application
 
 	private function _routeURL( $url ) 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			if( self::_hasUrl() ) 
 			{
 				return self::_getUrl(); 
 			}
 		}
-		
 		$url = Route::routing( $url );
-		
 		return ( $url );
 	}
 	
@@ -72,16 +70,14 @@ class Application
 		GlobalModifier::loadUrl();
 	}
 	
-	private function _bootParams() 
+	private function _parseQuery( $query, $override = true ) 
 	{
 		global $configs;
-		
-		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->_routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
-		
-		$has_vars = stripos( $_SERVER[ "REQUEST_URI" ], '?' );
+		$has_vars = stripos( $query, '?' );
+		$exepos = $has_vars;
 		if( $has_vars ) 
 		{
-			$has_vars = substr( $_SERVER[ "REQUEST_URI" ], $has_vars + 1 ); 
+			$has_vars = substr( $query, $has_vars + 1 ); 
 			if( $has_vars ) 
 			{
 				$arr_vars = explode( '&', $has_vars );
@@ -111,18 +107,25 @@ class Application
 				GlobalModifier::set( '_get', $configs[ 'REQUEST_VARIABLES' ] );
 			}
 		}
-		else 
+		else if( $override )
 		{
 			GlobalModifier::set( '_GET', array() );
 			GlobalModifier::set( '_get', array() );
 		} 
-
+		return $exepos;
+	}
+	
+	private function _bootParams() 
+	{
+		global $configs;
+		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->_routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
+		$this->_parseQuery($_SERVER[ "REQUEST_URI" ]);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
 	
 	private function _bootServices( $serviceInst, $appInst = NULL ) 
 	{
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			return $serviceInst->bootService( $appInst );
 		}
@@ -133,15 +136,12 @@ class Application
 	{
 		global $configs;
 		global $router;
-
 		$_extract = array();
-
 		if(is_array($configs['QUERY_STRING'])) 
 		{
 			$module = $configs['QUERY_STRING'][0];
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
 			$configs["MODULE"] = $module;
-
 			$controller = (isset($configs['QUERY_STRING']) && isset($configs['QUERY_STRING'][0])) ? $configs['QUERY_STRING'][0] : NULL;
 			if( NULL === $controller || empty_char === $controller ) 
 			{
@@ -149,7 +149,6 @@ class Application
 			}
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
 			$configs["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
-			
 			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
 
 			$_extract = $module.BS.CTRLER_PRE.BS.$configs["CONTROLLER"].CONTROLLER;
@@ -163,22 +162,19 @@ class Application
 	{
 		static $_instance;
 		Session::Start();
+		Cookie::Start();
 		$_instance = new Application();
 		$_instance->_bootService();
-		if( Config::get( 'COM' ) ) 
+		if( Config::has( 'COM' ) ) 
 		{
 			$_instance->_bootServices( BTShipnelService::getInstance() );
 			$_instance->_bootServices( RouteService::getInstance(), $_instance );
-			
-			// MISSING API
-			// if( $_GET["url"] != "admin/user/search" ) 
-			// {
-				$_instance->_bootServices( ThemeService::getInstance() );
-				$_instance->_bootServices( ComService::getInstance(), $_instance );
-				$_instance->_bootServices( CateService::getInstance(), $_instance );
-				$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
-			// }
+			$_instance->_bootServices( ThemeService::getInstance() );
+			$_instance->_bootServices( ComService::getInstance(), $_instance );
+			$_instance->_bootServices( CateService::getInstance(), $_instance );
+			$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}
+		$_instance->_bootServices( LocateService::getInstance(), $_instance );
 		$_instance->_bootParams();
 		return $_instance;
 	}
@@ -240,26 +236,28 @@ class Application
 
 	public function Start() 
 	{
-		global $configs;
+		global $configs, $_get;
 		
 		try 
 		{
 			$controller_class_name = $this->_extractController(); 
 			$controller_class_file = _currentControllerFile(); 
-
 			if(file_exists( $controller_class_file ) ) 
 			{
 				$dispatch = new $controller_class_name();
-				$action = preg_replace( '/[\-\_\s]/', ';', $configs['ACTION'] );
+				$action = $configs['ACTION']; 
 				$action = explode( ';', $action );
 				foreach( $action as $key => $value ) 
 				{
 					$action[ $key ] = strtoupper( substr( $value, 0, 1 ) ).substr( $value, 1 );
 				}
 				$action = implode( EMPTY_CHAR, $action );
+				$parse_result = $this->_parseQuery($action, false);
+				if($parse_result) 
+					$action = substr( $action, 0, $parse_result );
+				$action = preg_replace( '/[\-\_\s]/', '', $action );
 				$action .= ACTION;
 				if($action === 'Action') $action = 'IndexAction';
-
 				if((int)method_exists($dispatch, $action)) 
 				{
 					if( isset( $configs["QUERY_STRING"] ) ) 
@@ -275,21 +273,19 @@ class Application
 					call_user_func_array(array($dispatch, $action), $configs["QUERY_STRING"]);
 					call_user_func_array(array($dispatch, "AfterAction"), $configs["QUERY_STRING"]);
 				}
+				else if( $configs[DEVELOPER_WARNING] )
+					abort( 400, "Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>." ); 
 				else 
-				{
-					header( "HTTP/1.1 404 Not Found" );
-					die( "<h1>Error 404! Could not found file.</h1>" );
-				}
+					abort( 404 ); 
 			}
+			else if( $configs[DEVELOPER_WARNING] ) 
+				abort( 400, "Ops! Your controller <strong>$controller_class_name</strong> is not found." ); 
 			else 
-			{
-				header( "HTTP/1.1 404 Not Found" );
-				die( "<h1>Error 404! Could not found file.</h1>" );
-			}
+				abort( 404 ); 
 		}
 		catch(Exception $e) 
 		{
-			echo $e->message();
+			abort( 400 );
 		}
 		_closeDB();
 		return $this;
