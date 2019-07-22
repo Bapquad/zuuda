@@ -113,7 +113,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	
 	final public function rootName() { return __CLASS__; }
 	
-	final public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
+	public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
 	{
 		if( !is_null( $section_name ) ) 
 		{

@@ -43,6 +43,8 @@ class Config
 	private static function _has( $name ) 
 	{
 		global $configs;
+		if( 'COM'===$name ) 
+		{ return $configs['COM']; }
 		return isset($configs[$name]);
 	}
 	
