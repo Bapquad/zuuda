@@ -161,6 +161,9 @@ class Application
 	static function Booting() 
 	{
 		static $_instance;
+		
+		if( NULL!==$_instance ) 
+			return $_instance;	// NEEDLE HANDLE.
 		Session::Start();
 		Cookie::Start();
 		$_instance = new Application();
@@ -174,8 +177,14 @@ class Application
 			$_instance->_bootServices( CateService::getInstance(), $_instance );
 			$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}
-		$_instance->_bootServices( LocateService::getInstance(), $_instance );
 		$_instance->_bootParams();
+		return $_instance;
+	} 
+	
+	static function Handling() 
+	{
+		$_instance = Application::Booting();
+		$_instance->_bootServices( LocateService::getInstance(), $_instance ); 
 		return $_instance;
 	}
 	
@@ -271,7 +280,9 @@ class Application
 					call_user_func_array(array($dispatch, "CheckMass"), $_POST); 
 					call_user_func_array(array($dispatch, "BeforeAction"), $configs["QUERY_STRING"]);
 					call_user_func_array(array($dispatch, $action), $configs["QUERY_STRING"]);
-					call_user_func_array(array($dispatch, "AfterAction"), $configs["QUERY_STRING"]);
+					call_user_func_array(array($dispatch, "AfterAction"), $configs["QUERY_STRING"]); 
+					call_user_func_array(array($dispatch, "BeforeRender"), $configs["QUERY_STRING"]); 
+					call_user_func_array(array($dispatch, "FinalRender" ), [ Application::Handling() ]);
 				}
 				else if( $configs[DEVELOPER_WARNING] )
 					abort( 400, "Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>." ); 

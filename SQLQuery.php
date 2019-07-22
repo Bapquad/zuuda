@@ -27,248 +27,250 @@ abstract class SQLQuery
 	protected $_hasManyAndBelongsToManyBlind = array();
 	protected $_page;
 	protected $_limit;
+	protected $_unions;
 	protected $_offset;
 	protected $_imerge;
 	protected $_expresion;
 	// protected $_ibind;
 	protected $_prefix;
 	
-	protected function _getDBHandle() { return $this->_dbHandle; }
-	protected function _getResult() { return $this->_result; }
-	protected function _getQuerySQL() { return $this->_querySQL; }
-	protected function _getQuerySQLs() { return $this->_querySQLs; }
-	protected function _getModel() { return ( isset( $this->_model ) ) ? $this->_model : NULL; }
-	protected function _getAlias() { return ( isset( $this->_alias ) ) ? $this->_alias : NULL; }
-	protected function _getModelName() { return $this->_getModel(); }
-	protected function _getTable() { return ( isset( $this->_table ) ) ? $this->_table : NULL; }
-	protected function _getTableName() { return $this->_getTable(); }
-	protected function _getDescribe() { return $this->_describe; }
-	protected function _getOrderBy() { return $this->_order_by; }
-	protected function _getOrder() { return $this->_order; }
-	protected function _getExtraConditions() { return $this->_extraConditions; }
-	protected function _getCollection() { return $this->_collection; }
-	protected function _getHasOne() { return ( isset( $this->_hasOne ) ) ? $this->_hasOne : NULL; }
-	protected function _getHasMany() { return ( isset( $this->_hasMany ) ) ? $this->_hasMany : NULL; }
-	protected function _getHasManyAndBelongsToMany() { return ( isset( $this->_hasManyAndBelongsToMany ) ) ? $this->_hasManyAndBelongsToMany : NULL; }
-	protected function _getPage() { return $this->_page; }
-	protected function _getLimit() { return $this->_limit; }
-	protected function _getPrefix() { return $this->_prefix; }
+	final protected function _getDBHandle() { return $this->_dbHandle; }
+	final protected function _getResult() { return $this->_result; }
+	final protected function _getQuerySQL() { return $this->_querySQL; }
+	final protected function _getQuerySQLs() { return $this->_querySQLs; }
+	final protected function _getModel() { return ( isset( $this->_model ) ) ? $this->_model : NULL; }
+	final protected function _getAlias() { return ( isset( $this->_alias ) ) ? $this->_alias : NULL; }
+	final protected function _getModelName() { return $this->_getModel(); }
+	final protected function _getTable() { return ( isset( $this->_table ) ) ? $this->_table : NULL; }
+	final protected function _getTableName() { return $this->_getTable(); }
+	final protected function _getDescribe() { return $this->_describe; }
+	final protected function _getOrderBy() { return $this->_order_by; }
+	final protected function _getOrder() { return $this->_order; }
+	final protected function _getExtraConditions() { return $this->_extraConditions; }
+	final protected function _getCollection() { return $this->_collection; }
+	final protected function _getHasOne() { return ( isset( $this->_hasOne ) ) ? $this->_hasOne : NULL; }
+	final protected function _getHasMany() { return ( isset( $this->_hasMany ) ) ? $this->_hasMany : NULL; }
+	final protected function _getHasManyAndBelongsToMany() { return ( isset( $this->_hasManyAndBelongsToMany ) ) ? $this->_hasManyAndBelongsToMany : NULL; }
+	final protected function _getPage() { return $this->_page; }
+	final protected function _getLimit() { return $this->_limit; }
+	final protected function _getPrefix() { return $this->_prefix; }
 	
-	protected function _setDBHandle( $value ) { $this->_dbHandle = $value; return $this; }
-	protected function _setResult( $value ) { $this->_result = $value; return $this; }
-	protected function _setQuery( $value ) { $this->_querySQL = $value; return $this; }
-	protected function _setTable( $value ) { return $this->_setTableName( $value ); }
-	protected function _setModel( $value ) { return $this->_setModelName( $value ); }
-	protected function _setAlias( $value ) { return $this->_setAliasName( $value ); }
-	protected function _setOrderBy( $value ) { $this->_order_by = $value; return $this; }
-	protected function _setOrder( $value ) { $this->_order = $value; return $this; }
-	protected function _setExtraConditions( $value ) { $this->_extraConditions = $value; return $this; }
-	protected function _setCollection( $value ) { $this->_collection = $value; return $this; }
+	final protected function _setDBHandle( $value ) { $this->_dbHandle = $value; return $this; }
+	final protected function _setResult( $value ) { $this->_result = $value; return $this; }
+	final protected function _setQuery( $value ) { $this->_querySQL = $value; return $this; }
+	final protected function _setTable( $value ) { return $this->_setTableName( $value ); }
+	final protected function _setModel( $value ) { return $this->_setModelName( $value ); }
+	final protected function _setAlias( $value ) { return $this->_setAliasName( $value ); }
+	final protected function _setOrderBy( $value ) { $this->_order_by = $value; return $this; }
+	final protected function _setOrder( $value ) { $this->_order = $value; return $this; }
+	final protected function _setExtraConditions( $value ) { $this->_extraConditions = $value; return $this; }
+	final protected function _setCollection( $value ) { $this->_collection = $value; return $this; }
 
-	protected function _setHasOne( $value ) { return $this->_orderHasOne( $value ); }
-	protected function _addHasOne( $value ) { return $this->_orderHasOne( $value ); }
-	protected function _setHasMany( $value ) { return $this->_orderHasMany( $value ); }
-	protected function _addHasMany( $value ) { return $this->_orderHasMany( $value ); }
-	protected function _setHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
-	protected function _addHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
+	final protected function _setHasOne( $value ) { return $this->_orderHasOne( $value ); }
+	final protected function _addHasOne( $value ) { return $this->_orderHasOne( $value ); }
+	final protected function _setHasMany( $value ) { return $this->_orderHasMany( $value ); }
+	final protected function _addHasMany( $value ) { return $this->_orderHasMany( $value ); }
+	final protected function _setHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
+	final protected function _addHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
 
-	protected function _setPage( $value ) { $this->_page = $value; return $this; }
+	final protected function _setPage( $value ) { $this->_page = $value; return $this; }
 	/** private function _setLimit */
-	protected function _setPrefix( $value ) { $this->_prefix = $value; return $this; }
-	protected function _new() { return $this->clear( true ); } 
+	final protected function _setPrefix( $value ) { $this->_prefix = $value; return $this; }
+	final protected function _new() { return $this->clear( true ); } 
 	
 	/** Connects to database **/
-	public function Connect( $address, $account, $pwd, $name ) { return $this->_connect( $address, $account, $pwd, $name ); }
-	public function Query( $query = NULL ) { return $this->_query( $query ); }
-	public function GetQuery() { return $this->_getQuerySQL(); }
-	public function GetQuerySQLs() { return $this->_getQuerySQLs(); } 
-	public function GetQuerySQL() { return $this->_getQuerySQL(); }
-	public function GetModel() { return $this->_getModel(); }
-	public function GetModelName() { return $this->_getModel(); }
-	public function GetTable() { return $this->_getTable(); }
-	public function GetTableName() { return $this->_getTable(); }
-	public function GetAlias() { return $this->_getAlias(); }
-	public function GetAliasName() { return $this->_getAlias(); }
-	public function Parse( $result ) { return $this->_parse( $result ); }
-	public function First()	{ return $this->_first(); }
-	public function Item( $result, $index = 0 ) { return $this->_item( $result, $index ); }
-	public function GetCollectionString() { return $this->_getCollectionString(); }
+	final public function Connect( $address, $account, $pwd, $name ) { return $this->_connect( $address, $account, $pwd, $name ); }
+	final public function Query( $query = NULL ) { return $this->_query( $query ); }
+	final public function GetQuery() { return $this->_getQuerySQL(); }
+	final public function GetQuerySQLs() { return $this->_getQuerySQLs(); } 
+	final public function GetQuerySQL() { return $this->_getQuerySQL(); }
+	final public function GetModel() { return $this->_getModel(); }
+	final public function GetModelName() { return $this->_getModel(); }
+	final public function GetTable() { return $this->_getTable(); }
+	final public function GetTableName() { return $this->_getTable(); }
+	final public function GetAlias() { return $this->_getAlias(); }
+	final public function GetAliasName() { return $this->_getAlias(); }
+	final public function Parse( $result ) { return $this->_parse( $result ); }
+	final public function First()	{ return $this->_first(); }
+	final public function Item( $result, $index = 0 ) { return $this->_item( $result, $index ); }
+	final public function GetCollectionString() { return $this->_getCollectionString(); }
 
-	public function Select( $fields, $label = NULL ) { return $this->_select( $fields, $label ); }
-	public function Unselect( $fields ) { return $this->_unselect( $fields ); }
-	public function Between( $field, $start, $end ) { return $this->_between( $field, $start, $end ); }
-	public function Equal( $field, $value ) { return $this->_equal( $field, $value ); }
-	public function Greater( $field, $value ) { return $this->_greater( $field, $value ); } 
-	public function GreaterThanOrEqual( $field, $value ) { return $this->_greaterThanOrEqual( $field, $value ); } 
-	public function In( $field, $values ) { return $this->_in( $field, $values ); }
-	public function Is( $field, $value ) { return $this->_is( $field, $value ); }
-	public function IsNot( $field, $value ) { return $this->_isNot( $field, $value ); }
-	public function IsNotNull( $field ) { return $this->_isNotNull( $field ); }
-	public function IsNull( $field ) { return $this->_isNull( $field ); }
-	public function Less( $field, $value ) { return $this->_less( $field, $value ); } 
-	public function LessThanOrEqual( $field, $value ) { return $this->_lessThanOrEqual( $field, $value ); } 
-	public function Like( $field, $value ) { return $this->_like( $field, $value ); }
-	public function Not( $field, $value ) { return $this->_not( $field, $value ); }
-	public function NotNull( $field ) { return $this->_notNull( $field ); }
-	public function NotEqual( $field, $value ) { return $this->_notEqual( $field, $value ); }
-	public function NotIn( $field, $values ) { return $this->_notIn( $field, $values ); }
-	public function NotLike( $field, $value ) { return $this->_notLike( $field, $value ); }
-	public function Where( $field, $value, $operaion='=' ) { return $this->_where( $field, $value, $operaion ); }
+	final public function Select( $fields, $label = NULL ) { return $this->_select( $fields, $label ); }
+	final public function Unselect( $fields ) { return $this->_unselect( $fields ); }
+	final public function Between( $field, $start, $end ) { return $this->_between( $field, $start, $end ); }
+	final public function Equal( $field, $value ) { return $this->_equal( $field, $value ); }
+	final public function Greater( $field, $value ) { return $this->_greater( $field, $value ); } 
+	final public function GreaterThanOrEqual( $field, $value ) { return $this->_greaterThanOrEqual( $field, $value ); } 
+	final public function In( $field, $values ) { return $this->_in( $field, $values ); }
+	final public function Is( $field, $value ) { return $this->_is( $field, $value ); }
+	final public function IsNot( $field, $value ) { return $this->_isNot( $field, $value ); }
+	final public function IsNotNull( $field ) { return $this->_isNotNull( $field ); }
+	final public function IsNull( $field ) { return $this->_isNull( $field ); }
+	final public function Less( $field, $value ) { return $this->_less( $field, $value ); } 
+	final public function LessThanOrEqual( $field, $value ) { return $this->_lessThanOrEqual( $field, $value ); } 
+	final public function Like( $field, $value ) { return $this->_like( $field, $value ); }
+	final public function Not( $field, $value ) { return $this->_not( $field, $value ); }
+	final public function NotNull( $field ) { return $this->_notNull( $field ); }
+	final public function NotEqual( $field, $value ) { return $this->_notEqual( $field, $value ); }
+	final public function NotIn( $field, $values ) { return $this->_notIn( $field, $values ); }
+	final public function NotLike( $field, $value ) { return $this->_notLike( $field, $value ); }
+	final public function Where( $field, $value, $operaion='=' ) { return $this->_where( $field, $value, $operaion ); }
 
-	public function Select_HMABTM( $model, $field, $label = NULL ) { return $this->_select_HMABTM( $model, $field, $label ); }
-	public function Unselect_HMABTM( $model, $fields ) { return $this->_unselect_HMABTM( $model, $fields ); } 
-	public function Between_HMABTM( $model, $field, $start, $end ) { return $this->_between_HMABTM( $model, $field, $start, $end ); }
-	public function Equal_HMABTM( $model, $field, $value ) { return $this->_equal_HMABTM( $model, $field, $value ); } 
-	public function Greater_HMABTM( $model, $field, $value ) { return $this->_greater_HMABTM( $model, $field, $value ); } 
-	public function GreaterThanOrEqual_HMABTM( $model, $field, $value ) { return $this->_greaterThanOrEqual_HMABTM( $model, $field, $value ); } 
-	public function In_HMABTM( $model, $field, $values ) { return $this->_in_HMABTM( $model, $field, $values ); } 
-	public function Is_HMABTM( $model, $field, $value ) { return $this->_is_HMABTM( $model, $field, $value ); } 
-	public function IsNot_HMABTM( $model, $field, $value ) { return $this->_isNot_HMABTM( $model, $field, $value ); } 
-	public function IsNotNull_HMABTM( $model, $field ) { return $this->_isNotNull_HMABTM( $model, $field ); } 
-	public function IsNull_HMABTM( $model, $field ) { return $this->_isNull_HMABTM( $model, $field ); } 
-	public function Less_HMABTM( $model, $field, $value ) { return $this->_less_HMABTM( $model, $field, $value ); } 
-	public function LessThanOrEqual_HMABTM( $model, $field, $value ) { return $this->_lessThanOrEqual_HMABTM( $model, $field, $value ); } 
-	public function Like_HMABTM( $model, $field, $value ) { return $this->_like_HMABTM( $model, $field, $value ); } 
-	public function Not_HMABTM( $model, $field, $value ) { return $this->_not_HMABTM( $model, $field, $value ); } 
-	public function NotNull_HMABTM( $model, $field ) { return $this->_notNull_HMABTM( $model, $field ); } 
-	public function NotEqual_HMABTM( $model, $field, $value ) { return $this->_notEqual_HMABTM( $model, $field, $value ); } 
-	public function NotIn_HMABTM( $model, $field, $values ) { return $this->_notIn_HMABTM( $model, $field, $values ); } 
-	public function NotLike_HMABTM( $model, $field, $value ) { return $this->_notLike_HMABTM( $model, $field, $value ); } 
-	public function Where_HMABTM( $model, $field, $value, $operator = '=') { return $this->_where_HMABTM( $model, $field, $value, $operator ); } 
-	public function Limit_HMABTM( $model, $numrows = 1000 ) { return $this->_limit_HMABTM( $model, $numrows ); }
-	public function Reverse_HMABTM( $model, $field = "id" ) { return $this->_reverse_HMABTM( $model, $field ); }
-	public function Hide_Relative_HMABTM( $model ) { return $this->_hide_Relative_HMABTM( $model ); }
-	public function Show_Relative_HMABTM( $model ) { return $this->_show_Relative_HMABTM( $model ); } 
+	final public function Select_HMABTM( $model, $field, $label = NULL ) { return $this->_select_HMABTM( $model, $field, $label ); }
+	final public function Unselect_HMABTM( $model, $fields ) { return $this->_unselect_HMABTM( $model, $fields ); } 
+	final public function Between_HMABTM( $model, $field, $start, $end ) { return $this->_between_HMABTM( $model, $field, $start, $end ); }
+	final public function Equal_HMABTM( $model, $field, $value ) { return $this->_equal_HMABTM( $model, $field, $value ); } 
+	final public function Greater_HMABTM( $model, $field, $value ) { return $this->_greater_HMABTM( $model, $field, $value ); } 
+	final public function GreaterThanOrEqual_HMABTM( $model, $field, $value ) { return $this->_greaterThanOrEqual_HMABTM( $model, $field, $value ); } 
+	final public function In_HMABTM( $model, $field, $values ) { return $this->_in_HMABTM( $model, $field, $values ); } 
+	final public function Is_HMABTM( $model, $field, $value ) { return $this->_is_HMABTM( $model, $field, $value ); } 
+	final public function IsNot_HMABTM( $model, $field, $value ) { return $this->_isNot_HMABTM( $model, $field, $value ); } 
+	final public function IsNotNull_HMABTM( $model, $field ) { return $this->_isNotNull_HMABTM( $model, $field ); } 
+	final public function IsNull_HMABTM( $model, $field ) { return $this->_isNull_HMABTM( $model, $field ); } 
+	final public function Less_HMABTM( $model, $field, $value ) { return $this->_less_HMABTM( $model, $field, $value ); } 
+	final public function LessThanOrEqual_HMABTM( $model, $field, $value ) { return $this->_lessThanOrEqual_HMABTM( $model, $field, $value ); } 
+	final public function Like_HMABTM( $model, $field, $value ) { return $this->_like_HMABTM( $model, $field, $value ); } 
+	final public function Not_HMABTM( $model, $field, $value ) { return $this->_not_HMABTM( $model, $field, $value ); } 
+	final public function NotNull_HMABTM( $model, $field ) { return $this->_notNull_HMABTM( $model, $field ); } 
+	final public function NotEqual_HMABTM( $model, $field, $value ) { return $this->_notEqual_HMABTM( $model, $field, $value ); } 
+	final public function NotIn_HMABTM( $model, $field, $values ) { return $this->_notIn_HMABTM( $model, $field, $values ); } 
+	final public function NotLike_HMABTM( $model, $field, $value ) { return $this->_notLike_HMABTM( $model, $field, $value ); } 
+	final public function Where_HMABTM( $model, $field, $value, $operator = '=') { return $this->_where_HMABTM( $model, $field, $value, $operator ); } 
+	final public function Limit_HMABTM( $model, $numrows = 1000 ) { return $this->_limit_HMABTM( $model, $numrows ); }
+	final public function Reverse_HMABTM( $model, $field = "id" ) { return $this->_reverse_HMABTM( $model, $field ); }
+	final public function Hide_Relative_HMABTM( $model ) { return $this->_hide_Relative_HMABTM( $model ); }
+	final public function Show_Relative_HMABTM( $model ) { return $this->_show_Relative_HMABTM( $model ); } 
 
-	public function Select_HasOne( $model, $field, $label = NULL ) { return $this->_select_HasOne( $model, $field, $label ); }
-	public function Unselect_HasOne( $model, $fields ) { return $this->_unselect_HasOne( $model, $fields ); } 
+	final public function Select_HasOne( $model, $field, $label = NULL ) { return $this->_select_HasOne( $model, $field, $label ); }
+	final public function Unselect_HasOne( $model, $fields ) { return $this->_unselect_HasOne( $model, $fields ); } 
 	
-	public function Select_HasMany( $model, $field, $label = NULL ) { return $this->_select_HasMany( $model, $field, $label ); }
-	public function Unselect_HasMany( $model, $fields ) { return $this->_unselect_HasMany( $model, $fields ); } 
-	public function Between_HasMany( $model, $field, $start, $end ) { return $this->_between_HasMany( $model, $field, $start, $end ); }
-	public function Equal_HasMany( $model, $field, $value ) { return $this->_equal_HasMany( $model, $field, $value ); } 
-	public function Greater_HasMany( $model, $field, $value ) { return $this->_greater_HasMany( $model, $field, $value ); } 
-	public function GreaterThanOrEqual_HasMany( $model, $field, $value ) { return $this->_greaterThanOrEqual_HasMany( $model, $field, $value ); } 
-	public function In_HasMany( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
-	public function Is_HasMany( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
-	public function IsNot_HasMany( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
-	public function IsNotNull_HasMany( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
-	public function IsNull_HasMany( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
-	public function Less_HasMany( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
-	public function LessThanOrEqual_HasMany( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
-	public function Like_HasMany( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
-	public function Not_HasMany( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
-	public function NotNull_HasMany( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
-	public function NotEqual_HasMany( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
-	public function NotIn_HasMany( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
-	public function NotLike_HasMany( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
-	public function Where_HasMany( $model, $field, $value, $operator = '=') { return $this->_where_HasMany( $model, $field, $value, $operator ); }
-	public function Limit_HasMany( $model, $numrows = 1000 ) { return $this->_limit_HasMany( $model, $numrows ); }
-	public function Reverse_HasMany( $model, $field = "id" ) { return $this->_reverse_HasMany( $model, $field ); }
+	final public function Select_HasMany( $model, $field, $label = NULL ) { return $this->_select_HasMany( $model, $field, $label ); }
+	final public function Unselect_HasMany( $model, $fields ) { return $this->_unselect_HasMany( $model, $fields ); } 
+	final public function Between_HasMany( $model, $field, $start, $end ) { return $this->_between_HasMany( $model, $field, $start, $end ); }
+	final public function Equal_HasMany( $model, $field, $value ) { return $this->_equal_HasMany( $model, $field, $value ); } 
+	final public function Greater_HasMany( $model, $field, $value ) { return $this->_greater_HasMany( $model, $field, $value ); } 
+	final public function GreaterThanOrEqual_HasMany( $model, $field, $value ) { return $this->_greaterThanOrEqual_HasMany( $model, $field, $value ); } 
+	final public function In_HasMany( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
+	final public function Is_HasMany( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
+	final public function IsNot_HasMany( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
+	final public function IsNotNull_HasMany( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
+	final public function IsNull_HasMany( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
+	final public function Less_HasMany( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
+	final public function LessThanOrEqual_HasMany( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
+	final public function Like_HasMany( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
+	final public function Not_HasMany( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
+	final public function NotNull_HasMany( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
+	final public function NotEqual_HasMany( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
+	final public function NotIn_HasMany( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
+	final public function NotLike_HasMany( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
+	final public function Where_HasMany( $model, $field, $value, $operator = '=') { return $this->_where_HasMany( $model, $field, $value, $operator ); }
+	final public function Limit_HasMany( $model, $numrows = 1000 ) { return $this->_limit_HasMany( $model, $numrows ); }
+	final public function Reverse_HasMany( $model, $field = "id" ) { return $this->_reverse_HasMany( $model, $field ); }
 
-	public function Select_HM( $model, $field, $label = NULL ) { return $this->_select_HasMany( $model, $field, $label ); }
-	public function Unselect_HM( $model, $fields ) { return $this->_unselect_HasMany( $model, $fields ); } 
-	public function Between_HM( $model, $field, $start, $end ) { return $this->_between_HasMany( $model, $field, $start, $end ); }
-	public function Equal_HM( $model, $field, $value ) { return $this->_equal_HasMany( $model, $field, $value ); } 
-	public function Greater_HM( $model, $field, $value ) { return $this->_greater_HasMany( $model, $field, $value ); } 
-	public function GreaterThanOrEqual_HM( $model, $field, $value ) { return $this->_greaterThanOrEqual_HasMany( $model, $field, $value ); } 
-	public function In_HM( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
-	public function Is_HM( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
-	public function IsNot_HM( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
-	public function IsNotNull_HM( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
-	public function IsNull_HM( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
-	public function Less_HM( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
-	public function LessThanOrEqual_HM( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
-	public function Like_HM( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
-	public function Not_HM( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
-	public function NotNull_HM( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
-	public function NotEqual_HM( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
-	public function NotIn_HM( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
-	public function NotLike_HM( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
-	public function Where_HM( $model, $field, $value, $operator = '=') { return $this->_where_HasMany( $model, $field, $value, $operator ); }
-	public function Limit_HM( $model, $numrows = 1000 ) { return $this->_limit_HasMany( $model, $numrows ); }
-	public function Reverse_HM( $model, $id = "id" ) { return $this->_reverse_HasMany( $model, $id ); }
+	final public function Select_HM( $model, $field, $label = NULL ) { return $this->_select_HasMany( $model, $field, $label ); }
+	final public function Unselect_HM( $model, $fields ) { return $this->_unselect_HasMany( $model, $fields ); } 
+	final public function Between_HM( $model, $field, $start, $end ) { return $this->_between_HasMany( $model, $field, $start, $end ); }
+	final public function Equal_HM( $model, $field, $value ) { return $this->_equal_HasMany( $model, $field, $value ); } 
+	final public function Greater_HM( $model, $field, $value ) { return $this->_greater_HasMany( $model, $field, $value ); } 
+	final public function GreaterThanOrEqual_HM( $model, $field, $value ) { return $this->_greaterThanOrEqual_HasMany( $model, $field, $value ); } 
+	final public function In_HM( $model, $field, $values ) { return $this->_in_HasMany( $model, $field, $values ); } 
+	final public function Is_HM( $model, $field, $value ) { return $this->_is_HasMany( $model, $field, $value ); } 
+	final public function IsNot_HM( $model, $field, $value ) { return $this->_isNot_HasMany( $model, $field, $value ); } 
+	final public function IsNotNull_HM( $model, $field ) { return $this->_isNotNull_HasMany( $model, $field ); } 
+	final public function IsNull_HM( $model, $field ) { return $this->_isNull_HasMany( $model, $field ); } 
+	final public function Less_HM( $model, $field, $value ) { return $this->_less_HasMany( $model, $field, $value ); } 
+	final public function LessThanOrEqual_HM( $model, $field, $value ) { return $this->_lessThanOrEqual_HasMany( $model, $field, $value ); } 
+	final public function Like_HM( $model, $field, $value ) { return $this->_like_HasMany( $model, $field, $value ); } 
+	final public function Not_HM( $model, $field, $value ) { return $this->_not_HasMany( $model, $field, $value ); } 
+	final public function NotNull_HM( $model, $field ) { return $this->_notNull_HasMany( $model, $field ); } 
+	final public function NotEqual_HM( $model, $field, $value ) { return $this->_notEqual_HasMany( $model, $field, $value ); } 
+	final public function NotIn_HM( $model, $field, $values ) { return $this->_notIn_HasMany( $model, $field, $values ); } 
+	final public function NotLike_HM( $model, $field, $value ) { return $this->_notLike_HasMany( $model, $field, $value ); } 
+	final public function Where_HM( $model, $field, $value, $operator = '=') { return $this->_where_HasMany( $model, $field, $value, $operator ); }
+	final public function Limit_HM( $model, $numrows = 1000 ) { return $this->_limit_HasMany( $model, $numrows ); }
+	final public function Reverse_HM( $model, $id = "id" ) { return $this->_reverse_HasMany( $model, $id ); }
 
-	public function ShowHasOne() { return $this->_showHasOne(); }
-	public function ShowHasMany() { return $this->_showHasMany(); }
-	public function ShowHMABTM() { return $this->_showHMABTM(); }
-	public function HideHasOne() { return $this->_hideHasOne(); }
-	public function HideHasMany() { return $this->_hideHasMany(); }
-	public function HideHMABTM() { return $this->_hideHMABTM(); }
-	public function ClearHasOne() { return $this->_clearHasOne(); }
-	public function ClearHasMany() { return $this->_clearHasMany(); }
-	public function ClearHMABTM() { return $this->_clearHMABTM(); } 
-	public function ConvertHasOne( $data ) { return $this->_convertHasOne( $data ); } 
-	public function ConvertHasMany( $data ) { return $this->_convertHasMany( $data ); } 
-	public function ConvertHMABTM( $data ) { return $this->_convertHMABTM( $data ); } 
-	public function BlindHasOne( $data ) { return $this->_blindHasOne( $data ); } 
-	public function BlindHasMany( $data ) { return $this->_blindHasMany( $data ); } 
-	public function BlindHMABTM( $data ) { return $this->_blindHMABTM( $data ); } 
-	public function UnblindHasOne( $data ) { return $this->_unblindHasOne( $data ); } 
-	public function UnblindHasMany( $data ) { return $this->_unblindHasMany( $data ); } 
-	public function UnblindHMABTM( $data ) { return $this->_unblindHMABTM( $data ); } 
+	final public function ShowHasOne() { return $this->_showHasOne(); }
+	final public function ShowHasMany() { return $this->_showHasMany(); }
+	final public function ShowHMABTM() { return $this->_showHMABTM(); }
+	final public function HideHasOne() { return $this->_hideHasOne(); }
+	final public function HideHasMany() { return $this->_hideHasMany(); }
+	final public function HideHMABTM() { return $this->_hideHMABTM(); }
+	final public function ClearHasOne() { return $this->_clearHasOne(); }
+	final public function ClearHasMany() { return $this->_clearHasMany(); }
+	final public function ClearHMABTM() { return $this->_clearHMABTM(); } 
+	final public function ConvertHasOne( $data ) { return $this->_convertHasOne( $data ); } 
+	final public function ConvertHasMany( $data ) { return $this->_convertHasMany( $data ); } 
+	final public function ConvertHMABTM( $data ) { return $this->_convertHMABTM( $data ); } 
+	final public function BlindHasOne( $data ) { return $this->_blindHasOne( $data ); } 
+	final public function BlindHasMany( $data ) { return $this->_blindHasMany( $data ); } 
+	final public function BlindHMABTM( $data ) { return $this->_blindHMABTM( $data ); } 
+	final public function UnblindHasOne( $data ) { return $this->_unblindHasOne( $data ); } 
+	final public function UnblindHasMany( $data ) { return $this->_unblindHasMany( $data ); } 
+	final public function UnblindHMABTM( $data ) { return $this->_unblindHMABTM( $data ); } 
 
-	public function SetLimit( $value ) { return $this->_setLimit( $value ); }
-	public function Limit( $value ) { return $this->_setLimit( $value ); }
-	public function Offset( $position ) { return $this->_seek( $position ); }
-	public function Seek( $position ) { return $this->_seek( $position ); }
-	public function SetPage( $value ) { return $this->_setPage( $value ); }
-	public function Page( $value ) { return $this->_setPage( $value ); }
-	public function OrderBy( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
-	public function Order( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
-	public function GroupBy( $field ) { return $this->_groupBy( $field ); }
-	public function GroupByLabel( $label ) { return $this->_groupWith( $label ); }
-	public function GroupWith( $label ) { return $this->_groupWith( $label ); }
-	public function GroupLabel( $label ) { return $this->_groupWith( $label ); }
+	final public function SetLimit( $value ) { return $this->_setLimit( $value ); }
+	final public function Limit( $value ) { return $this->_setLimit( $value ); }
+	final public function Offset( $position ) { return $this->_seek( $position ); }
+	final public function Seek( $position ) { return $this->_seek( $position ); }
+	final public function SetPage( $value ) { return $this->_setPage( $value ); }
+	final public function Page( $value ) { return $this->_setPage( $value ); }
+	final public function OrderBy( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
+	final public function Order( $order_by, $order = 'ASC' ) { return $this->_orderBy( $order_by, $order ); }
+	final public function GroupBy( $field ) { return $this->_groupBy( $field ); }
+	final public function GroupByLabel( $label ) { return $this->_groupWith( $label ); }
+	final public function GroupWith( $label ) { return $this->_groupWith( $label ); }
+	final public function GroupLabel( $label ) { return $this->_groupWith( $label ); }
 
-	public function Command( $expresion ) { return $this->_command( $expresion ); }
-	public function Output( $label ) { return $this->_output( $label ); }
-	public function Execute() { return $this->_execute(); }
+	final public function Command( $expresion ) { return $this->_command( $expresion ); }
+	final public function Output( $label ) { return $this->_output( $label ); }
+	final public function Execute() { return $this->_execute(); }
 
-	public function Load() { return $this->_search(); }
-	public function Search() { return $this->_search(); }
-	public function Custom( $query ) { return $this->_custom( $query ); }
-	public function Delete( $id=NULL ) { return $this->_delete( $id ); }
-	public function Save( $data=NULL ) { return $this->_save( $data ); }
-	public function Update( $data=NULL ) { return $this->_update( $data ); }
-	public function Clear( $deep=false ) { return $this->_clear( $deep ); }
-	public function TotalPages() { return $this->_totalPages(); } 
-	public function Total() { return $this->_total(); } 
-	public function Count() { return $this->_count(); }
-	public function Length() { return $this->_length(); }
-	public function DBList() { return $this->_dbList(); }
-	public function SetIncreament( $value ) { $this->_setIncreament( $value ); }
-	public function GetId() { return $this->_getId(); }
-	public function SetId( $id ) { return $this->_setId( $id ); } 
-	public function UnsetId() { return $this->_setId(); }
-	public function MaxId( $label = NULL ) { return $this->_maxId( $label ); }
-	public function GetPrefix() { return $this->_getPrefix(); }
-	public function GetMaxId( $label = NULL ) { return $this->_maxId( $label ); }
-	public function GetData( $id = NULL ) { return $this->_getData( $id ); }
-	public function GetLastedData() { return $this->_getLastedData(); }
-	public function GetError() { return $this->_getError(); } 
-	public function SetData( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
-	public function Set( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
-	public function Assign( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
-	public function SetPrefix( $value ) { return $this->_setPrefix( $value ); }
-	public function SetTableName( $value ) { return $this->_setTableName( $value ); }
-	public function SetModelName( $value ) { return $this->_setModelName( $value ); }
-	public function SetAliasName( $value ) { return $this->_setAliasName( $value ); }
-	public function SetHasOne( $value ) { return $this->_setHasOne( $value ); }
-	public function SetHasMany( $value ) { return $this->_setHasMany( $value ); }
-	public function SetHasManyAndBelongsToMany( $value ) { return $this->_setHasManyAndBelongsToMany( $value ); }
-	public function AddHasOne( $value ) { return $this->_addHasOne( $value ); }
-	public function AddHasMany( $value ) { return $this->_addHasMany( $value ); }
-	public function AddHasManyAndBelongsToMany( $value ) { return $this->_addHasManyAndBelongsToMany( $value ); }
-	public function Merge( $value ) { return $this->_merge( $value ); }
-	public function Bind( $value ) { return $this->_merge( $value ); } 
-	public function Find( $id ) { return $this->_find( $id ); } 
-	public function FindData( $id ) { return $this->_findData( $id ); }
-	public function New() { return $this->_new(); }
-	public function Reset() { return $this->_new(); }
-	public function Begin() { return $this->_new(); }
-	
-	public function GenRandString( $len=10 ) { return $this->_genRandString($len); }
+	final public function Load() { return $this->_search(); }
+	final public function Search() { return $this->_search(); }
+	final public function Custom( $query ) { return $this->_custom( $query ); }
+	final public function Delete( $id=NULL ) { return $this->_delete( $id ); }
+	final public function Save( $data=NULL ) { return $this->_save( $data ); }
+	final public function Update( $data=NULL ) { return $this->_update( $data ); }
+	final public function Clear( $deep=false ) { return $this->_clear( $deep ); }
+	final public function TotalPages() { return $this->_totalPages(); } 
+	final public function Total() { return $this->_total(); } 
+	final public function Count() { return $this->_count(); }
+	final public function Length() { return $this->_length(); }
+	final public function DBList() { return $this->_dbList(); }
+	final public function SetIncreament( $value ) { $this->_setIncreament( $value ); }
+	final public function GetId() { return $this->_getId(); }
+	final public function SetId( $id ) { return $this->_setId( $id ); } 
+	final public function UnsetId() { return $this->_setId(); }
+	final public function MaxId( $label = NULL ) { return $this->_maxId( $label ); }
+	final public function GetPrefix() { return $this->_getPrefix(); }
+	final public function GetMaxId( $label = NULL ) { return $this->_maxId( $label ); }
+	final public function GetData( $id = NULL ) { return $this->_getData( $id ); }
+	final public function GetLastedData() { return $this->_getLastedData(); }
+	final public function GetError() { return $this->_getError(); } 
+	final public function SetData( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
+	final public function Set( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
+	final public function Assign( $data, $value = NULL ) { return $this->_setData( $data, $value ); }
+	final public function SetPrefix( $value ) { return $this->_setPrefix( $value ); }
+	final public function SetTableName( $value ) { return $this->_setTableName( $value ); }
+	final public function SetModelName( $value ) { return $this->_setModelName( $value ); }
+	final public function SetAliasName( $value ) { return $this->_setAliasName( $value ); }
+	final public function SetHasOne( $value ) { return $this->_setHasOne( $value ); }
+	final public function SetHasMany( $value ) { return $this->_setHasMany( $value ); }
+	final public function SetHasManyAndBelongsToMany( $value ) { return $this->_setHasManyAndBelongsToMany( $value ); }
+	final public function AddHasOne( $value ) { return $this->_addHasOne( $value ); }
+	final public function AddHasMany( $value ) { return $this->_addHasMany( $value ); }
+	final public function AddHasManyAndBelongsToMany( $value ) { return $this->_addHasManyAndBelongsToMany( $value ); }
+	final public function Merge( $value ) { return $this->_merge( $value ); }
+	final public function Include( $value ) { return $this->_include( $value ); } 
+	final public function Bind( $value ) { return $this->_merge( $value ); } 
+	final public function Find( $id ) { return $this->_find( $id ); } 
+	final public function FindData( $id ) { return $this->_findData( $id ); }
+	final public function New() { return $this->_new(); }
+	final public function Reset() { return $this->_new(); }
+	final public function Begin() { return $this->_new(); }
+	final public function ShareMainQuery() { return $this->_shareMainQuery(); }
+	final public function GenRandString( $len=10 ) { return $this->_genRandString($len); }
 	
 	abstract protected function _startConn();
 	abstract protected function setTable();
@@ -1481,6 +1483,14 @@ abstract class SQLQuery
 	{
 		$this->_group_with = $label;
 		return $this;
+	} 
+	
+	private function _include( $model ) 
+	{
+		if(!$this->_unions) 
+			$this->_unions = array();
+		$this->_unions[] = $model->shareMainQuery( $this->_model );
+		return $this;
 	}
 
 	/** HOW TO USE MERGE(models) FUNCTION
@@ -1553,13 +1563,59 @@ abstract class SQLQuery
 		}
 		return $this;
 	}
+	
+	private function _shareMainQuery() 
+	{
+		$prefix = $this->_retrivePrefix(); 
+		$this->_buildMainQuery( $prefix ); 
+		$query = $this->_querySQL; 
+		$this->clear(); 
+		return substr( $query, 0, strlen($query)-1 );
+	}
 
-	private function buildMainQuery( $prefix ) 
+	private function _buildMainQuery( $prefix ) 
 	{
 		global $inflect;
 
+		$collections = $this->getCollectionString();
 		$from = '`'.$this->_table.'` as `'.$this->_model.'` ';
 		$conditions = '\'1\'=\'1\' AND ';
+		$groupBy = '';
+		$groupWith = ''; 
+		$orderBy = '';
+		$limit = '';
+		$hasOne = '';
+
+		if( isset($this->id) ) 
+		{
+			$conditions .= '`'.$this->_model.'`.`id` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\' AND ';
+		}
+		$conditions .= $this->_extraConditions;
+		$conditions = ' WHERE ' . substr( $conditions, 0, -4 );
+
+		if( isset( $this->_group_by ) ) 
+		{
+			$groupBy .= " GROUP BY `".$this->_model."`.`".$this->_group_by."`";
+		} 
+
+		if( isset( $this->_group_with ) ) 
+		{
+			$groupWith .= " GROUP BY `".$this->_group_with."`";
+		} 
+		
+		if( isset( $this->_order_by ) ) 
+		{
+			$orderBy .= ' ORDER BY `'.$this->_model.'`.`'.$this->_order_by.'` '.$this->_order;
+		}
+
+		if ( isset( $this->_page ) ) 
+		{
+			if( isset($this->_offset) ) 
+				$offset = $this->_offset;
+			else
+				$offset = ( $this->_page-1 ) * $this->_limit;
+			$limit .= ' LIMIT '.$this->_limit.' OFFSET '.$offset;
+		}
 
 		if( $this->_hO == 1 && isset( $this->_hasOne ) ) 
 		{
@@ -1571,45 +1627,33 @@ abstract class SQLQuery
 				} 
 				$aliasKey = $aliasChild[ 'key' ]; 
 				$tableChild = $aliasChild[ 'table' ];
-				$from .= 'LEFT JOIN `'.$tableChild.'` as `'.$modelChild.'` ';
-				$from .= 'ON `'.$this->_model.'`.`'.$aliasKey.'` = `'.$modelChild.'`.`id` ';
+				$hasOne .= 'LEFT JOIN `'.$tableChild.'` as `'.$modelChild.'` ';
+				$hasOne .= 'ON `'.$this->_model.'`.`'.$aliasKey.'` = `'.$modelChild.'`.`id` ';
 			}
 		}
 
-		if( isset( $this->id ) ) 
+		$this->_querySQL = 'SELECT ' . $collections . ' FROM ' . $from . $hasOne . $this->_imerge . $conditions . $groupBy . $groupWith . $orderBy . $limit; 
+
+		if( $this->_unions ) 
 		{
-			$conditions .= '`'.$this->_model.'`.`id` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\' AND ';
+			$unionQuery = ' UNION ALL ' . implode( ' UNION ALL ', $this->_unions ); 
+			if( $this->_hO == 1 && $hasOne ) 
+			{
+				$selfQuery = 'SELECT * FROM ' . $from . $conditions; 
+				$unionQuery = $selfQuery . $unionQuery;
+				$this->_querySQL = 'SELECT ' . $collections . ' FROM ( ' . $unionQuery . ' ) AS `' . $this->_model . '` ' . $hasOne . $groupBy . $groupWith . $orderBy . $limit; 
+			}
+			else if( false!==strpos($collections, 'COUNT') ) 
+			{
+				$selfQuery = 'SELECT * FROM ' . $from . $conditions; 
+				$unionQuery = $selfQuery . $unionQuery;
+				$this->_querySQL = 'SELECT ' . $collections . ' FROM ( ' . $unionQuery . ' ) AS `' . $this->_model . '` ' . $hasOne . $groupBy . $groupWith . $orderBy . $limit; 
+			}
+			else 
+			{
+				$this->_querySQL .= $unionQuery; 
+			}
 		}
-
-		$conditions .= $this->_extraConditions;
-
-		$conditions = substr( $conditions, 0, -4 );
-		
-		if( isset( $this->_order_by ) ) 
-		{
-			$conditions .= ' ORDER BY `'.$this->_model.'`.`'.$this->_order_by.'` '.$this->_order;
-		}
-
-		if( isset( $this->_group_by ) ) 
-		{
-			$conditions .= " GROUP BY `".$this->_model."`.`".$this->_group_by."`";
-		} 
-
-		if( isset( $this->_group_with ) ) 
-		{
-			$conditions .= " GROUP BY `".$this->_group_with."`";
-		} 
-
-		if ( isset( $this->_page ) ) 
-		{
-			if( isset($this->_offset) ) 
-				$offset = $this->_offset;
-			else
-				$offset = ( $this->_page-1 ) * $this->_limit;
-			$conditions .= ' LIMIT '.$this->_limit.' OFFSET '.$offset;
-		} 
-
-		$this->_querySQL = 'SELECT ' . $this->getCollectionString() . ' FROM ' . $from . $this->_imerge . 'WHERE ' . $conditions;
 	} 
 
 	private function _findData( $id ) 
@@ -1653,11 +1697,12 @@ abstract class SQLQuery
 	private function _search() 
 	{
 		global $inflect;
+		$commandTable = 'command'; 
 		$conditionsChild = '';
 		$fromChild = '';
 		$prefix = $this->_retrivePrefix();
 
-		$this->buildMainQuery( $prefix );
+		$this->_buildMainQuery( $prefix );
 		$this->_result = mysqli_query( $this->_dbHandle, $this->_querySQL );
 		$result = array();
 		$table = array();
@@ -1699,7 +1744,11 @@ abstract class SQLQuery
 					if( !$ignoreField ) 
 					{
 						if( $field_info->table == EMPTY_CHAR ) 
-							array_push( $table, "command" );
+						{
+							if( EMPTY_CHAR!==$this->_model )
+								$commandTable = $this->_model;
+							array_push( $table, $commandTable );
+						}
 						else
 							array_push( $table, $field_info->table );
 						array_push( $field, $field_info->name );
@@ -2147,9 +2196,9 @@ abstract class SQLQuery
 		{
 			return $this->_setData( $result[ 0 ][ $this->_model ] );
 		} 
-		else if( strpos($this->_collection, 'COUNT') ) 
+		else if( strpos($this->_collection, 'COUNT') !== false ) 
 		{
-			return (int)each($result[0]['command'])['value'];
+			return (int)each($result[0][$commandTable])['value'];
 		}
 		return $result;
 	}
@@ -2464,7 +2513,7 @@ abstract class SQLQuery
 		else 
 		{
 			/* Error Generation Code Here */
-			$this->buildMainQuery( $this->_retrivePrefix() );
+			$this->_buildMainQuery( $this->_retrivePrefix() );
 			return $this->_total();
 		}
 	} 

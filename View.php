@@ -31,41 +31,41 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	private $_layout_footer = false;
 	private $_layout_engine_vars;
 	
-	protected function _getVars() { return $this->_vars; }
-	protected function _getBlocks() { return $this->_blocks; }
-	protected function _getHeadAssets() { return $this->_head_assets; }
-	protected function _getContentAssets() { return $this->_content_assets; } 
-	protected function _getModule() { return $this->_module; }
-	protected function _getController() { return $this->_controller; }
-	protected function _getAction() { return $this->_action; }
-	protected function _getTemplatePath() { return $this->_tpl_path; }
-	protected function _getHeaderLayoutPath() { return $this->_layout_header_path; }
-	protected function _getFooterLayoutPath() { return $this->_layout_footer_path; }
-	protected function _getMainLayoutPath() { return $this->_layout_main_path; }
-	protected function _getEngineLayoutPath() { return $this->_layout_engine_path; }
-	protected function _getLayoutHeader() { return $this->_layout_header; }
-	protected function _getLayoutFooter() { return $this->_layout_footer; }
-	protected function _getLayoutEngineVars() { return $this->_layout_engine_vars; }
+	final protected function _getVars() { return $this->_vars; }
+	final protected function _getBlocks() { return $this->_blocks; }
+	final protected function _getHeadAssets() { return $this->_head_assets; }
+	final protected function _getContentAssets() { return $this->_content_assets; } 
+	final protected function _getModule() { return $this->_module; }
+	final protected function _getController() { return $this->_controller; }
+	final protected function _getAction() { return $this->_action; }
+	final protected function _getTemplatePath() { return $this->_tpl_path; }
+	final protected function _getHeaderLayoutPath() { return $this->_layout_header_path; }
+	final protected function _getFooterLayoutPath() { return $this->_layout_footer_path; }
+	final protected function _getMainLayoutPath() { return $this->_layout_main_path; }
+	final protected function _getEngineLayoutPath() { return $this->_layout_engine_path; }
+	final protected function _getLayoutHeader() { return $this->_layout_header; }
+	final protected function _getLayoutFooter() { return $this->_layout_footer; }
+	final protected function _getLayoutEngineVars() { return $this->_layout_engine_vars; }
 	
-	protected function _setVars( $value ) { $this->_vars = $value; return $this; }
-	protected function _setBlocks( $value ) { $this->_blocks = $value; return $this; }
-	protected function _setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
-	protected function _addHeadAsset( $type, $value ) { array_push( $this->_head_assets[ $type ], $value ); return $this; }
-	protected function _setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
-	protected function _addContentAsset( $type, $value ) { array_push( $this->_content_assets[ $type ], $value ); return $this; }
-	protected function _setModule( $value ) { $this->_module = $value; return $this; }
-	protected function _setController( $value ) { $this->_controller = $value; return $this; }
-	protected function _setAction( $value ) { $this->_action = $value; return $this; }
-	protected function _setTemplatePath( $value ) { $this->_tpl_path = $value; return $this; }
-	protected function _setHeaderLayoutPath( $value ) { $this->_layout_header_path = $value; return $this; }
-	protected function _setFooterLayoutPath( $value ) { $this->_layout_footer_path = $value; return $this; }
-	protected function _setMainLayoutPath( $value ) { $this->_layout_main_path = $value; return $this; }
-	protected function _setEngineLayoutPath( $value ) { $this->_layout_header = $value; return $this; }
-	protected function _setLayoutHeader( $value ) { $this->_layout_header = $value; return $this; }
-	protected function _setLayoutFooter( $value ) { $this->_layout_footer = $value; return $this; }
-	protected function _setLayoutEngineVars( $value ) { $this->_layout_engine_vars = $value; return $this; }
+	final protected function _setVars( $value ) { $this->_vars = $value; return $this; }
+	final protected function _setBlocks( $value ) { $this->_blocks = $value; return $this; }
+	final protected function _setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
+	final protected function _addHeadAsset( $type, $value ) { array_push( $this->_head_assets[ $type ], $value ); return $this; }
+	final protected function _setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
+	final protected function _addContentAsset( $type, $value ) { array_push( $this->_content_assets[ $type ], $value ); return $this; }
+	final protected function _setModule( $value ) { $this->_module = $value; return $this; }
+	final protected function _setController( $value ) { $this->_controller = $value; return $this; }
+	final protected function _setAction( $value ) { $this->_action = $value; return $this; }
+	final protected function _setTemplatePath( $value ) { $this->_tpl_path = $value; return $this; }
+	final protected function _setHeaderLayoutPath( $value ) { $this->_layout_header_path = $value; return $this; }
+	final protected function _setFooterLayoutPath( $value ) { $this->_layout_footer_path = $value; return $this; }
+	final protected function _setMainLayoutPath( $value ) { $this->_layout_main_path = $value; return $this; }
+	final protected function _setEngineLayoutPath( $value ) { $this->_layout_header = $value; return $this; }
+	final protected function _setLayoutHeader( $value ) { $this->_layout_header = $value; return $this; }
+	final protected function _setLayoutFooter( $value ) { $this->_layout_footer = $value; return $this; }
+	final protected function _setLayoutEngineVars( $value ) { $this->_layout_engine_vars = $value; return $this; }
 	
-	public function GetVars() { return $this->_getVars(); }
+	final public function GetVars() { return $this->_getVars(); }
 
 	final public function rootName() { return __CLASS__; }
 	
@@ -79,71 +79,71 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		$this->_setFooterLayoutPath( 'footer.tpl' );
 	}
 	
-	public function IncludeAsset( $assets ) { return $this->_includeAsset( $assets ); }
-	public function PreloadAsset() { return $this->_preloadAsset(); }
-	public function CustomAsset() { return $this->_customAsset(); }
-	public function HeadAsset( $type, $value ) { return $this->_headAsset( $type, $value ); }
-	public function HeadHtml( $value ) { return $this->_headHtml( $value ); }
-	public function HeadStyle( $value ) { return $this->_headStyle( $value ); }
-	public function HeadScript( $value ) { return $this->_headScript( $value ); }
-	public function PreloadMeta( $value ) { return $this->_preloadMeta( $value ); } 
-	public function PreloadHtml( $value ) { return $this->_preloadHtml( $value ); }
-	public function PreloadStyle( $value ) { return $this->_preloadStyle( $value ); }
-	public function PreloadScript( $value ) { return $this->_preloadScript( $value ); }
-	public function PreloadTag( $value ) { return $this->_preloadTag( $value ); }
-	public function PreloadCss( $value ) { return $this->_preloadCss( $value ); }
-	public function PreloadJs( $value ) { return $this->_preloadJs( $value ); }
-	public function ContentAsset( $type, $value ) { return $this->_contentAsset( $type, $value ); }
-	public function AddContentAsset( $type, $value ) { return $this->_addContentAsset( $type, $value ); }
-	public function ContentHtml( $value ) { return $this->_contentHtml( $value ); }
-	public function ContentStyle( $value ) { return $this->_contentStyle( $value ); }
-	public function ContentScript( $value ) { return $this->_contentScript( $value ); }
-	public function IncludeMeta( $value ) { return $this->_includeMeta( $value ); }
-	public function IncludeHtml( $value ) { return $this->_includeHtml( $value ); } 
-	public function IncludeStyle( $value ) { return $this->_includeStyle( $value ); }
-	public function IncludeScript( $value ) { return $this->_includeScript( $value ); }
-	public function IncludeTag( $value ) { return $this->_includeTag( $value ); }
-	public function IncludeCss( $value ) { return $this->_includeCss( $value ); }
-	public function IncludeJs( $value ) { return $this->_includeJs( $value ); } 
+	final public function IncludeAsset( $assets ) { return $this->_includeAsset( $assets ); }
+	final public function PreloadAsset() { return $this->_preloadAsset(); }
+	final public function CustomAsset() { return $this->_customAsset(); }
+	final public function HeadAsset( $type, $value ) { return $this->_headAsset( $type, $value ); }
+	final public function HeadHtml( $value ) { return $this->_headHtml( $value ); }
+	final public function HeadStyle( $value ) { return $this->_headStyle( $value ); }
+	final public function HeadScript( $value ) { return $this->_headScript( $value ); }
+	final public function PreloadMeta( $value ) { return $this->_preloadMeta( $value ); } 
+	final public function PreloadHtml( $value ) { return $this->_preloadHtml( $value ); }
+	final public function PreloadStyle( $value ) { return $this->_preloadStyle( $value ); }
+	final public function PreloadScript( $value ) { return $this->_preloadScript( $value ); }
+	final public function PreloadTag( $value ) { return $this->_preloadTag( $value ); }
+	final public function PreloadCss( $value ) { return $this->_preloadCss( $value ); }
+	final public function PreloadJs( $value ) { return $this->_preloadJs( $value ); }
+	final public function ContentAsset( $type, $value ) { return $this->_contentAsset( $type, $value ); }
+	final public function AddContentAsset( $type, $value ) { return $this->_addContentAsset( $type, $value ); }
+	final public function ContentHtml( $value ) { return $this->_contentHtml( $value ); }
+	final public function ContentStyle( $value ) { return $this->_contentStyle( $value ); }
+	final public function ContentScript( $value ) { return $this->_contentScript( $value ); }
+	final public function IncludeMeta( $value ) { return $this->_includeMeta( $value ); }
+	final public function IncludeHtml( $value ) { return $this->_includeHtml( $value ); } 
+	final public function IncludeStyle( $value ) { return $this->_includeStyle( $value ); }
+	final public function IncludeScript( $value ) { return $this->_includeScript( $value ); }
+	final public function IncludeTag( $value ) { return $this->_includeTag( $value ); }
+	final public function IncludeCss( $value ) { return $this->_includeCss( $value ); }
+	final public function IncludeJs( $value ) { return $this->_includeJs( $value ); } 
 
-	public function IncludeJui( $value ) { return $this->_includeJui( $value ); }
-	public function PreloadJui( $value ) { return $this->_preloadJui( $value ); }
-	public function RequireJui( $value ) { return $this->_requireJui( $value ); }
+	final public function IncludeJui( $value ) { return $this->_includeJui( $value ); }
+	final public function PreloadJui( $value ) { return $this->_preloadJui( $value ); }
+	final public function RequireJui( $value ) { return $this->_requireJui( $value ); }
 	
-	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); } 
-	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
-	public function Get( $name ) { return $this->_get( $name ); }
-	public function AddBlock( $block, $force_name ) { return $this->_addBlock( $block, $force_name ); } 
+	final public function Assign( $name, $value ) { return $this->_assign( $name, $value ); } 
+	final public function Set( $name, $value ) { return $this->_set( $name, $value ); }
+	final public function Get( $name ) { return $this->_get( $name ); }
+	final public function AddBlock( $block, $force_name ) { return $this->_addBlock( $block, $force_name ); } 
 	
-	public function SetHeaderLayout( $layout ) { return $this->_setHeaderLayout( $layout ); }
-	public function SetFooterLayout( $layout ) { return $this->_setFooterLayout( $layout ); }
-	public function SetMainLayout( $layout ) { return $this->_setMainLayout( $layout ); }
-	public function EngineLayout( $layout_content = NULL, $vars = NULL ) { return $this->_engineLayout( $layout_content, $vars ); }
-	public function RenderLayout( $vars = NULL ) { return $this->_renderLayout( $vars ); } 
-	public function RenderBlock( $block, $args = NULL ) { return $this->_renderBlock( $block, $args ); }
-	public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); } 
-	public function SetLayout( $tpl_path, $type ) { return $this->_setLayout( $tpl_path, $type ); } 
-	public function LoadHeader() { return $this->_loadHeader(); }
-	public function LoadFooter() { return $this->_loadFooter(); }
-	public function LoadLayout() { return $this->_loadLayout(); }
-	public function Display( $blockName ) { return $this->_executeBlock( $blockName ); }
-	public function Equip( $blockName ) { return $this->_executeBlock( $blockName ); }
-	public function ExecuteBlock( $blockName, $methodName ) { return $this->_executeBlock( $blockName, $methodName ); }
+	final public function SetHeaderLayout( $layout ) { return $this->_setHeaderLayout( $layout ); }
+	final public function SetFooterLayout( $layout ) { return $this->_setFooterLayout( $layout ); }
+	final public function SetMainLayout( $layout ) { return $this->_setMainLayout( $layout ); }
+	final public function EngineLayout( $layout_content = NULL, $vars = NULL ) { return $this->_engineLayout( $layout_content, $vars ); }
+	final public function RenderLayout( $vars = NULL ) { return $this->_renderLayout( $vars ); } 
+	final public function RenderBlock( $block, $args = NULL ) { return $this->_renderBlock( $block, $args ); }
+	final public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); } 
+	final public function SetLayout( $tpl_path, $type ) { return $this->_setLayout( $tpl_path, $type ); } 
+	final public function LoadHeader() { return $this->_loadHeader(); }
+	final public function LoadFooter() { return $this->_loadFooter(); }
+	final public function LoadLayout() { return $this->_loadLayout(); }
+	final public function Display( $blockName ) { return $this->_executeBlock( $blockName ); }
+	final public function Equip( $blockName ) { return $this->_executeBlock( $blockName ); }
+	final public function ExecuteBlock( $blockName, $methodName ) { return $this->_executeBlock( $blockName, $methodName ); }
 
-	public function JsonLayout( $data=NULL ) { $this->_jsonLayout( $data ); }
-	public function PrintJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
-	public function OutputJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
-	public function DisplayJSON ( $data=NULL ) { $this->_jsonLayout( $data ); }
+	final public function JsonLayout( $data=NULL ) { $this->_jsonLayout( $data ); }
+	final public function PrintJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
+	final public function OutputJSON( $data=NULL ) { $this->_jsonLayout( $data ); }
+	final public function DisplayJSON ( $data=NULL ) { $this->_jsonLayout( $data ); }
 
-	protected function DisplayAsCss() { return $this->_displayAsCss(); }
-	protected function DisplayAsJs() { return $this->_displayAsJs(); }
-	protected function DisplayAsJson() { return $this->_displayAsJson(); }
-	protected function DisplayAsText() { return $this->_displayAsText(); }
-	protected function DisplayAsStream( $name ) { return $this->_displayAsStream( $name ); }
+	final protected function DisplayAsCss() { return $this->_displayAsCss(); }
+	final protected function DisplayAsJs() { return $this->_displayAsJs(); }
+	final protected function DisplayAsJson() { return $this->_displayAsJson(); }
+	final protected function DisplayAsText() { return $this->_displayAsText(); }
+	final protected function DisplayAsStream( $name ) { return $this->_displayAsStream( $name ); }
 	
-	protected function MakeStream( $name ) { return $this->_displayAsStream( $name ); }
-	protected function MakeAPIOut() { return $this->CORS(); }
-	protected function MakeAPI() { return $this->CORS(); }
+	final protected function MakeStream( $name ) { return $this->_displayAsStream( $name ); }
+	final protected function MakeAPIOut() { return $this->CORS(); }
+	final protected function MakeAPI() { return $this->CORS(); }
 
 	private function _executeBlock( $blockName, $methodName=NULL ) 
 	{

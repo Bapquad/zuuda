@@ -7,6 +7,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	private $_controller;
 	private $_action;
 	private $_view;
+	private $_template;
 	private $_model;
 	
 	protected function _getModule() { return $this->_module; }
@@ -67,12 +68,14 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function AddBlock( $block, $force_name = NULL ) { return $this->_addBlock( $block, $force_name ); }
 	
 	/** Implement Interface iController */
-	public function BeforeAction( $query = NULL ) {}
-	public function AfterAction( $query = NULL ) {} 
+	public function BeforeAction( $query = NULL ) { /**...*/ }
+	public function AfterAction( $query = NULL ) { /**....*/ } 
+	public function BeforeRender( $query = NULL ) { /**...*/ }
 	public function CheckMass( $query = NULL ) { return $this->_checkMass(); } 
-	public function Resting( $seconds=2 ) { $this->_resting( $seconds ); }
+	public function Resting( $seconds=2 ) { $this->_resting( $seconds ); } 
 	
 	final public function rootName() { return __CLASS__; }
+	final public function FinalRender( Application $appInst ) { $this->_finalRender( $this->_template ); }
 
 	public function __construct() 
 	{
@@ -109,7 +112,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		}
 	}
 	
-	protected function _includeMeta( $value ) 
+	final protected function _includeMeta( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -119,7 +122,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _includeHtml( $value ) 
+	final protected function _includeHtml( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -129,7 +132,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _includeCss( $value ) 
+	final protected function _includeCss( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -139,7 +142,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _includeJs( $value ) 
+	final protected function _includeJs( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -149,7 +152,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _preloadMeta( $value ) 
+	final protected function _preloadMeta( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -159,7 +162,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _preloadHtml( $value ) 
+	final protected function _preloadHtml( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -169,7 +172,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _preloadCss( $value ) 
+	final protected function _preloadCss( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -179,7 +182,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _preloadJs( $value ) 
+	final protected function _preloadJs( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) )
@@ -189,7 +192,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 
-	protected function _requireJui( $value ) 
+	final protected function _requireJui( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) ) 
@@ -199,7 +202,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 
-	protected function _includeJui( $value ) 
+	final protected function _includeJui( $value ) 
 	{
 		$view = $this->_getView();
 		if( isset( $view ) ) 
@@ -209,22 +212,22 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _share( $name, $value ) 
+	final protected function _share( $name, $value ) 
 	{
 		return $this->_set( $name, $value );
 	}
 	
-	protected function _compact( $name, $value ) 
+	final protected function _compact( $name, $value ) 
 	{
 		return $this->_set( $name, $value );
 	}
 	
-	protected function _assign( $name, $value ) 
+	final protected function _assign( $name, $value ) 
 	{
 		return $this->_set( $name, $value );
 	}
 
-	protected function _set( $name, $value ) 
+	final protected function _set( $name, $value ) 
 	{
 		$view = $this->_getView();
 		if( !is_null( $view ) && !$this->_addBlock( $value, $name ) ) 
@@ -234,7 +237,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	}
 	
-	protected function _render( $template = NULL, $agrs = NULL ) 
+	final protected function _render( $template = NULL, $agrs = NULL ) 
 	{
 		$view = $this->_getView();
 		
@@ -246,10 +249,15 @@ abstract class Controller implements iController, iDeclare, iBlock
 				{
 					$view->set($a, $b);
 				}
-			}
-			$view->render( $template );
+			} 
+			$this->_template = $template;
 		}
 	} 
+	
+	final protected function _finalRender() 
+	{
+		$this->_getView()->render( $this->_template );
+	}
 
 	private function _customRender( $render_name, $agrs = NULL ) 
 	{

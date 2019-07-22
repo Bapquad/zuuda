@@ -25,95 +25,95 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		HTML_ASSET	=> array()
 	);
 	
-	protected function _getVars() { return $this->_vars; }
-	protected function _getWidgets() { return $this->_widgets; }
+	final protected function _getVars() { return $this->_vars; }
+	final protected function _getWidgets() { return $this->_widgets; }
 	/** private function _getName */
-	protected function _getTemplate() { return $this->_tpl_name; }
-	protected function _getHeadAssets() { return $this->_head_assets; }
-	protected function _getContentAssets() { return $this->_content_assets; }
+	final protected function _getTemplate() { return $this->_tpl_name; }
+	final protected function _getHeadAssets() { return $this->_head_assets; }
+	final protected function _getContentAssets() { return $this->_content_assets; }
 	
-	protected function _setVars( $vars ) { $this->_vars = $vars; return $this; }
-	protected function _setVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
-	protected function _addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
-	protected function _setName( $value ) { $this->_name = $value; return $this; }
-	protected function _setTemplate( $value ) { $this->_tpl_name = $value; return $this; }
-	protected function _setLayout( $value ) { $this->_tpl_name = $value; return $this; }
-	protected function _setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
-	protected function _setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
+	final protected function _setVars( $vars ) { $this->_vars = $vars; return $this; }
+	final protected function _setVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
+	final protected function _addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
+	final protected function _setName( $value ) { $this->_name = $value; return $this; }
+	final protected function _setTemplate( $value ) { $this->_tpl_name = $value; return $this; }
+	final protected function _setLayout( $value ) { $this->_tpl_name = $value; return $this; }
+	final protected function _setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
+	final protected function _setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
 	
-	public function GetVars() { return $this->_getVars(); }
-	public function SetVar( $name, $value ) { return $this->_setVar( $name, $value ); }
-	public function AddVar( $name, $value ) { return $this->_addVar( $name, $value ); }
-	public function __view__get_head_assets() { return $this->_head_assets; }
-	public function __view__get_content_assets() { return $this->_content_assets; }
-	public function __view__merge_vars( $vars ) { $this->_vars = array_merge( $vars, $this->_vars ); return $this; }
+	final public function GetVars() { return $this->_getVars(); }
+	final public function SetVar( $name, $value ) { return $this->_setVar( $name, $value ); }
+	final public function AddVar( $name, $value ) { return $this->_addVar( $name, $value ); }
+	final public function __view__get_head_assets() { return $this->_head_assets; }
+	final public function __view__get_content_assets() { return $this->_content_assets; }
+	final public function __view__merge_vars( $vars ) { $this->_vars = array_merge( $vars, $this->_vars ); return $this; }
 
-	public function Share( $name, $value ) { return $this->_share( $name, $value ); }
-	public function Compact( $name, $value ) { return $this->_compact( $name, $value ); }
-	public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
-	public function Set( $name, $value ) { return $this->_set( $name, $value ); }
-	public function SetTitle( $value ) { return $this->_setTitle( $value ); }
-	public function GetName() { return $this->_getName(); }
-	public function SetName( $value ) { return $this->_setName( $value ); }
-	public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); }
-	public function SetLayout( $tpl_path ) { return $this->_setLayout( $tpl_path ); } 
-	public function AddWidget( $widget, $force_name = NULL ) { return $this->_addWidget( $widget, $force_name ); }
-	public function GetWidget( $name ) { return $this->_getWidget( $name ); }
-	public function Render( $template = NULL, $args = NULL ) { return $this->_render( $template, $args ); }
+	final public function Share( $name, $value ) { return $this->_share( $name, $value ); }
+	final public function Compact( $name, $value ) { return $this->_compact( $name, $value ); }
+	final public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
+	final public function Set( $name, $value ) { return $this->_set( $name, $value ); }
+	final public function SetTitle( $value ) { return $this->_setTitle( $value ); }
+	final public function GetName() { return $this->_getName(); }
+	final public function SetName( $value ) { return $this->_setName( $value ); }
+	final public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); }
+	final public function SetLayout( $tpl_path ) { return $this->_setLayout( $tpl_path ); } 
+	final public function AddWidget( $widget, $force_name = NULL ) { return $this->_addWidget( $widget, $force_name ); }
+	final public function GetWidget( $name ) { return $this->_getWidget( $name ); }
+	final public function Render( $template = NULL, $args = NULL ) { return $this->_render( $template, $args ); }
 	
-	public function HeadAsset( $type, $value ) 
+	final public function HeadAsset( $type, $value ) 
 	{
 		array_push( $this->_head_assets[ $type ], $value );
 	}
 	
-	public function PreloadMeta( $value ) 
+	final public function PreloadMeta( $value ) 
 	{
 		$this->headAsset( HTML_ASSET, $value );
 	}
 	
-	public function PreloadHtml( $value ) 
+	final public function PreloadHtml( $value ) 
 	{
 		$this->headAsset( HTML_ASSET, $value );
 	}
 	
-	public function PreloadCss( $value ) 
+	final public function PreloadCss( $value ) 
 	{
 		$this->headAsset( STYLE_ASSET, $value );
 	}
 	
-	public function PreloadJs( $value ) 
+	final public function PreloadJs( $value ) 
 	{
 		$this->headAsset( SCRIPT_ASSET, $value );
 	}
 	
-	public function ContentAsset( $type, $value ) 
+	final public function ContentAsset( $type, $value ) 
 	{
 		array_push( $this->_content_assets[ $type ], $value );
 	}
 	
-	public function IncludeMeta( $value ) 
+	final public function IncludeMeta( $value ) 
 	{
 		$this->contentAsset( HTML_ASSET, $value );
 	}
 	
-	public function IncludeHtml( $value ) 
+	final public function IncludeHtml( $value ) 
 	{
 		$this->contentAsset( HTML_ASSET, $value );
 	}
 	
-	public function IncludeCss( $value ) 
+	final public function IncludeCss( $value ) 
 	{
 		$this->contentAsset( STYLE_ASSET, $value );
 	}
 	
-	public function IncludeJs( $value ) 
+	final public function IncludeJs( $value ) 
 	{
 		$this->contentAsset( SCRIPT_ASSET, $value );
 	}
 	
 	final public function rootName() { return __CLASS__; }
 	
-	public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
+	final public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
 	{
 		if( !is_null( $section_name ) ) 
 		{
