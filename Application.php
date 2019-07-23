@@ -9,6 +9,7 @@ const FOOTER_LAYOUT = 'footer';
 const MAIN_LAYOUT 	= 'main'; 
 
 use Kuwamoto; 
+use ReflectionClass;
 
 class Application 
 {
@@ -253,7 +254,15 @@ class Application
 			$controller_class_file = _currentControllerFile(); 
 			if(file_exists( $controller_class_file ) ) 
 			{
-				$dispatch = new $controller_class_name();
+				$ctrlRefl = new ReflectionClass($controller_class_name); 
+				$ttrInjts = $ctrlRefl->getConstructor()->getParameters(); 
+				$args = array();
+				foreach( $ttrInjts as $key => $arg ) 
+				{
+					$propName = $arg->getClass()->name; 
+					$args[] = new $propName;
+				}
+				$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
 				$action = $configs['ACTION']; 
 				$action = explode( ';', $action );
 				foreach( $action as $key => $value ) 

@@ -600,9 +600,18 @@ abstract class SQLQuery
 			$field = $field[ 1 ]; 
 		}
 
-		$field = '`' . $model . '`.`' . $field . '`';
-
-		$this->_extraConditions .= $field.' '.$operator.' '.$sql_value.' AND ';
+		$field = '`' . $model . '`.`' . $field . '`'; 
+		
+		try 
+		{
+			if( is_array($value) ) 
+				throw new Exception( 'Can\'t use <i>$field_value</i> as an array in condation function <i>where( $field_name, $field_value, $operator )</i>.');
+			$this->_extraConditions .= $field.' '.$operator.' '.$sql_value.' AND ';
+		}
+		catch(Exception $e) 
+		{
+			abort( 400, $e->getMessage() ); 
+		}
 
 		return $this;
 	} 
