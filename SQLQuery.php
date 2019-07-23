@@ -1566,11 +1566,14 @@ abstract class SQLQuery
 	
 	private function _shareMainQuery() 
 	{
+		$remcols = $this->_collection; 
+		$this->_collection = '*'; 
 		$prefix = $this->_retrivePrefix(); 
 		$this->_buildMainQuery( $prefix ); 
 		$query = $this->_querySQL; 
+		$this->_collection = $remcols; 
 		$this->clear(); 
-		return substr( $query, 0, strlen($query)-1 );
+		return substr( $query, 0, strlen($query)-1 ); 
 	}
 
 	private function _buildMainQuery( $prefix ) 
