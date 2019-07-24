@@ -226,8 +226,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	
 	private function _renderLayout( $args = NULL ) 
 	{
-		global $configs;
-		global $html, $file;
+		global $configs, $html, $file, $_get, $_post;
 		
 		if( !is_null( $this->_tpl_name ) ) 
 		{

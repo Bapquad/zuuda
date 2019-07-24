@@ -233,8 +233,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function _renderLayout( $args = NULL ) 
 	{
-		global $configs; 
-		global $html, $file;
+		global $configs, $html, $file, $_get, $_post;
 		
 		extract( $this->_vars );
 		$this->_packageVars( $args );
