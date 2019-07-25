@@ -31,8 +31,10 @@ abstract class SQLQuery
 	protected $_offset;
 	protected $_imerge;
 	protected $_expresion;
-	// protected $_ibind;
 	protected $_prefix;
+	// protected $_ibind;
+	// protected $timestamp; 
+	// public $id;
 	
 	final protected function _getDBHandle() { return $this->_dbHandle; }
 	final protected function _getResult() { return $this->_result; }
@@ -74,11 +76,9 @@ abstract class SQLQuery
 	final protected function _addHasManyAndBelongsToMany( $value ) { return $this->_orderHMABTM( $value ); }
 
 	final protected function _setPage( $value ) { $this->_page = $value; return $this; }
-	/** private function _setLimit */
 	final protected function _setPrefix( $value ) { $this->_prefix = $value; return $this; }
 	final protected function _new() { return $this->clear( true ); } 
 	
-	/** Connects to database **/
 	final public function Connect( $address, $account, $pwd, $name ) { return $this->_connect( $address, $account, $pwd, $name ); }
 	final public function Query( $query = NULL ) { return $this->_query( $query ); }
 	final public function GetQuery() { return $this->_getQuerySQL(); }
@@ -271,6 +271,9 @@ abstract class SQLQuery
 	final public function Begin() { return $this->_new(); }
 	final public function ShareMainQuery() { return $this->_shareMainQuery(); }
 	final public function GenRandString( $len=10 ) { return $this->_genRandString($len); }
+
+	// final public function boot() { return NULL; }
+	// final public function down() { return NULL; }
 	
 	abstract protected function _startConn();
 	abstract protected function setTable();
@@ -2313,7 +2316,12 @@ abstract class SQLQuery
 			$cond_clause .= '`id`='.$id.' AND ';
 		}
 
-		$cond_clause = substr( $cond_clause, 0, -4 );
+		$cond_clause = substr( $cond_clause, 0, -4 ); 
+		
+		if( method_exists('down') ) 
+		{
+			$this->down();
+		}
 
 		$query = 'DELETE FROM `'.$this->_table.'`'.$cond_clause.$limit_clause; 
 
@@ -2365,12 +2373,22 @@ abstract class SQLQuery
 
 			foreach ( $this->_describe as $field ) 
 			{
+				if(isset($this->timestamp) && is_array($this->timestamp)) 
+				{
+					if( in_array($field, $this->timestamp) ) 
+					{
+						$dt = new \Datetime(); 
+						$this->$field = $dt->format('Y-m-d H:i:s');
+					}
+				} 
+
 				if( $field == "id" ) continue; 
 				if( !isset($this->$field) ) continue;
-				if ( $this->$field || is_string( $this->$field ) || is_numeric( $this->$field ) ) 
+				if ( $this->$field || is_string($this->$field) || is_numeric($this->$field) ) 
 				{
 					$updates .= '`'.$this->_model.'`.`'.$field.'` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->$field ).'\',';
-				} 			}
+				} 
+			}
 
 			if( $updates == EMPTY_CHAR ) 
 				return $this;
