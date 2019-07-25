@@ -78,8 +78,12 @@ function _assetPath( $file_path, $file = false, $build = false )
 		if( call(Zuuda\cFile::get(), $path)->exist() )
 			return $path;
 		$file_path = _correctPath($file_path);
-		$theme_path = _correctPath($theme_path);
-		if( EMPTY_CHAR!==$theme_path ) 
+		$theme_path = _correctPath($theme_path); 
+		if(false!==stripos($file_path, CACHE_TPL_NAME_DIR)) 
+		{
+			return WEB_DIR . $file_path; 
+		} 
+		if( EMPTY_CHAR!==$file_path ) 
 			abort( 400, "<strong style=\"\">$file_path</strong> is not found.<br/><strong style=\"\">$theme_path</strong> is not found also.</p>" );
 		else 
 			abort( 400, "<strong style=\"\">$file_path</strong> is not found.</p>" );

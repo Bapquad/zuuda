@@ -121,6 +121,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function EngineLayout( $layout_content = NULL, $vars = NULL ) { return $this->_engineLayout( $layout_content, $vars ); }
 	final public function RenderLayout( $vars = NULL ) { return $this->_renderLayout( $vars ); } 
 	final public function RenderBlock( $block, $args = NULL ) { return $this->_renderBlock( $block, $args ); }
+	final public function Include( $tplName ) { return $this->_include( $tplName ); }
 	final public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); } 
 	final public function SetLayout( $tpl_path, $type ) { return $this->_setLayout( $tpl_path, $type ); } 
 	final public function LoadHeader() { return $this->_loadHeader(); }
@@ -235,8 +236,8 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	{
 		global $configs, $html, $file, $_get, $_post;
 		
-		extract( $this->_vars );
 		$this->_packageVars( $args );
+		extract( $this->_vars );
 		extract( $this->_blocks );
 		
 		if( $this->_layout_engine_path ) 
@@ -256,6 +257,14 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		{
 			include_once( $this->_layout_footer_path );
 		}
+	}
+	
+	private function _include( $tplName ) 
+	{
+		extract( $this->_vars );
+		extract( $this->_blocks );
+		include( _assetPath(TPL_NAME_DIR . $tplName, true ) ); 
+		return $this;
 	}
 	
 	private function _renderBlock( $block, $args = NULL ) 
