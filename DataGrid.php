@@ -220,7 +220,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		} 
 		$model->setLimit( $num_of_rows );
 		
-		$total_pages = (int)ceil( (int)$length[ 'size' ] / $num_of_rows );
+		$total_pages = (int)ceil( $length/$num_of_rows );
 		$this->_setTotalPages( $total_pages );
 		
 		// Check current page greater total pages.
@@ -237,7 +237,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		
 		if( $this->getPaging() === true ) 
 		{
-			$paging = new Pagination( $current_page, $length[ 'size' ] );
+			$paging = new Pagination( $current_page, $length );
 			// $paging->setPath( 'admin/stat/index/' );
 			// $paging->setPath( '/?page={page}' );
 			$paging->setPath( $printer );
@@ -525,7 +525,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		}
 		
 		$this->_assign( 'printer', $printer );				// Distributes page printer datas.
-		$this->_assign( 'length', $length[ 'size' ] );				// Distributes the length value.
+		$this->_assign( 'length', $length );				// Distributes the length value.
 		$this->_assign( 'current_page', $current_page );	// Distributes the curr page value.
 		$this->_assign( 'total_pages', $total_pages );		// Distributes the total pages value.
 		$this->_assign( 'data', $data_grid );				// Distributes the data of grid.
@@ -536,7 +536,6 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$this->_assign( 'name', $name );					// Distributes the name.
 		$this->_assign( 'sort', $sort );					// Distributes the sort, default null.
 		$this->_assign( 'order', $order );					// Distributes the order, default null, if any column has sort, and in current order request, it returns it's name value.
-		
 		return $this->_renderLayout( $data );
 	}
 	

@@ -251,7 +251,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 			catch(Exception $e) 
 			{
 				$block_name = get_class( $this );
-				echo "{ $block_name is missed }";
+				echo "{ $block_name is missed }"; 
 			}
 		}
 		

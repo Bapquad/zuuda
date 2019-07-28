@@ -1,27 +1,6 @@
 <?php
 
-function zuuda_api_autoload( $class_name ) 
-{
-	global $configs; 
-	$class_file = _correctPath( $class_name.$configs[ 'EXT' ] ); 
-	$class_path = VENDOR.DS.$class_file; 
-	if( !file_exists( $class_path ) ) 
-	{
-		if( $configs[ 'COM' ] ) 
-		{
-			$class_path = COM . $class_file;
-			if( !file_exists( $class_path ) ) 
-			{
-				$class_path = CODE . ((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL) . $class_file; 
-			}
-		}
-		
-		if( !file_exists( $class_path ) ) 
-			$class_path = MOD_DIR . $class_file;
-	} 
-	require_once( $class_path );
-}
-
+function zuuda_api_autoload( $class_name ) {_dispatch( $class_name );}
 spl_autoload_register( 'zuuda_api_autoload' );
 
 function _numeral( $number ) 
@@ -165,6 +144,29 @@ function _closeDB()
 		@mysql_close( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] );
 	}
 }
+
+function _dispatch( $class_name ) 
+{
+	global $configs; 
+	$class_file = _correctPath( $class_name.$configs[ 'EXT' ] ); 
+	$class_path = VENDOR.DS.$class_file; 
+	if( !file_exists( $class_path ) ) 
+	{
+		if( $configs[ 'COM' ] ) 
+		{
+			$class_path = COM . $class_file;
+			if( !file_exists( $class_path ) ) 
+			{
+				$class_path = CODE . ((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL) . $class_file; 
+			}
+		}
+		
+		if( !file_exists( $class_path ) ) 
+			$class_path = MOD_DIR . $class_file;
+	} 
+	require_once( $class_path );
+} 
+function dispatch( $class_name ) {_dispatch( $class_name );}
 
 function _direct( $url ) 
 {

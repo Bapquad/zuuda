@@ -10,6 +10,7 @@ const MAIN_LAYOUT 	= 'main';
 
 use Kuwamoto; 
 use ReflectionClass;
+use Exception;
 
 class Application 
 {
@@ -273,7 +274,14 @@ class Application
 				$parse_result = $this->_parseQuery($action, false);
 				if($parse_result) 
 					$action = substr( $action, 0, $parse_result );
-				$action = preg_replace( '/[\-\_\s]/', '', $action );
+				$actionDelimeter = '|'; 
+				$actionInjector = '/[\-\_\s]/';
+				$action = explode( $actionDelimeter, preg_replace( $actionInjector, $actionDelimeter, $action ) );
+				foreach( $action as $key => $word ) 
+				{
+					$action[$key] = ucfirst($word); 
+				}
+				$action = implode(EMPTY_CHAR, $action);
 				$action .= ACTION;
 				if($action === 'Action') $action = 'IndexAction';
 				if((int)method_exists($dispatch, $action)) 

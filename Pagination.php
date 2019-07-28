@@ -2,6 +2,8 @@
 
 namespace Zuuda;
 
+use Exception;
+
 class Pagination implements iHTML, iPagination 
 {
 	private $_classies = array( 'pg-paging', 'pagination', 'pagination-sm' );		// Holds the style class.
@@ -213,14 +215,22 @@ class Pagination implements iHTML, iPagination
 		$current = $this->_getCurrent();
 		$total = $this->_getTotal();
 		
-		if( is_null( $current ) ) 
+		try 
 		{
-			throw new Exception( 'Phân trang(' . get_class( $this ) . ')::Chưa cài đặt trang hiện tại.' );
-		}
-		
-		if( is_null( $total ) ) 
+			if( is_null( $current ) ) 
+			{
+				throw new Exception( 'Phân trang(' . get_class( $this ) . ')::Chưa cài đặt trang hiện tại.' );
+			}
+			
+			if( is_null( $total ) ) 
+			{
+				throw new Exception( 'Phân trang(' . get_class( $this ) . ')::Chưa cài đặt trang cuối.' );
+			}
+		} 
+		catch(Exception $e) 
 		{
-			throw new Exception( 'Phân trang(' . get_class( $this ) . ')::Chưa cài đặt trang cuối.' );
+			echo $e->getMessage(); 
+			var_dump($e->getTrace());
 		}
 	}
 }

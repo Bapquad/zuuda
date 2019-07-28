@@ -1,6 +1,8 @@
 <?php
 namespace Zuuda;
 
+use Exception;
+
 define( 'AUTH_DATA', 'authorization' );
 define( 'auth', AUTH_DATA );
 
@@ -32,7 +34,7 @@ abstract class Authorization implements iAuthorization
 				$this->_data[ $data ] = $value;
 				return $this;
 			} 
-			catch( Exception $e ) 
+			catch( \Exception $e ) 
 			{
 				echo $e->getMessage(); 
 				exit;
