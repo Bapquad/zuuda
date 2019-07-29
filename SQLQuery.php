@@ -2385,13 +2385,19 @@ abstract class SQLQuery
 
 		if( $id ) 
 		{
-			if( is_string($id) )
+			if( is_string($id) ) 
+			{
 				$id = "'".mysqli_real_escape_string( $this->_dbHandle, $id )."'";
-			$cond_clause .= '`id`='.$id.' AND ';
+				$cond_clause .= '`id`='.$id.' AND ';
+			} 
+			elseif( is_array($id) )
+			{
+				$id = mysqli_real_escape_string( $this->_dbHandle, implode(comma, $id) );
+				$cond_clause .= '`id` IN ('.$id.') AND ';
+			}
 		}
-
-		$cond_clause = substr( $cond_clause, 0, -4 ); 
 		
+		$cond_clause = substr( $cond_clause, 0, -4 ); 
 		if( method_exists($this, 'down') ) 
 			$this->down();
 		$query = 'DELETE FROM `'.$this->_table.'`'.$cond_clause.$limit_clause; 
