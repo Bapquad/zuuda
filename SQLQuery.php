@@ -2425,7 +2425,8 @@ abstract class SQLQuery
 	{
 		$save_all = NULL;
 		$fix_id = NULL;
-		$query = '';
+		$query = ''; 
+		$result = NULL;
 		
 		if( isset($this->_updates) && $this->_updates==="d4adf8b7f2ac" ) 
 		{
@@ -2498,8 +2499,6 @@ abstract class SQLQuery
 			$query = 'UPDATE `'.$this->_table.'` AS `'.$this->_model.'` SET '.$updates.$cond_clause.$limit_clause; 
 			$this->_result = mysqli_query( $this->_dbHandle, $query );
 			$fix_id = $this->id;
-			if( method_exists($this, 'onride') ) 
-				$this->onride(); 
 		} 
 		else 
 		{
@@ -2532,19 +2531,13 @@ abstract class SQLQuery
 			$fields = substr( $fields, 0, -1 );
 			
 			$query = 'INSERT INTO '.$this->_table.' ('.$fields.') VALUES ('.$values.')'; 
-			$this->_result = mysqli_query( $this->_dbHandle, $query );
-			if( method_exists($this, 'onboot') ) 
-				$this->onboot();
+			$this->_result = mysqli_query( $this->_dbHandle, $query ); 
 		} 
-
-		$this->_querySQL = $query; 
-		array_push( $this->_querySQLs, $query ); 
-		$this->clear();
 
 		if ( $this->_result == 0 ) 
 		{
 			/** Error Generation **/
-			return $this->_getError();
+			$result = $this->_getError();
 		} 
 		else 
 		{
@@ -2552,16 +2545,23 @@ abstract class SQLQuery
 			{
 				// Reserve the id from insert.
 				$this->id = mysqli_insert_id( $this->_dbHandle ); 
-				
-				
-				
-				return array( 'id'=> $this->id );
+				if( method_exists($this, 'onboot') ) 
+					$this->onboot(); 
+				$result = array( 'id'=> $this->id );
 			} 
 			else 
 			{
-				return array( 'id'=> $fix_id );
-			}
-		}
+				if( method_exists($this, 'onride') ) 
+					$this->onride(); 
+				$result = array( 'id'=> $fix_id );
+			} 
+			
+		} 
+		$this->_querySQL = $query; 
+		array_push( $this->_querySQLs, $query ); 
+		$this->clear();
+		
+		return $result;
 	}
 
 	/** Clear All Variables **/
