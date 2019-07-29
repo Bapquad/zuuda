@@ -2358,9 +2358,7 @@ abstract class SQLQuery
 		}
 		
 		foreach ($this->_describe as $field) 
-		{
-			$this->$field = NULL;
-		}
+			$this->$field = NULL; 
 	}
 
 	/** Delete an Object **/
@@ -2371,20 +2369,12 @@ abstract class SQLQuery
 		$limit_clause = '';
 
 		if( isset($this->_limit) ) 
-		{
-			$limit_clause = 'LIMIT '.$this->_limit.' ';
-		}
+			$limit_clause = 'LIMIT '.$this->_limit.' '; 
 		
-		if( NULL===$id ) 
-		{
-			if( isset($this->id) ) 
-			{
-				$id = $this->id;
-			}
-		}
+		if( NULL===$id && isset($this->id) ) 
+			$id = $this->id;
 
 		if( $id ) 
-		{
 			if( is_string($id) ) 
 			{
 				$id = "'".mysqli_real_escape_string( $this->_dbHandle, $id )."'";
@@ -2394,24 +2384,22 @@ abstract class SQLQuery
 			{
 				$id = mysqli_real_escape_string( $this->_dbHandle, implode(comma, $id) );
 				$cond_clause .= '`id` IN ('.$id.') AND ';
-			}
-		}
+			} 
 		
 		$cond_clause = substr( $cond_clause, 0, -4 ); 
 		if( method_exists($this, 'down') ) 
 			$this->down();
 		$query = 'DELETE FROM `'.$this->_table.'`'.$cond_clause.$limit_clause; 
 		$this->_result = mysqli_query( $this->_dbHandle, $query ); 
-		if( method_exists($this, 'ondown') )
-			$this->ondown(); 
 		$this->_querySQL = $query;
 		array_push( $this->_querySQLs, $query );
 		$this->clear(); 
-		if ( $this->_result == 0 ) 
-		{
+		if( $this->_result == 0 ) 
 			/** Error Generation **/
-			return -1;
-		} 
+			return -1; 
+		else 
+			if( method_exists($this, 'ondown') )
+				$this->ondown(); 
 	}
 
 	/** Saves an Object i.e. Updates/Inserts Query **/
