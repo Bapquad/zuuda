@@ -103,7 +103,7 @@ class Application
 				}
 			}
 			
-			if( in_array( 'REQUEST_VARIABLES', $configs ) ) 
+			if( array_key_exists( 'REQUEST_VARIABLES', $configs ) ) 
 			{
 				GlobalModifier::set( '_GET', $configs[ 'REQUEST_VARIABLES' ] );
 				GlobalModifier::set( '_get', $configs[ 'REQUEST_VARIABLES' ] );
