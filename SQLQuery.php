@@ -273,6 +273,7 @@ abstract class SQLQuery
 
 	final public function Load() { return $this->_search(); }
 	final public function Search() { return $this->_search(); } 
+	final public function Distinct( $field, $selects=NULL ) { return $this->_distinct( $field, $selects ); } 
 	final public function Paginate( $page=NULL, $limit=NULL ) { return $this->_paginate( $page, $limit ); }
 	final public function Custom( $query ) { return $this->_custom( $query ); }
 	final public function Delete( $id=NULL ) { return $this->_delete( $id ); }
@@ -408,9 +409,40 @@ abstract class SQLQuery
 		else
 			return NULL;
 	}
+	
+	/** Distinct Query */ 
+	private function _distinct( $field, $selects = NULL ) 
+	{
+		$distinct = ' DISTINCT(`'.$this->_model.'`.`'.$field.'`)';
+		if( NULL===$this->_imerge ) 
+		{
+			$collections = $distinct.$this->_collection; 
+		}
+		else 
+		{
+			if( NULL===$selects ) 
+			{
+				$collections = $distinct; 
+			} 
+			else 
+			{ 
+				$collects = array($distinct);
+				foreach( $selects as $model => $fields ) 
+				{
+					foreach( $fields as $select ) 
+					{
+						array_push( $collects, '`'.$model.'`.`'.$select.'`' );
+					}
+				}
+				$collections = implode( comma, $collects ); 
+			}
+		}
+		$this->_collection = $collections.$this->_collection; 
+		
+		return $this->_search(); 
+	}
 
 	/** Select Query **/
-	
 	private function _select( $fields, $label = NULL ) 
 	{
 		$model = $this->_model;
@@ -495,9 +527,9 @@ abstract class SQLQuery
 	
 	private function _getCollectionString() 
 	{
-		if( is_null( $this->_collection ) )
+		if( is_null($this->_collection) )
 		{
-			if( !empty( $this->_undescrible ) && ( (isset($this->_hasOne) && NULL===$this->_hasOne) || ((isset($this->_hasOne) && NULL!==$this->_hasOne && $this->_hO==null)) ) && $this->_imerge===NULL ) 
+			if( !empty($this->_undescrible) && ( (isset($this->_hasOne) && NULL===$this->_hasOne) || ((isset($this->_hasOne) && NULL!==$this->_hasOne && $this->_hO==null)) ) && $this->_imerge===NULL ) 
 			{
 				$describe = $this->_describe; 
 				$hasChange = false;
@@ -1580,14 +1612,20 @@ abstract class SQLQuery
 
 	/** HOW TO USE MERGE(models) FUNCTION
 	 * $this->model->merge([
-	 *	'Avatar' 	=> array('media.avatar_id.id', array('id'=>'= 2', 'name'=>'like \'%funny/%\'')), 
-	 *	'UserStat' 	=> array('user_stat.id.user_id'),
-	 * ])->search();
+	 *	'Avatar' 	=> array(
+	 *		'media.avatar_id.id', 			// merged_table . foreign_key . merged_table_key
+	 *		array(							// Addition Conditions
+	 *			'id'=>'= 2', 				// Make cond with the 'merged_table_key'
+	 *			'name'=>'like \'%funny/%\''	// Make cond with the 'merged_table_field' 
+	 *		)
+	 *	), 
+	 *	'UserStat' 	=> array(
+	 *		'user_stat.id.item_id'			// merged_table . foreign_key . merged_table_key
+	 *	),
+	 * ]);
 	 *
 	 * If merge model in hasOne, let's use
-	 * $this->model->merge(
-	 *	'User'
-	 * )
+	 * $this->model->merge(	'User' )
 	 */
 	private function _merge( $models )
 	{
