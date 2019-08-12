@@ -309,13 +309,11 @@ abstract class SQLQuery
 		if (!$describe && $this->_dbHandle) 
 		{
 			$describe = array();
-			$query = 'DESCRIBE '.$tableName;
-			$result = mysqli_query( $this->_dbHandle, $query );
-			while ($row = mysqli_fetch_row($result)) 
-			{
-				array_push($describe,$row[0]);
-			}
-			mysqli_free_result($result);
+			$sql = 'DESCRIBE '.$tableName;
+			$result = $this->_query( $sql );
+			while ($row = $this->fetch_row($result)) 
+				array_push($describe,$row[0]); 
+			$this->free_result($result);
 			$cache->set('describe'.$tableName,$describe);
 		}
 		return $describe; 
@@ -365,23 +363,10 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function _escape( $str ) 
-	{
-		return mysqli_real_escape_string( $this->_dbHandle, trim($str) );
-	} 
-	
 	private function _logsql( $sql ) 
 	{
 		$this->_querySQL = $sql;
 		$this->_querySQLs[] = $sql; 
-	}
-	
-	private function _query( $sql ) 
-	{
-		$sql = trim($sql);
-		$result = mysqli_query( $this->_dbHandle, $sql ); 
-		$this->_logsql( $sql ); 
-		return $result;
 	}
 	
 	private function _custom( $args, $argsNum, $mn="Custom" ) 
@@ -398,16 +383,10 @@ abstract class SQLQuery
 				$out = array(); 
 				if( $qr ) 
 				{
-					$ts = array(); 
-					$fs = array(); 
-					while( $f = mysqli_fetch_field($qr) ) 
-					{
-						$ts[] = ($f->table)?$f->table:$this->_propModel;
-						$fs[] = $f->name;
-					} 
-					$numf = count($fs); 
-					
-					while( $r = mysqli_fetch_row($qr) ) 
+					$ts;
+					$fs; 
+					$numf = $this->fetch_field( $qr, $ts, $fs ); 
+					while( $r = $this->fetch_row($qr) ) 
 					{
 						$tmps = array(); 
 						for( $i=head; $i<$numf; $i++ ) 
@@ -415,7 +394,7 @@ abstract class SQLQuery
 						
 						array_push($out,$tmps);
 					}
-					mysqli_free_result($qr); 
+					$this->free_result($qr); 
 				}
 				return $out;
 			} 
@@ -450,7 +429,7 @@ abstract class SQLQuery
 			} 
 			else 
 			{
-				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} '{$this->_escape($f[2])}' ";
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} '{$this->escape_string($f[2])}' ";
 			}
 		} 
 		return $sqls;
@@ -485,26 +464,21 @@ abstract class SQLQuery
 		
 		if( $this->_flagHasOne ) 
 			if( $this->_flagHasOne && !empty($this->_propsHasOne) ) 
-				foreach($this->_propsHasOne as $model) 
+				foreach( $this->_propsHasOne as $model ) 
 					if( $model->isLive() ) 
 						$sqls = array_unique(array_merge($sqls, $model->parseSqlSelection())); 
 					
-		if( $this->_flagHasMany ) 
-			leave($this->_flagHasMany); 
-		
-		if( $this->_flagHasMABTM ) 
-			leave($this->_flagHasMABTM); 
-		
 		if( !empty($this->_propsMerge) ) 
-			foreach($this->_propsMerge as $model) 
-				if( $model->isLive() ) 
-					$sqls = array_unique(array_merge($sqls, $model->parseSqlSelection())); 
+			foreach( $this->_propsMerge as $model ) 
+				$sqls = array_unique(array_merge($sqls, $model->parseSqlSelection())); 
 		
 		if( !empty($this->_propsMergeLeft) ) 
-			leave("You have left join table."); 
+			foreach( $this->_propsMergeLeft as $model ) 
+				$sqls = array_unique(array_merge($sqls, $model->parseSqlSelection())); 
 		
 		if( !empty($this->_propsMergeRight) ) 
-			leave("You have right join table."); 
+			foreach( $this->_propsMergeRight as $model ) 
+				$sqls = array_unique(array_merge($sqls, $model->parseSqlSelection()));
 		
 		$outSql = $defSql . implode( comma, $sqls ) . space; 
 		return $outSql; 
@@ -520,21 +494,17 @@ abstract class SQLQuery
 				foreach( $this->_propsHasOne as $model ) 
 					$outSql .= $model->parseSqlHasOne(); 
 					
-		if( $this->_flagHasMany ) 
-			leave($this->_flagHasMany); 
-		
-		if( $this->_flagHasMABTM ) 
-			leave($this->_flagHasMABTM); 
-		
 		if( !empty($this->_propsMerge) ) 
 			foreach( $this->_propsMerge as $model ) 
 				$outSql .= $model->parseSqlMerge(); 
 		
 		if( !empty($this->_propsMergeLeft) ) 
-			leave("You have left join table."); 
+			foreach( $this->_propsMergeLeft as $model ) 
+				$outSql .= $model->parseSqlMergeLeft(); 
 		
 		if( !empty($this->_propsMergeRight) ) 
-			leave("You have right join table.");
+			foreach( $this->_propsMergeRight as $model ) 
+				$outSql .= $model->parseSqlMergeRight(); 
 		
 		$outSql = $defSql . space . $outSql; 
 		return $outSql;
@@ -600,7 +570,7 @@ abstract class SQLQuery
 		$outSql = EMPTY_STRING; 
 		if( is_string($value) ) 
 		{
-			$value = $this->_escape($value);
+			$value = $this->escape_string($value);
 			$outSql = "WHERE `{$this->_propModel}`.`{$this->_primaryKey}` = '$value' "; 
 		} 
 		else if( is_numeric($value) )
@@ -625,16 +595,10 @@ abstract class SQLQuery
 		$out = array(); 
 		if( $qr ) 
 		{
-			$ts = array(); 
-			$fs = array(); 
-			while( $f = mysqli_fetch_field($qr) ) 
-			{
-				$ts[] = ($f->table)?$f->table:$this->_propModel;
-				$fs[] = $f->name;
-			} 
-			$numf = count($fs); 
-			
-			while( $r = mysqli_fetch_row($qr) ) 
+			$ts; 
+			$fs; 
+			$numf = $this->fetch_field( $qr, $ts, $fs ); 
+			while( $r = $this->fetch_row($qr) ) 
 			{
 				$tmps = array(); 
 				for( $i=head; $i<$numf; $i++ ) 
@@ -642,18 +606,16 @@ abstract class SQLQuery
 				
 				if( $this->_flagHasMany && !empty($this->_propsHasMany) ) 
 				{
-					// ...
 					leave($this->_propsHasMany);
 				} 
 				
 				if( $this->_flagHasMABTM && !empty($this->_propsHasMABTM) ) 
 				{ 
-					// ...
 					leave($this->_propsHasMABTM); 
 				} 
 				array_push($out,$tmps); 
 			} 
-			mysqli_free_result($qr); 
+			$this->free_result($qr); 
 		} 
 		$this->_clear(); 
 		return $out; 
@@ -1379,8 +1341,8 @@ abstract class SQLQuery
 					$this->_reset();
 					if( $qr ) 
 					{
-						$result = mysqli_fetch_assoc( $qr ); 
-						mysqli_free_result( $qr ); 
+						$result = $this->fetch_assoc( $qr ); 
+						$this->free_result( $qr ); 
 						return (int)$result['total'];
 					}
 					else 
@@ -1507,13 +1469,13 @@ abstract class SQLQuery
 								} 
 								else 
 								{
-									$value = $this->_escape( $data[$field] ); 
+									$value = $this->escape_string( $data[$field] ); 
 									$saveSql[] = "`{$field}` = '{$value}'"; 
 								}
 							else if( is_array($this->_eventRide) ) 
 								if( array_key_exists($field, $this->_eventRide) ) 
 								{
-									$value = $this->_escape( $this->_eventRide[$field] ); 
+									$value = $this->escape_string( $this->_eventRide[$field] ); 
 									$saveSql[] = "`{$field}` = '{$value}'"; 
 									$data[$field] = $value;
 								} 
@@ -1543,12 +1505,12 @@ abstract class SQLQuery
 						foreach ($this->_propsDescribe as $field ) 
 							if( array_key_exists($field, $data) ) 
 							{
-								$values[] = $this->_escape( $data[$field] );
+								$values[] = $this->escape_string( $data[$field] );
 								$fields[] = "`".$field."`";
 							}
 							else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
 							{
-								$values[] = $this->_escape( $this->_eventBoot[$field] ); 
+								$values[] = $this->escape_string( $this->_eventBoot[$field] ); 
 								$fields[] = "`".$field."`";
 								$data[$field] = $this->_eventBoot[$field]; 
 							}
@@ -1559,7 +1521,7 @@ abstract class SQLQuery
 						{
 							if( method_exists($this, 'onboot') ) 
 								$this->onboot(); 
-							$data[$this->_primaryKey] = mysqli_insert_id( $this->_dbHandle ); 
+							$data[$this->_primaryKey] = $this->insert_id(); 
 							return $data;
 						}
 						return false; 
@@ -4423,7 +4385,8 @@ abstract class SQLQuery
 	private function _require( $model ) 
 	{
 		if( method_exists($this, $model) ) 
-			return call_user_func_array(array($this, $model), array());
+			call_user_func_array(array($this, $model), array()); 
+		return $this;
 	}
 	
 	private function _orderHasOne( $args, $argsNum ) 
@@ -4584,7 +4547,7 @@ abstract class SQLQuery
 			$fourArg = 4; 
 			if( $fourArg===$argsNum ) 
 			{
-				if(array_key_exists($args[head], $this->_propsMerge)) 
+				if( array_key_exists($args[head], $this->_propsMerge) ) 
 					return $this->_propsMerge[$args[head]];
 				$args[] = $this->_propModel;
 				$args[] = $this->_propPrefix;
@@ -4601,30 +4564,53 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function _orderMergeLeft( $model ) { $this->_propsMergeLeft[] = $model; return $this; } 
-	private function _orderMergeRight( $model ) { $this->_propsMergeRight[] = $model; return $this; } 
+	private function _orderMergeLeft( $args, $argsNum ) 
+	{
+		try 
+		{
+			$fourArg = 4; 
+			if( $fourArg===$argsNum ) 
+			{
+				if( array_key_exists($args[head], $this->_propsMergeLeft) ) 
+					return $this->_propsMergeLeft[$args[head]]; 
+				$args[] = $this->_propModel;
+				$args[] = $this->_propPrefix; 
+				$model = new StdModel($args); 
+				$this->_propsMergeLeft += array( $args[head]=>$model ); 
+				return $model;
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::mergeLeft()</strong> is incorrect." ); 
+		} 
+		catch( Exception $e ) 
+		{ 
+			abort( 400, $e->getMessage() ); 
+		} 
+	} 
 	
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-
+	private function _orderMergeRight( $args, $argsNum ) 
+	{
+		try 
+		{ 
+			$fourArg = 4;
+			if( $fourArg===$argsNum ) 
+			{ 
+				if( array_key_exists($args[head], $this->_propsMergeRight) ) 
+					return $this->_propsMergeRight[$args[head]]; 
+				$args[] = $this->_propModel;
+				$args[] = $this->_propPrefix; 
+				$model = new StdModel($args); 
+				$this->_propsMergeRight += array( $args[head]=>$model ); 
+				return $model; 
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::mergeRight()</strong> is incorrect." ); 
+		} 
+		catch( Exception $e ) 
+		{ 
+			abort( 400, $e->getMessage() ); 
+		} 
+	} 
 	
 	private function _shareMainQuery() 
 	{
@@ -4723,15 +4709,12 @@ abstract class SQLQuery
 
 	private function _getError() 
 	{
-		return array(
-			'error_msg'	=>mysqli_error( $this->_dbHandle ), 
-			'error_no'	=>mysqli_errno( $this->_dbHandle ) 
+		return array( 
+			'error_msg'	=>$this->error(), 
+			'error_no'	=>$this->errno() 
 		); 
 	} 
 	
-	/**
-	 * Generation Random A String
-	 */
 	private function _genRandString( $max_len = 10 ) 
 	{
 		$chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$!';
@@ -4744,16 +4727,46 @@ abstract class SQLQuery
 		return $output;
 	} 
 	
-	private function _connect( $address, $account, $pwd, $name ) 
+	private function errno() { return mysql_errno( $this->_dbHandle ); }
+	private function error() { return mysqli_error( $this->_dbHandle ); }
+	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); }
+	private function fetch_assoc( $rs ) {return mysqli_fetch_assoc( $rs ); }
+	private function free_result( $rs ) { return mysqli_free_result( $rs ); } 
+	private function fetch_row( $rs ) { return mysqli_fetch_row( $rs ); }
+	private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
+	
+	private function fetch_field( $rs, &$ts, &$fs ) 
+	{
+		$ts = array(); 
+		$fs = array(); 
+		while($f=mysqli_fetch_field($rs)) 
+		{
+			$ts[] = $f->table;
+			$fs[] = $f->name;
+		} 
+		return count($fs);
+	}
+	
+	private function _query( $sql ) 
+	{
+		$sql = trim($sql);
+		
+		$result = mysqli_query( $this->_dbHandle, $sql ); 
+		
+		$this->_logsql( $sql ); 
+		return $result;
+	}
+	
+	private function _connect( $address, $username, $password, $dbname ) 
 	{
 		global $configs;
-		$hl = mysqli_connect($address, $account, $pwd);
-		if ( false!==$hl ) 
-			if ( mysqli_select_db($hl, $name) ) 
+		$dbLink = mysqli_connect($address, $username, $password);
+		if ( $dbLink ) 
+			if ( mysqli_select_db($dbLink, $dbname) ) 
 			{
-				mysqli_query( $hl, 'SET CHARSET utf8' );	
-				$this->_setDBHandle( $hl ); 
-				$configs[ 'DATASOURCE' ][ 'HANDLECN' ] = $hl; 
+				mysqli_query( $dbLink, 'SET CHARSET utf8' );	
+				$this->_setDBHandle( $dbLink ); 
+				$configs[ 'DATASOURCE' ][ 'HANDLECN' ] = $dbLink; 
 				return 1;
 			}
 		return 0;
