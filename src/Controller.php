@@ -310,7 +310,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	
 	protected function _checkMass()  
 	{
-		global $_post, $_file, $configs;
+		global $_post, $_put, $_delete, $_file, $configs;
 
 		if( isset( $_SERVER[ 'REQUEST_URI' ] ) ) 
 		{
@@ -376,7 +376,22 @@ abstract class Controller implements iController, iDeclare, iBlock
 		if( !is_null( $_mass_vertifier_data ) ) 
 		{
 			$_file = $_file_vertifier_data[ "data" ];
-			$_post = $_mass_vertifier_data[ "data" ];
+			if( isset($_mass_vertifier_data[ "data" ]['_method']) ) 
+			{
+				$_method = strtolower($_mass_vertifier_data[ "data" ]['_method']);
+				unset( $_mass_vertifier_data[ "data" ]['_method'] ); 
+				if( 'put'===$_method ) 
+					$_put = $_mass_vertifier_data[ "data" ]; 
+				else if( 'delete'===$_method ) 
+					$_delete = $_mass_vertifier_data[ "data" ]; 
+				else if( 'post'===$_method )
+					$_post = $_mass_vertifier_data[ "data" ]; 
+			} 
+			else 
+			{
+				$_post = $_mass_vertifier_data[ "data" ]; 
+			}
+			
 			Session::Unregister( "_file_vertifier" . $thread_id );
 			Session::Unregister( "_mass_vertifier" . $thread_id );
 		}

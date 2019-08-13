@@ -65,10 +65,12 @@ class Application
 		GlobalModifier::set( 'inflect', new Kuwamoto\Inflection() );
 		GlobalModifier::set( 'html', Html::getInstance() );
 		GlobalModifier::set( 'file', cFile::getInstance() );
-		GlobalModifier::set( '$_post', array() );
-		GlobalModifier::set( '$_get', array() );
-		GlobalModifier::set( '$_server', array() );
-		GlobalModifier::set( '$_file', array() );
+		GlobalModifier::set( '_post', array() );
+		GlobalModifier::set( '_put', array() );
+		GlobalModifier::set( '_delete', array() );
+		GlobalModifier::set( '_get', array() );
+		GlobalModifier::set( '_server', array() );
+		GlobalModifier::set( '_file', array() );
 		GlobalModifier::loadUrl();
 	}
 	
@@ -247,8 +249,7 @@ class Application
 
 	public function Start() 
 	{
-		global $configs, $_get;
-		
+		global $configs, $_get;		
 		try 
 		{
 			$controller_class_name = $this->_extractController(); 

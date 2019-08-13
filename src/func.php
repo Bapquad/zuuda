@@ -142,15 +142,17 @@ function _useDB()
 
 function escape() 
 {
-	call_user_func( '_escape' );
+	if( call_user_func('_escape') ) 
+		exit(zero); 
 }
 
 function _escape() 
 {
 	global $configs;
 	if( isset($configs[ 'DATASOURCE' ][ 'HANDLECN' ]) ) 
-		if( mysqli_close( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) )
-			exit(zero); 
+		return mysqli_close( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ); 
+	else 
+		return true;
 }
 
 function _dispatch_service_file( $service_namespace ) 
@@ -181,8 +183,9 @@ function dispatch( $class_name ) {_dispatch_autoload_class_file( $class_name );}
 
 function _direct( $url ) 
 {
+	_escape();
 	header( "location: $url" );
-	die();
+	exit;
 }
 function redirect( $url ) 
 {
@@ -663,6 +666,10 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 				return Zuuda\GlobalModifier::getInstance();
 			case 'Post':
 				return Zuuda\Post::getInstance(); 
+			case 'Put':
+				return Zuuda\Put::getInstance(); 
+			case 'Delete':
+				return Zuuda\Delete::getInstance(); 
 			case 'Get':
 				return $_GET;
 			case 'Query':
