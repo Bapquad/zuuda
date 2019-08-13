@@ -534,7 +534,11 @@ abstract class SQLQuery
 		$outSql = EMPTY_STRING;
 		if( $this->_propLimit ) 
 		{
-			$outSql .= "LIMIT {$this->_propLimit} OFFSET {$this->_propOffset} ";
+			if( isset($this->_propPage) )  
+				$offset = ( $this->_propPage-1 ) * $this->_propLimit;
+			else
+				$offset = $this->_propOffset;
+			$outSql .= "LIMIT {$this->_propLimit} OFFSET {$offset} ";
 		} 
 		return $outSql;
 	} 
@@ -1311,9 +1315,9 @@ abstract class SQLQuery
 				return array(
 					'pages'	=> $pages, 
 					'total' => $total, 
-					'limit' => $limit, 
-					'page'	=> $page, 
 					'data'	=> $data,
+					'page'	=> (int) $page, 
+					'limit' => (int) $limit, 
 				); 
 			}
 		}
@@ -1491,7 +1495,7 @@ abstract class SQLQuery
 						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} WHERE {$condSql}"; 
 						$qr = $this->_query( $sql ); 
 						if( !$qr ) 
-							return $qr; 
+							return NULL; 
 						if( method_exists($this, 'onride') ) 
 							$this->onride(); 
 						return $data; 
@@ -1519,12 +1523,12 @@ abstract class SQLQuery
 						$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ('{$values}')"; 
 						if( $this->_query($sql) ) 
 						{
+							$data[$this->_primaryKey] = $this->insert_id(); 
 							if( method_exists($this, 'onboot') ) 
 								$this->onboot(); 
-							$data[$this->_primaryKey] = $this->insert_id(); 
 							return $data;
 						}
-						return false; 
+						return NULL; 
 					} 
 				} 
 				else 
@@ -1590,7 +1594,14 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				return NULL;
+				$f = current($args); 
+				$selectSql = "SELECT SUM(`{$f}`) AS `SUM` "; 
+				$fromSql = $this->_buildSqlFrom(); 
+				$condSql = $this->_buildSqlCondition(); 
+				$sql = $selectSql . $fromSql . $condSql; 
+				$qr = $this->_query( $sql ); 
+				$data = $this->fetch_assoc($qr); 
+				return (int)$data['SUM']; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::sum()</strong> is incorrect." ); 
@@ -1607,7 +1618,14 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{ 
-				return NULL;
+				$f = current($args); 
+				$selectSql = "SELECT AVG(`{$f}`) AS `AVG` "; 
+				$fromSql = $this->_buildSqlFrom(); 
+				$condSql = $this->_buildSqlCondition(); 
+				$sql = $selectSql . $fromSql . $condSql; 
+				$qr = $this->_query( $sql ); 
+				$data = $this->fetch_assoc($qr); 
+				return (int)$data['AVG']; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::avg()</strong> is incorrect." ); 
@@ -1624,11 +1642,14 @@ abstract class SQLQuery
 		{ 
 			if( $argsNum ) 
 			{
-				$result = $this->query( "SELECT MAX(`" . $field . "`) AS `" . $field . "` FROM `" . $this->_propTable ."` AS `" . $this->_propModel . "`");
-				if( is_null($result) ) 
-					return NULL;
-				list( $key, $value ) = each( $result[0] );
-				return (int) $value[$field];
+				$f = current($args); 
+				$selectSql = "SELECT MAX(`{$f}`) AS `MAX` "; 
+				$fromSql = $this->_buildSqlFrom(); 
+				$condSql = $this->_buildSqlCondition(); 
+				$sql = $selectSql . $fromSql . $condSql; 
+				$qr = $this->_query( $sql ); 
+				$data = $this->fetch_assoc($qr); 
+				return (int)$data['MAX']; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::max()</strong> is incorrect." ); 
@@ -1645,7 +1666,14 @@ abstract class SQLQuery
 		{ 
 			if( $argsNum ) 
 			{ 
-				return NULL;
+				$f = current($args); 
+				$selectSql = "SELECT MIN(`{$f}`) AS `MIN` "; 
+				$fromSql = $this->_buildSqlFrom(); 
+				$condSql = $this->_buildSqlCondition(); 
+				$sql = $selectSql . $fromSql . $condSql; 
+				$qr = $this->_query( $sql ); 
+				$data = $this->fetch_assoc($qr); 
+				return (int)$data['MIN']; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::min()</strong> is incorrect." ); 
@@ -1719,7 +1747,7 @@ abstract class SQLQuery
 				if( is_array($row) && isset( $row[$this->_propModel] ) ) 
 					return $row[$this->_propModel]; 
 				else 
-					return NULL;
+					return NULL; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::raw()</strong> is incorrect." ); 
@@ -4727,12 +4755,12 @@ abstract class SQLQuery
 		return $output;
 	} 
 	
-	private function errno() { return mysql_errno( $this->_dbHandle ); }
-	private function error() { return mysqli_error( $this->_dbHandle ); }
-	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); }
-	private function fetch_assoc( $rs ) {return mysqli_fetch_assoc( $rs ); }
+	private function errno() { return mysql_errno( $this->_dbHandle ); } 
+	private function error() { return mysqli_error( $this->_dbHandle ); } 
+	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
+	private function fetch_assoc( $rs ) {return mysqli_fetch_assoc( $rs ); } 
+	private function fetch_row( $rs ) { return mysqli_fetch_row( $rs ); } 
 	private function free_result( $rs ) { return mysqli_free_result( $rs ); } 
-	private function fetch_row( $rs ) { return mysqli_fetch_row( $rs ); }
 	private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
 	
 	private function fetch_field( $rs, &$ts, &$fs ) 

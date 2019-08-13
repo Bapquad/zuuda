@@ -150,7 +150,7 @@ function _escape()
 	global $configs;
 	if( isset($configs[ 'DATASOURCE' ][ 'HANDLECN' ]) ) 
 		if( mysqli_close( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) )
-			exit(zero);
+			exit(zero); 
 }
 
 function _dispatch_service_file( $service_namespace ) 
@@ -293,7 +293,7 @@ function check()
 			foreach( $args as $arg ) 
 				_trace_show($arg);
 			echo nl.'</pre>'.nl;
-			exit;
+			escape(); 
 		}
 	}
 	catch( Exception $e ) 
@@ -320,7 +320,7 @@ function debug()
 			foreach( $args as $arg ) 
 				_trace_show($arg);
 			echo nl.'</pre>'.nl;
-			exit;
+			escape(); 
 		}
 	}
 	catch( Exception $e ) 
@@ -345,7 +345,7 @@ function leave()
 			foreach( $args as $arg ) 
 				_trace_show($arg);
 			echo nl.'</pre>'.nl;
-			exit;
+			escape(); 
 		}
 	}
 	
@@ -355,7 +355,7 @@ function leave()
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [leave]'.nl;
 	echo $back_trace['function']; 
 	echo nl.'</pre>'.nl;
-	exit;
+	escape(); 
 }
 
 function quit() 
@@ -374,7 +374,7 @@ function quit()
 			foreach( $args as $arg ) 
 				_trace_show($arg); 
 			echo nl.'</pre>'.nl;
-			exit;
+			escape(); 
 		}
 	}
 	
@@ -384,7 +384,7 @@ function quit()
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [quit]'.nl;
 	echo $back_trace['function']; 
 	echo nl.'</pre>'.nl;
-	exit;
+	escape(); 
 } 
 
 function stop() 
@@ -403,7 +403,7 @@ function stop()
 			foreach( $args as $arg ) 
 				_trace_show($arg); 
 			echo nl.'</pre>'.nl;
-			exit;
+			escape(); 
 		}
 	}
 	
@@ -413,7 +413,7 @@ function stop()
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [stop]'.nl;
 	echo $back_trace['function']; 
 	echo nl.'</pre>'.nl;
-	exit;
+	escape(); 
 }
 
 function _trace( Exception $e ) 
