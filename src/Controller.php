@@ -72,7 +72,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function BeforeAction( $query = NULL ) { /**...*/ }
 	public function AfterAction( $query = NULL ) { /**....*/ } 
 	public function BeforeRender( $query = NULL ) { /**...*/ }
-	public function CheckMass( $query = NULL ) { return $this->_checkMass(); } 
+	public function CheckMass( $method ) { return $this->_checkMass( $method ); } 
 	public function Resting( $seconds=2 ) { $this->_resting( $seconds ); } 
 	
 	final public function rootName() { return __CLASS__; }
@@ -308,9 +308,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return false;
 	}
 	
-	protected function _checkMass()  
+	protected function _checkMass( $requestMethod )  
 	{
-		global $_post, $_put, $_delete, $_file, $configs;
+		global $_server, $_get, $_post, $_put, $_delete, $_file, $configs;
 
 		if( isset( $_SERVER[ 'REQUEST_URI' ] ) ) 
 		{
@@ -323,77 +323,100 @@ abstract class Controller implements iController, iDeclare, iBlock
 
 		$thread_id = md5( $url );
 
-		if( !empty( $_POST ) || ( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) ) 
+		if( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) 
 		{
-			if( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) 
-			{
-				$n = 'name';
-				$t = 'type';
-				$s = 'size';
-				$e = 'error';
-				$p = 'tmp_name';
-				$md = 'media';
+			$n = 'name';
+			$t = 'type';
+			$s = 'size';
+			$e = 'error';
+			$p = 'tmp_name';
+			$md = 'media';
 
-				foreach ($_FILES as $key => $value) 
+			foreach ($_FILES as $key => $value) 
+			{
+				if(is_array( $_FILES[ $key ][ $n ] ) ) 
 				{
-					if(is_array( $_FILES[ $key ][ $n ] ) ) 
+					foreach( $_FILES[ $key ][ $n ] as $akey => $file ) 
 					{
-						foreach( $_FILES[ $key ][ $n ] as $akey => $file ) 
-						{
-							$tn = $_FILES[ $key ][ $p ][ $akey ];
-							$fn = $_FILES[ $key ][ $n ][ $akey ];
-							$tp = $_FILES[ $key ][ $t ][ $akey ];
-							if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
-							{
-								$tp = TMP_DIR . $md . DS . $fn;
-								move_uploaded_file( $tn, $tp );
-								$_FILES[ $key ][ $p ][ $akey ] = $tp;
-							}
-						}
-					} 
-					else 
-					{
-						$tn = $_FILES[ $key ][ $p ];
-						$fn = $_FILES[ $key ][ $n ];
-						$tp = $_FILES[ $key ][ $t ];
+						$tn = $_FILES[ $key ][ $p ][ $akey ];
+						$fn = $_FILES[ $key ][ $n ][ $akey ];
+						$tp = $_FILES[ $key ][ $t ][ $akey ];
 						if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
 						{
 							$tp = TMP_DIR . $md . DS . $fn;
 							move_uploaded_file( $tn, $tp );
-							$_FILES[ $key ][ $p ] = $tp;
+							$_FILES[ $key ][ $p ][ $akey ] = $tp;
 						}
 					}
+				} 
+				else 
+				{
+					$tn = $_FILES[ $key ][ $p ];
+					$fn = $_FILES[ $key ][ $n ];
+					$tp = $_FILES[ $key ][ $t ];
+					if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
+					{
+						$tp = TMP_DIR . $md . DS . $fn;
+						move_uploaded_file( $tn, $tp );
+						$_FILES[ $key ][ $p ] = $tp;
+					}
 				}
-				Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES ) );
 			}
+			Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES ) );
+		}
+		
+		if( !empty($_POST) ) 
+		{
 			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_POST ) );
 			_direct( $url );
 		}
 
 		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );
 		$_mass_vertifier_data = Session::Get( "_mass_vertifier" . $thread_id );
-
-		if( !is_null( $_mass_vertifier_data ) ) 
+		
+		if( !is_null($_file_vertifier_data) ) 
 		{
-			$_file = $_file_vertifier_data[ "data" ];
+			$_file = $_file_vertifier_data[ "data" ]; 
+			Session::Unregister( "_file_vertifier" . $thread_id );
+		}
+		
+		if( !is_null($_mass_vertifier_data) ) 
+		{	
 			if( isset($_mass_vertifier_data[ "data" ]['_method']) ) 
 			{
-				$_method = strtolower($_mass_vertifier_data[ "data" ]['_method']);
+				$requestMethod = strtolower($_mass_vertifier_data[ "data" ]['_method']);
 				unset( $_mass_vertifier_data[ "data" ]['_method'] ); 
-				if( 'put'===$_method ) 
+				if( 'put'===$requestMethod ) 
 					$_put = $_mass_vertifier_data[ "data" ]; 
-				else if( 'delete'===$_method ) 
+				else if( 'delete'===$requestMethod ) 
 					$_delete = $_mass_vertifier_data[ "data" ]; 
-				else if( 'post'===$_method )
+				else 
+				{
 					$_post = $_mass_vertifier_data[ "data" ]; 
+					$requestMethod = 'post';
+				}
 			} 
-			else 
-			{
+			else
+			{				
 				$_post = $_mass_vertifier_data[ "data" ]; 
+				$requestMethod = 'post';
 			}
-			
-			Session::Unregister( "_file_vertifier" . $thread_id );
-			Session::Unregister( "_mass_vertifier" . $thread_id );
-		}
+			Session::Unregister( "_mass_vertifier" . $thread_id ); 
+		} 
+		else if( 'put'===$requestMethod ) 
+		{
+			$requestHeaders = getallheaders(); 
+			$requestBody = file_get_contents("php://input");
+			$_put = json_decode( $requestBody ); 
+		} 
+		else if( 'delete'===$requestMethod ) 
+			$_delete = $_get; 
+		else 
+			$requestMethod = 'get'; 
+		
+		$_server['request_method'] = strtoupper($requestMethod); 
+		$_server['REQUEST_METHOD'] = $_server['request_method'];
+		$configs['request_method'] = $_server['request_method'];
+		$configs['REQUEST_METHOD'] = $_server['request_method'];
 	}
 }

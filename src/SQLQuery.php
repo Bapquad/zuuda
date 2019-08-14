@@ -1398,45 +1398,31 @@ abstract class SQLQuery
 	{
 		try 
 		{
-			if( $argsNum ) 
+			$oneArg = 1; 
+			if( $oneArg===$argsNum ) 
 			{
-				$cond_clause = ' WHERE 1 AND '.preg_replace("/`".$this->_propModel."`./", '', $this->_extraConditions);
-				$limit_clause = '';
-
-				if( isset($this->_propLimit) ) 
-					$limit_clause = 'LIMIT '.$this->_propLimit.' '; 
-				
-				if( NULL===$id && isset($this->id) ) 
-					$id = $this->id;
-
-				if( $id ) 
-					if( is_string($id) ) 
-					{
-						$id = "'".mysqli_real_escape_string( $this->_dbHandle, $id )."'";
-						$cond_clause .= '`id`='.$id.' AND ';
-					} 
-					elseif( is_array($id) )
-					{
-						$id = mysqli_real_escape_string( $this->_dbHandle, implode(comma, $id) );
-						$cond_clause .= '`id` IN ('.$id.') AND ';
-					} 
-				
-				$cond_clause = substr( $cond_clause, 0, -4 ); 
-				if( method_exists($this, 'down') ) 
-					$this->down();
-				$query = 'DELETE FROM `'.$this->_propTable.'`'.$cond_clause.$limit_clause; 
-				$this->_result = mysqli_query( $this->_dbHandle, $query ); 
-				$this->_querySQL = $query;
-				array_push( $this->_querySQLs, $query );
-				$this->clear(); 
-				if( $this->_result == 0 ) 
-					return -1; 
-				else 
-					if( method_exists($this, 'ondown') ) 
-						$this->ondown(); 
-			}
+				$id = current($args); 
+				$condSql = $this->_buildSqlCondition(); 
+				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = {$id}"; 
+				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
+				$sql = $deleteSql . $condSql . $deleteCondSql; 
+			} 
 			else 
-				throw new Exception( "Usage <strong>Model::delete()</strong> is incorrect." ); 
+			{
+				$condSql = $this->_buildSqlCondition(); 
+				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` IN (".implode(comma, $args).")"; 
+				$rangeSql = $this->_buildSqlRange(); 
+				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
+				$sql = $deleteSql . $condSql . $deleteCondSql . $rangeSql; 
+			} 
+			$result = $this->_query( $sql ); 
+			$this->clear(); 
+			if( $result ) 
+				if( method_exists($this, 'ondown') ) 
+					$this->ondown(); 
+			else 
+				return $args; 
+			// throw new Exception( "Usage <strong>Model::delete()</strong> is incorrect." ); 
 		}
 		catch( Exception $e ) 
 		{
@@ -1521,14 +1507,19 @@ abstract class SQLQuery
 						$fields = implode( comma, $fields );
 						$values = implode( "','", $values );
 						$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ('{$values}')"; 
-						if( $this->_query($sql) ) 
+						$qr = $this->_query( $sql ); 
+						if( $qr ) 
 						{
 							$data[$this->_primaryKey] = $this->insert_id(); 
 							if( method_exists($this, 'onboot') ) 
 								$this->onboot(); 
 							return $data;
+						} 
+						else 
+						{
+							$data = $this->_getError(); 
 						}
-						return NULL; 
+						return $data; 
 					} 
 				} 
 				else 
@@ -4755,7 +4746,7 @@ abstract class SQLQuery
 		return $output;
 	} 
 	
-	private function errno() { return mysql_errno( $this->_dbHandle ); } 
+	private function errno() { return mysqli_errno( $this->_dbHandle ); } 
 	private function error() { return mysqli_error( $this->_dbHandle ); } 
 	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
 	private function fetch_assoc( $rs ) {return mysqli_fetch_assoc( $rs ); } 
@@ -4777,10 +4768,8 @@ abstract class SQLQuery
 	
 	private function _query( $sql ) 
 	{
-		$sql = trim($sql);
-		
+		$sql = trim($sql); 
 		$result = mysqli_query( $this->_dbHandle, $sql ); 
-		
 		$this->_logsql( $sql ); 
 		return $result;
 	}

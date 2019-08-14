@@ -295,7 +295,7 @@ class Application
 							$configs["QUERY_STRING"][ $i ] = strtolower( $configs["QUERY_STRING"][ $i ] );
 						}
 					} 
-					call_user_func_array(array($dispatch, "CheckMass"), $_POST); 
+					call_user_func_array(array($dispatch, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
 					call_user_func_array(array($dispatch, "BeforeAction"), $configs["QUERY_STRING"]);
 					call_user_func_array(array($dispatch, $action), $configs["QUERY_STRING"]);
 					call_user_func_array(array($dispatch, "AfterAction"), $configs["QUERY_STRING"]); 
