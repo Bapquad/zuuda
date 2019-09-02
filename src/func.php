@@ -632,7 +632,7 @@ function abort( $code=404, $msg=NULL )
 			<div class="content">
 				<h1 class="title">ERROR $code <span class="name">$title</span></h1>
 				<p class="message">$msg</p>
-				<p>You can try follow ways</p>
+				<p>You can try following ways</p>
 				<ul>
 					$try_again_link
 					<li>Return <a href="javascript:void(0)" onclick="window.history.back()">back</a> history.</li>
