@@ -18,69 +18,69 @@ class Pagination implements iHTML, iPagination
 	private $_current;											// Holds the current page.
 	private $_total;											// Holds the total page.
 	
-	protected function _getClassList() { return $this->_classies; }
-	protected function _getCrumbs() { return $this->_crumbs; }
-	protected function _getRpp() { return $this->_rpp; }
-	protected function _getKey() { return $this->_key; }
-	protected function _getPath() { global $url; return ( empty( $this->_path ) ) ? $url : $this->_path; }
-	protected function _getNext() { return $this->_next; }
-	protected function _getPrevious() { return $this->_previous; }
-	protected function _getAlwaysShow() { return $this->_alwaysShow; }
-	protected function _getClean() { return $this->_clean; }
-	protected function _getCurrent() { return $this->_current; }
-	protected function _getTotal() { return $this->_total; }
+	protected function __getClassList() { return $this->_classies; }
+	protected function __getCrumbs() { return $this->_crumbs; }
+	protected function __getRpp() { return $this->_rpp; }
+	protected function __getKey() { return $this->_key; }
+	protected function __getPath() { global $url; return ( empty( $this->_path ) ) ? $url : $this->_path; }
+	protected function __getNext() { return $this->_next; }
+	protected function __getPrevious() { return $this->_previous; }
+	protected function __getAlwaysShow() { return $this->_alwaysShow; }
+	protected function __getClean() { return $this->_clean; }
+	protected function __getCurrent() { return $this->_current; }
+	protected function __getTotal() { return $this->_total; }
 	
-	protected function _addClasses( $values ) { $this->_classies = array_merge( $this->_classies, (array) $values ); return $this; }
-	protected function _setClasses( $values ) { $this->_addClasses( $values ); return $this; }
-	protected function _setCrumbs( $value ) { $this->_crumbs = $value; return $this; }
-	protected function _setRpp( $value ) { $this->_rpp = (int) $value; return $this; }
-	protected function _setKey( $value ) { $this->_key = $value; return $this; }
-	protected function _setPath( $value ) { $this->_path = $value; return $this; }
-	protected function _setNext( $value ) { $this->_next = $value; return $this; }
-	protected function _setPrevious( $value ) { $this->_previous = $value; return $this; }
-	protected function _setAlwaysShow( $value ) { $this->_alwaysShow = $value; return $this; }
-	protected function _setClean( $value = true ) { $this->_clean = $value; return $this; }
-	protected function _setFull() { $this->_setClean( false ); return $this; }
-	protected function _setCurrent( $value ) { $this->_current = $value; return $this; }
-	protected function _setTotal( $value ) { $this->_total = $value; return $this; }
+	protected function __addClasses( $values ) { $this->_classies = array_merge( $this->_classies, (array) $values ); return $this; }
+	protected function __setClasses( $values ) { $this->__addClasses( $values ); return $this; }
+	protected function __setCrumbs( $value ) { $this->_crumbs = $value; return $this; }
+	protected function __setRpp( $value ) { $this->_rpp = (int) $value; return $this; }
+	protected function __setKey( $value ) { $this->_key = $value; return $this; }
+	protected function __setPath( $value ) { $this->_path = $value; return $this; }
+	protected function __setNext( $value ) { $this->_next = $value; return $this; }
+	protected function __setPrevious( $value ) { $this->_previous = $value; return $this; }
+	protected function __setAlwaysShow( $value ) { $this->_alwaysShow = $value; return $this; }
+	protected function __setClean( $value = true ) { $this->_clean = $value; return $this; }
+	protected function __setFull() { $this->__setClean( false ); return $this; }
+	protected function __setCurrent( $value ) { $this->_current = $value; return $this; }
+	protected function __setTotal( $value ) { $this->_total = $value; return $this; }
 	
-	public function AddClasses( $values ) { return $this->_addClasses( $values ); }
-	public function AlwaysShow() { return $this->_setAlwaysShow( true ); }
-	public function GetCanonicalUrl() { return $this->_getCanonicalUrl(); }
-	public function GetPageParam() { return $this->_getPageParam(); }
-	public function GetPageUrl( $page = NULL ) { return $this->_getPageUrl( $page ); }
-	public function GetRelPrevNextLinkTags() { return $this->_getRelPrevNextLinkTags(); }
-	public function Parse() { return $this->_parse(); }
-	public function SetClasses( $classes ) { return $this->_setClasses( $classes ); }
-	public function SetClean() { return $this->_setClean(); }
-	public function SetCrumbs( $crumbs ) { return $this->_setCrumbs( $crumbs ); }
-	public function SetCurrent( $current ) { return $this->_setCurrent( $current ); }
-	public function SetFull() { return $this->_setFull(); }
-	public function SetKey( $key ) { return $this->_setKey( $key ); }
-	public function SetNext( $next ) { return $this->_setNext( $next ); }
-	public function SetPrevious( $previous ) { return $this->_setPrevious( $previous ); }
-	public function SetRpp( $rpp ) { return $this->_setRpp( $rpp ); }
-	public function SetPath( $path ) { return $this->_setPath( $path ); }
-	public function SetTotal( $total ) { return $this->_setTotal( $total ); }
+	public function AddClasses( $values ) { return $this->__addClasses( $values ); }
+	public function AlwaysShow() { return $this->__setAlwaysShow( true ); }
+	public function GetCanonicalUrl() { return $this->__getCanonicalUrl(); }
+	public function GetPageParam() { return $this->__getPageParam(); }
+	public function GetPageUrl( $page = NULL ) { return $this->__getPageUrl( $page ); }
+	public function GetRelPrevNextLinkTags() { return $this->__getRelPrevNextLinkTags(); }
+	public function Parse() { return $this->__parse(); }
+	public function SetClasses( $classes ) { return $this->__setClasses( $classes ); }
+	public function SetClean() { return $this->__setClean(); }
+	public function SetCrumbs( $crumbs ) { return $this->__setCrumbs( $crumbs ); }
+	public function SetCurrent( $current ) { return $this->__setCurrent( $current ); }
+	public function SetFull() { return $this->__setFull(); }
+	public function SetKey( $key ) { return $this->__setKey( $key ); }
+	public function SetNext( $next ) { return $this->__setNext( $next ); }
+	public function SetPrevious( $previous ) { return $this->__setPrevious( $previous ); }
+	public function SetRpp( $rpp ) { return $this->__setRpp( $rpp ); }
+	public function SetPath( $path ) { return $this->__setPath( $path ); }
+	public function SetTotal( $total ) { return $this->__setTotal( $total ); }
 	
 	public function __construct( $current = null, $total = null ) 
 	{
 		if( !is_null( $current ) ) 
 		{
-			$this->_setCurrent( $current );
+			$this->__setCurrent( $current );
 		}
 		
 		if( !is_null( $total ) ) 
 		{
-			$this->_setTotal( $total );
+			$this->__setTotal( $total );
 		}
 	}
 	
-	protected function _getCanonicalUrl() 
+	protected function __getCanonicalUrl() 
 	{
-		$url = $this->_getPath();
-		$page = (int) $this->_getCurrent();
-		$key = "{".$this->_getKey()."}";
+		$url = $this->__getPath();
+		$page = (int) $this->__getCurrent();
+		$key = "{".$this->__getKey()."}";
 		
 		if( stripos( $url, $key ) !== false ) 
 		{
@@ -91,28 +91,28 @@ class Pagination implements iHTML, iPagination
 		else 
 		{
 			if( $page !== 1 ) 
-				return WEB_PATH . ( $url ) . $this->_getPageParam();
+				return WEB_PATH . ( $url ) . $this->__getPageParam();
 			return WEB_PATH . ( $url );
 		}
 	}
 	
-	protected function _getPageParam( $page = NULL ) 
+	protected function __getPageParam( $page = NULL ) 
 	{
-		$key = $this->_getKey();
+		$key = $this->__getKey();
 		
 		if( is_null( $page ) ) 
 		{
-			$page = (int) $this->_getCurrent();
+			$page = (int) $this->__getCurrent();
 		}
 		
 		return '?' . ( $key ) . '=' . ( (int) $page );
 	}
 	
-	protected function _getPageUrl( $page = NULL ) 
+	protected function __getPageUrl( $page = NULL ) 
 	{
 		global $configs;
-		$url = $this->_getPath();
-		$key = $this->_getKey();
+		$url = $this->__getPath();
+		$key = $this->__getKey();
 		$params = ( isset( $configs[ 'REQUEST_VARIABLES' ] ) ) ? $configs[ 'REQUEST_VARIABLES' ] : array();
 		
 		if( stripos( $url, "{".$key."}") ) 
@@ -151,14 +151,14 @@ class Pagination implements iHTML, iPagination
 		return $href;
 	}
 	
-	protected function _getRelPrevNextLinkTags() 
+	protected function __getRelPrevNextLinkTags() 
 	{
 		global $configs;
-		$key = "{".$this->_getKey()."}";
-		$page = (int) $this->_getCurrent();
-		$pages = ( (int) ceil( $this->_getTotal() / $this->_getRpp() ) );
+		$key = "{".$this->__getKey()."}";
+		$page = (int) $this->__getCurrent();
+		$pages = ( (int) ceil( $this->__getTotal() / $this->__getRpp() ) );
 		
-		$href = $this->_getPageUrl();
+		$href = $this->__getPageUrl();
 		
 		if( $page === 1 ) 
 		{
@@ -185,35 +185,35 @@ class Pagination implements iHTML, iPagination
 		return $next_page_tags;
 	}
 	
-	protected function _parse() 
+	protected function __parse() 
 	{
 		global $configs;
-		$this->_check();
+		$this->__check();
 		
-		$classes = $this->_getClassList();
-		$crumbs = $this->_getCrumbs();
-		$rpp = $this->_getRpp();
-		$key = $this->_getKey();
-		$url = $this->_getPath();
-		$next = $this->_getNext();
-		$previous = $this->_getPrevious();
-		$alwaysShow = $this->_getAlwaysShow();
-		$clean = $this->_getClean();
-		$current = $this->_getCurrent();
-		$total = $this->_getTotal();
+		$classes = $this->__getClassList();
+		$crumbs = $this->__getCrumbs();
+		$rpp = $this->__getRpp();
+		$key = $this->__getKey();
+		$url = $this->__getPath();
+		$next = $this->__getNext();
+		$previous = $this->__getPrevious();
+		$alwaysShow = $this->__getAlwaysShow();
+		$clean = $this->__getClean();
+		$current = $this->__getCurrent();
+		$total = $this->__getTotal();
 		
 		ob_start();
-		include( WIDGET_DIR . _correctPath( str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) ) . PS . 'render.inc.php' );
+		include( WIDGET_DIR . __correctPath( str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) ) . PS . 'render.inc.php' );
 		$_response = ob_get_contents();
 		ob_end_clean();
 		
 		return $_response;
 	}
 	
-	protected function _check() 
+	protected function __check() 
 	{
-		$current = $this->_getCurrent();
-		$total = $this->_getTotal();
+		$current = $this->__getCurrent();
+		$total = $this->__getTotal();
 		
 		try 
 		{

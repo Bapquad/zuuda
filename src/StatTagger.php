@@ -4,12 +4,12 @@ namespace Zuuda;
 class StatTagger implements iStatTagger 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function Tag( Model $source, Model $target, $code ) { return self::_tag( $source, $target, $code ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function Tag( Model $source, Model $target, $code ) { return self::__tag( $source, $target, $code ); }
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -19,7 +19,7 @@ class StatTagger implements iStatTagger
 		return $_instance;
 	}
 	
-	private static function _tag( Model $source, Model $target, $code ) 
+	private static function __tag( Model $source, Model $target, $code ) 
 	{
 		
 	}

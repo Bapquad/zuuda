@@ -4,14 +4,14 @@ namespace Zuuda;
 class Route implements iRoute 
 {
 	
-	public static function GetInstance() { return sefl::_getInstance(); }
-	public static function GetAll() { return self::_getAll(); }
-	public static function Set( $pattern, $result ) { return self::_set( $pattern, $result); }
-	public static function Routing( $url ) { return self::_routing( $url ); }
+	public static function GetInstance() { return sefl::__getInstance(); }
+	public static function GetAll() { return self::__getAll(); }
+	public static function Set( $pattern, $result ) { return self::__setVar( $pattern, $result); }
+	public static function Routing( $url ) { return self::__routing( $url ); }
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance; 
 		if( is_null( $_instance ) ) 
@@ -21,18 +21,18 @@ class Route implements iRoute
 		return $_instance;
 	}
 	
-	private static function _getAll() 
+	private static function __getAll() 
 	{
 		return $GLOBALS[ 'router' ][ 'routings' ];
 	}
 	
-	private static function _set( $pattern, $result ) 
+	private static function __setVar( $pattern, $result ) 
 	{
 		$GLOBALS[ 'router' ][ 'routings' ][ $pattern ] = $result; 
 		return array( $pattern => $result );
 	}
 	
-	private static function _routing( $url ) 
+	private static function __routing( $url ) 
 	{
 		global $router;
 		foreach ( $router[ 'routings' ] as $pattern => $result ) 

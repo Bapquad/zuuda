@@ -4,12 +4,12 @@ namespace Zuuda;
 
 class Delete 
 {
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function Get( $name ) { return self::_getValue( $name ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function Get( $name ) { return self::__getValue( $name ); }
 	
 	private function __construct() {} 
 	private function __clone() {} 
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -19,7 +19,7 @@ class Delete
 		return $_instance;
 	}
 	
-	private static function _getValue( $name ) 
+	private static function __getValue( $name ) 
 	{
 		global $_delete;
 		

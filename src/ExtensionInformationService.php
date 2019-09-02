@@ -5,14 +5,14 @@ class ExtensionInformationService implements iComService
 {
 	private $_exts = array();
 
-	public function Info( $part=NULL ) { return $this->_info( $part ); }
-	public static function GetInstance() { return self::_getInstance(); } 
-	public static function BootService( Application $app = NULL ) { return self::_bootService( $app ); } 
+	public function Info( $part=NULL ) { return $this->__info( $part ); }
+	public static function GetInstance() { return self::__getInstance(); } 
+	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); } 
 
 	private function __construct() {} 
 	private function __clone() {} 
-	private function _info( $part=NULL ) { return (NULL!==$part)?(isset($this->_exts[ $part ]))?$this->_exts[ $part ]:array():$this->_exts; }
-	private static function _getInstance() 
+	private function __info( $part=NULL ) { return (NULL!==$part)?(isset($this->_exts[ $part ]))?$this->_exts[ $part ]:array():$this->_exts; }
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -22,7 +22,7 @@ class ExtensionInformationService implements iComService
 		return $_instance;
 	} 
 
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -36,9 +36,9 @@ class ExtensionInformationService implements iComService
 		return false;
 	} 
 
-	private static function _loadConfigs() 
+	private static function __loadConfigs() 
 	{
-		$configs = self::_applyConfigs(); 
+		$configs = self::__applyConfigs(); 
 		if( $configs ) 
 		{
 			return array(
@@ -52,7 +52,7 @@ class ExtensionInformationService implements iComService
 		return false;
 	} 
 
-	private static function _read_live( $file_path ) 
+	private static function __read_live( $file_path ) 
 	{
 		if( call( cFile::get(), $file_path )->exist() ) 
 		{
@@ -68,7 +68,7 @@ class ExtensionInformationService implements iComService
 		return NULL;
 	} 
 
-	private static function _read_about( $file_path ) 
+	private static function __read_about( $file_path ) 
 	{
 		if( call( cFile::get(), $file_path )->exist() ) 
 		{
@@ -90,7 +90,7 @@ class ExtensionInformationService implements iComService
 		return NULL;
 	} 
 
-	private static function _read_menu( $file_path, $instance ) 
+	private static function __read_menu( $file_path, $instance ) 
 	{
 		// $basename = basename( $file_path );
 		// $live_path = str_replace( $basename, 'live.xml', $file_path );
@@ -164,7 +164,7 @@ class ExtensionInformationService implements iComService
 		return NULL;
 	}
 
-	private function _push( $branch, $value=NULL ) 
+	private function __push( $branch, $value=NULL ) 
 	{
 		if( FALSE===array_key_exists( $branch, $this->_exts ) ) 
 		{
@@ -174,10 +174,10 @@ class ExtensionInformationService implements iComService
 			$this->_exts[ $branch ] = array_merge( $this->_exts[ $branch ], (array) $value );
 	}
 
-	private static function _bootService( Application $app = NULL ) 
+	private static function __bootService( Application $app = NULL ) 
 	{
-		$instance = self::_getInstance();
-		$configs = $instance->_loadConfigs();
+		$instance = self::__getInstance();
+		$configs = $instance->__loadConfigs();
 
 		list( $code_area, $configs ) = each( $configs ); 
 
@@ -185,13 +185,13 @@ class ExtensionInformationService implements iComService
 		{
 			list( $key, $filename ) = each( $config );
 			$list = cFile::lookFile( $code_area, $filename ); 
-			$command = '_read_'.$key; 
+			$command = '__read_'.$key; 
 
 			foreach( $list as $file_path ) 
 			{
 				$result = $instance->$command( $file_path, $instance ); 
 				if( NULL!==$result )
-					$instance->_push( $key, $result );
+					$instance->__push( $key, $result );
 			} 
 		} 
 		return false;

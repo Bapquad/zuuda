@@ -5,9 +5,9 @@ namespace Zuuda;
 class ThemeClient implements iThemeClient 
 {
 	
-	public static function Load() { return self::_load(); }
+	public static function Load() { return self::__load(); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		global $configs;
 		if( isset( $configs[ 'COM' ] ) ) 
@@ -22,7 +22,7 @@ class ThemeClient implements iThemeClient
 		return false;
 	}
 	
-	private static function _fetch( $data )
+	private static function __fetch( $data )
 	{
 		return array
 		(
@@ -40,7 +40,7 @@ class ThemeClient implements iThemeClient
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -50,9 +50,9 @@ class ThemeClient implements iThemeClient
 		return $_instance;
 	}
 	
-	private static function _loadConfigs() 
+	private static function __loadConfigs() 
 	{
-		$configs = self::_applyConfigs();
+		$configs = self::__applyConfigs();
 		if( $configs ) 
 		{
 			return array
@@ -63,38 +63,38 @@ class ThemeClient implements iThemeClient
 		return false;
 	}
 	
-	private static function _loadData( $handle ) 
+	private static function __loadData( $handle ) 
 	{
 		$outs = array(); 
 		$len = count( $handle );
 		for( $i = 0; $i < $len; $i++ ) 
 		{
 			$data = $handle->theme[ $i ];
-			array_push( $outs, self::_fetch( $data ) );
+			array_push( $outs, self::__fetch( $data ) );
 		}
 		return $outs;
 	}
 	
-	private static function _request( $themes ) 
+	private static function __request( $themes ) 
 	{
 		$outs = array();
 		foreach( $themes as $key => $theme ) 
 		{
 			$handle = simplexml_load_file( $theme );
-			array_push( $outs, self::_loadData( $handle ) );
+			array_push( $outs, self::__loadData( $handle ) );
 		}
 		return $outs;
 	}
 	
-	private static function _load() 
+	private static function __load() 
 	{
-		$configs = self::_loadConfigs();
+		$configs = self::__loadConfigs();
 		
 		if( $configs ) 
 		{
 			list( $realpath, $filename ) = each( $configs );
 			$themes = cFile::lookDir( $realpath, $filename );
-			return self::_request( $themes );
+			return self::__request( $themes );
 		}
 		return NULL;
 	}

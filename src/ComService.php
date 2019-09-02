@@ -4,12 +4,12 @@ namespace Zuuda;
 class ComService implements iComService 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService( Application $app = NULL ) { return self::_bootService( $app ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); }
 	
 	private function __construct() {} 
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -19,7 +19,7 @@ class ComService implements iComService
 		return $_instance;
 	}
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -33,9 +33,9 @@ class ComService implements iComService
 		return false;
 	}
 	
-	private static function _loadConfigs() 
+	private static function __loadConfigs() 
 	{
-		$configs = self::_applyConfigs(); 
+		$configs = self::__applyConfigs(); 
 		if( $configs ) 
 		{
 			return array(
@@ -45,7 +45,7 @@ class ComService implements iComService
 		return false;
 	}
 	
-	private static function _routing( $app, $url, $file_path ) 
+	private static function __routing( $app, $url, $file_path ) 
 	{
 		global $configs;
 		$basename = basename( $file_path );
@@ -74,18 +74,18 @@ class ComService implements iComService
 		return false;
 	}
 	
-	private static function _bootService( Application $app = NULL ) 
+	private static function __bootService( Application $app = NULL ) 
 	{
 		if( Config::has( 'COM' ) && !$app->hasUrl() ) 
 		{
 			$url = getSingleton( 'Global' )->get( 'url' );
-			$configs = self::_loadConfigs();
+			$configs = self::__loadConfigs();
 			list( $realpath, $filename ) = @each( $configs );
 			
 			$list = cFile::lookFile( $realpath, $filename );
 			foreach( $list as $file_path ) 
 			{
-				return self::_routing( $app, $url, $file_path );
+				return self::__routing( $app, $url, $file_path );
 			}
 			die();
 		}

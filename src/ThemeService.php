@@ -7,15 +7,15 @@ define( 'THEME_INACTIVE', 'inactive' );
 class ThemeService implements iTaskService, iThemeService 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService() { return self::_bootService(); }
-	public static function Task( Model $model ) { return self::_task( $model ); }
-	public static function ResetDefault( Model $model ) { return self::_reset( $model ); }
-	public static function Reset( Model $model ) { return self::_reset( $model ); } 
-	public static function Install( Model $model, $theme_dir ) { return self::_install( $model, $theme_dir ); } 
-	public static function Load() { return self::_load(); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService() { return self::__bootService(); }
+	public static function Task( Model $model ) { return self::__task( $model ); }
+	public static function ResetDefault( Model $model ) { return self::__reset( $model ); }
+	public static function Reset( Model $model ) { return self::__reset( $model ); } 
+	public static function Install( Model $model, $theme_dir ) { return self::__install( $model, $theme_dir ); } 
+	public static function Load() { return self::__load(); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -31,7 +31,7 @@ class ThemeService implements iTaskService, iThemeService
 	
 	private function __construct() {} 
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -41,7 +41,7 @@ class ThemeService implements iTaskService, iThemeService
 		return $_instance;
 	}
 	
-	private static function _task( ServiceModel $model, $modelName ) 
+	private static function __task( ServiceModel $model, $modelName ) 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -53,7 +53,7 @@ class ThemeService implements iTaskService, iThemeService
 		return false;
 	}
 	
-	private static function _load( $service ) 
+	private static function __load( $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() )  
 		{
@@ -74,7 +74,7 @@ class ThemeService implements iTaskService, iThemeService
 				foreach( $table_name as $key => $value ) 
 					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value ); 
 				$table_name = implode( '_', $table_name ); 
-				self::_task( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $model_name );
+				self::__task( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $model_name );
 				break;
 			}
 		}
@@ -82,7 +82,7 @@ class ThemeService implements iTaskService, iThemeService
 		return true;
 	}
 	
-	private static function _install( Model $model, $theme_dir ) 
+	private static function __install( Model $model, $theme_dir ) 
 	{
 		$lt = $model->getLastedData();
 		list( $a, $data ) = each( $lt );
@@ -104,18 +104,18 @@ class ThemeService implements iTaskService, iThemeService
 		return true;
 	}
 	
-	private static function _reset( Model $model ) 
+	private static function __reset( Model $model ) 
 	{
 		if( $id = $model->getMaxId('id') ) 
 			$model->setId( $id )->setData( 'status', 'inactive' )->save();
 		return true;
 	}
 	
-	private static function _bootService() 
+	private static function __bootService() 
 	{
-		$service = self::_applyConfigs();
+		$service = self::__applyConfigs();
 		if( $service ) 
-			return self::_load(_correctPath(_dispatch_service_file($service))); 
+			return self::__load(__correctPath(__dispatch_service_file($service))); 
 		return false;
 	}
 	

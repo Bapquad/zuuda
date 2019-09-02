@@ -6,24 +6,24 @@ class FileInfo
 	
 	private $_real_path;
 	
-	private function _getRealPath() { return $this->_real_path; }
-	private function _getPath() { $this->_getRealPath(); }
+	private function __getRealPath() { return $this->_real_path; }
+	private function __getPath() { $this->__getRealPath(); }
 	
-	private function _setRealPath( $value ) { $this->_real_path = $value; return $this; }
-	private function _setPath( $value ) { return $this->_setRealPath( $value ); }
+	private function __setRealPath( $value ) { $this->_real_path = $value; return $this; }
+	private function __setPath( $value ) { return $this->__setRealPath( $value ); }
 	
-	public function getRealPath() { return $this->_getRealPath(); }
-	public function getPath() { return $this->_getPath(); }
-	public function setRealPath( $value ) { return $this->_setRealPath( $value ); }
-	public function setPath( $value ) { return $this->_setPath( $value ); }
-	public function exist() { return $this->_exist(); }
+	public function getRealPath() { return $this->__getRealPath(); }
+	public function getPath() { return $this->__getPath(); }
+	public function setRealPath( $value ) { return $this->__setRealPath( $value ); }
+	public function setPath( $value ) { return $this->__setPath( $value ); }
+	public function exist() { return $this->__exist(); }
 	
 	public function __construct( $file_path ) 
 	{
-		$this->_setRealPath( $file_path );
+		$this->__setRealPath( $file_path );
 	}
 	
-	private function _exist() 
+	private function __exist() 
 	{
 		if( !is_null( $this->_real_path ) )
 			return file_exists( $this->_real_path );

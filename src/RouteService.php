@@ -4,11 +4,11 @@ namespace Zuuda;
 class RouteService implements iTaskService, iRouteService 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService( Application $app = NULL ) { return self::_bootService( $app ); }
-	public static function Task( Model $model ) { return self::_task( $model ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); }
+	public static function Task( Model $model ) { return self::__task( $model ); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -24,7 +24,7 @@ class RouteService implements iTaskService, iRouteService
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) )
@@ -34,7 +34,7 @@ class RouteService implements iTaskService, iRouteService
 		return $_instance;
 	}
 	
-	private static function _routing( ServiceModel $model, $prefix, $url ) 
+	private static function __routing( ServiceModel $model, $prefix, $url ) 
 	{
 		$model->hasOne('com_layout', 'com_layout', 'id', 'com_layout_id');
 		$routes = $model->displayHasOne()->search();
@@ -44,7 +44,7 @@ class RouteService implements iTaskService, iRouteService
 		return false;
 	}
 	
-	private static function _load( Application $app, $service ) 
+	private static function __load( Application $app, $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
@@ -65,17 +65,17 @@ class RouteService implements iTaskService, iRouteService
 					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value );
 				$table_name = implode( '_', $table_name ); 
 				if( Config::has('COM') && !$app::hasUrl() ) 
-					if( $path = self::_routing( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $prefix, $url ) ) 
+					if( $path = self::__routing( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $prefix, $url ) ) 
 						$app->setUrl( $path ); 
 			}
 		}
 	}
 	
-	private static function _bootService( Application $app = NULL ) 
+	private static function __bootService( Application $app = NULL ) 
 	{
-		$service = self::_applyConfigs();
+		$service = self::__applyConfigs();
 		if( $service ) 
-			return self::_load($app, _correctPath(_dispatch_service_file($service)));
+			return self::__load($app, __correctPath(__dispatch_service_file($service)));
 		return false;
 	}
 	

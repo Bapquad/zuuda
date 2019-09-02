@@ -17,11 +17,11 @@ class Application
 	private static $_data = array();
 	
 	final public function rootName() { return __CLASS__; } 
-	final static public function HasUrl() { return self::_hasUrl(); }
-	final static public function GetUrl() { return self::_getUrl(); }
-	final static public function SetUrl( $value ) { return self::_setUrl( $value ); }
+	final static public function HasUrl() { return self::__hasUrl(); }
+	final static public function GetUrl() { return self::__getUrl(); }
+	final static public function SetUrl( $value ) { return self::__setUrl( $value ); }
 	
-	private static function _hasUrl() 
+	private static function __hasUrl() 
 	{
 		if( isset( self::$_data[ 'url' ] ) )
 		{
@@ -30,9 +30,9 @@ class Application
 		return false;
 	}
 	
-	private static function _getUrl() { return ( NULL !== self::$_data[ 'url' ] ) ? self::$_data[ 'url' ] : NULL; }
+	private static function __getUrl() { return ( NULL !== self::$_data[ 'url' ] ) ? self::$_data[ 'url' ] : NULL; }
 	
-	private static function _setUrl( $value ) 
+	private static function __setUrl( $value ) 
 	{
 		self::$_data = array_merge
 		(
@@ -45,20 +45,20 @@ class Application
 	private function __construct() {}
 	private function __clone() {}
 
-	private function _routeURL( $url ) 
+	private function __routeURL( $url ) 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
-			if( self::_hasUrl() ) 
+			if( self::__hasUrl() ) 
 			{
-				return self::_getUrl(); 
+				return self::__getUrl(); 
 			}
 		}
 		$url = Route::routing( $url );
 		return ( $url );
 	}
 	
-	private function _bootService() 
+	private function __bootService() 
 	{
 		GlobalModifier::set( 'cache', new Cache() );
 		GlobalModifier::set( 'irregularWords', array() );
@@ -74,7 +74,7 @@ class Application
 		GlobalModifier::loadUrl();
 	}
 	
-	private function _parseQuery( $query, $override = true ) 
+	private function __parseQuery( $query, $override = true ) 
 	{
 		global $configs;
 		$has_vars = stripos( $query, '?' );
@@ -119,15 +119,15 @@ class Application
 		return $exepos;
 	}
 	
-	private function _bootParams() 
+	private function __bootParams() 
 	{
 		global $configs;
-		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->_routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
-		$this->_parseQuery($_SERVER[ "REQUEST_URI" ]);
+		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->__routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
+		$this->__parseQuery($_SERVER[ "REQUEST_URI" ]);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
 	
-	private function _bootServices( $serviceInst, $appInst = NULL ) 
+	private function __bootServices( $serviceInst, $appInst = NULL ) 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -136,7 +136,7 @@ class Application
 		return false;
 	}
 
-	private function _extractController() 
+	private function __extractController() 
 	{
 		global $configs;
 		global $router;
@@ -171,24 +171,24 @@ class Application
 		Session::Start();
 		Cookie::Start();
 		$_instance = new Application();
-		$_instance->_bootService();
+		$_instance->__bootService();
 		if( Config::has( 'COM' ) ) 
 		{
-			$_instance->_bootServices( BTShipnelService::getInstance() );
-			$_instance->_bootServices( RouteService::getInstance(), $_instance );
-			$_instance->_bootServices( ThemeService::getInstance() );
-			$_instance->_bootServices( ComService::getInstance(), $_instance );
-			$_instance->_bootServices( CateService::getInstance(), $_instance );
-			$_instance->_bootServices( ExtensionInformationService::getInstance(), $_instance );
+			$_instance->__bootServices( BTShipnelService::getInstance() );
+			$_instance->__bootServices( RouteService::getInstance(), $_instance );
+			$_instance->__bootServices( ThemeService::getInstance() );
+			$_instance->__bootServices( ComService::getInstance(), $_instance );
+			$_instance->__bootServices( CateService::getInstance(), $_instance );
+			$_instance->__bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}
-		$_instance->_bootParams();
+		$_instance->__bootParams();
 		return $_instance;
 	} 
 	
 	static function Handling() 
 	{
 		$_instance = Application::Booting();
-		$_instance->_bootServices( LocateService::getInstance(), $_instance ); 
+		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
 		return $_instance;
 	}
 	
@@ -214,9 +214,9 @@ class Application
 	{
 		if ( get_magic_quotes_gpc() ) 
 		{
-			$_GET    = _stripSlashesDeep( $_GET );
-			$_POST   = _stripSlashesDeep( $_POST );
-			$_COOKIE = _stripSlashesDeep( $_COOKIE );
+			$_GET    = __stripSlashesDeep( $_GET );
+			$_POST   = __stripSlashesDeep( $_POST );
+			$_COOKIE = __stripSlashesDeep( $_COOKIE );
 		}
 		return $this;
 	}
@@ -252,8 +252,8 @@ class Application
 		global $configs, $_get; 
 		try 
 		{
-			$controller_class_name = $this->_extractController(); 
-			$controller_class_file = _currentControllerFile(); 
+			$controller_class_name = $this->__extractController(); 
+			$controller_class_file = __currentControllerFile(); 
 			if(file_exists( $controller_class_file ) ) 
 			{
 				$ctrlRefl = new ReflectionClass($controller_class_name); 
@@ -272,7 +272,7 @@ class Application
 					$action[ $key ] = strtoupper( substr( $value, 0, 1 ) ).substr( $value, 1 );
 				}
 				$action = implode( EMPTY_CHAR, $action );
-				$parse_result = $this->_parseQuery($action, false);
+				$parse_result = $this->__bootService($action, false);
 				if($parse_result) 
 					$action = substr( $action, 0, $parse_result );
 				$actionDelimeter = '|'; 

@@ -1,18 +1,17 @@
 <?php 
-
-function _numeral( $number ) 
+function __numeral( $number ) 
 {
 	return number_format( (int) $number, 0, ',', '.' );
 }
 
-function _correctPath( $class_path ) 
+function __correctPath( $class_path ) 
 {
 	return str_replace( PS, DS, $class_path );
 } 
 
-function _buildPath( $file_path, $file = false ) 
+function __buildPath( $file_path, $file = false ) 
 {
-	return _assetPath( $file_path, $file, true );
+	return __assetPath( $file_path, $file, true );
 }
 
 function __($str_name) 
@@ -30,7 +29,7 @@ function __($str_name)
 	} else return $str_name;
 }
 
-function _assetPath( $file_path, $file = false, $build = false ) 
+function __assetPath( $file_path, $file = false, $build = false ) 
 {
 	global $configs;
 	$theme_path = EMPTY_CHAR;
@@ -53,8 +52,8 @@ function _assetPath( $file_path, $file = false, $build = false )
 		$path = WEB_DIR . $file_path;
 		if( call(Zuuda\cFile::get(), $path)->exist() )
 			return $path;
-		$file_path = _correctPath($file_path);
-		$theme_path = _correctPath($theme_path); 
+		$file_path = __correctPath($file_path);
+		$theme_path = __correctPath($theme_path); 
 		if(false!==stripos($file_path, CACHE_TPL_NAME_DIR)) 
 		{
 			return WEB_DIR . $file_path; 
@@ -70,7 +69,7 @@ function _assetPath( $file_path, $file = false, $build = false )
 	}
 }
 
-function _currentControllerFile() 
+function __currentControllerFile() 
 {
 	global $configs;
 	$controller = $configs[ 'MODULE' ].DS.CTRLER_DIR.$configs[ 'CONTROLLER' ].CONTROLLER.$configs[ 'EXT' ];
@@ -87,22 +86,22 @@ function _currentControllerFile()
 	return MOD_DIR.$controller; 
 }
 
-function _currentModelClass() 
+function __currentModelClass() 
 {
 	global $configs;
 	return $configs[ 'MODULE' ].BS.MODEL_PRE.BS.$configs[ 'CONTROLLER' ].MODEL;
 }
 
-function _currentViewClass() 
+function __currentViewClass() 
 {
 	global $configs;
 	return $configs[ 'MODULE' ].BS.VIEW_PRE.BS.$configs[ 'CONTROLLER' ].VIEW;
 }
 
-function _availbleClass( $class_name ) 
+function __availbleClass( $class_name ) 
 {
 	global $configs;
-	$class_file = _correctPath( $class_name.$configs[ 'EXT' ] );
+	$class_file = __correctPath( $class_name.$configs[ 'EXT' ] );
 	
 	if( $configs[ 'COM' ] && isset( $configs[ 'SHIP' ] ) ) 
 	{
@@ -128,13 +127,13 @@ function isDev()
 	return !($configs['DEVELOPMENT_ENVIRONMENT'] && $configs['DEVELOPER_WARNING']); 
 }
 
-function _hasDomain() 
+function __hasDomain() 
 {
 	global $configs;
 	return ( $_SERVER [ "SERVER_NAME" ] == $configs[ 'DOMAIN' ] );
 }
 
-function _useDB() 
+function __useDB() 
 {
 	global $configs;
 	return !is_null( $configs[ 'DATASOURCE' ] ); 
@@ -142,11 +141,11 @@ function _useDB()
 
 function escape() 
 {
-	if( call_user_func('_escape') ) 
+	if( call_user_func('__escape') ) 
 		exit(zero); 
 }
 
-function _escape() 
+function __escape() 
 {
 	global $configs;
 	if( isset($configs[ 'DATASOURCE' ][ 'HANDLECN' ]) ) 
@@ -155,15 +154,15 @@ function _escape()
 		return true;
 }
 
-function _dispatch_service_file( $service_namespace ) 
+function __dispatch_service_file( $service_namespace ) 
 {
 	return str_replace(FW_NAME.DS, FW_NAME.DS.SRC_DIR ,implode(EMPTY_CHAR, $service_namespace));
 }
 
-function _dispatch_autoload_class_file( $class_name ) 
+function __dispatch_autoload_class_file( $class_name ) 
 {
 	global $configs; 
-	$class_file = _correctPath( $class_name.$configs[ 'EXT' ] ); 
+	$class_file = __correctPath( $class_name.$configs[ 'EXT' ] ); 
 	$class_path = str_replace( FW_NAME.DS, FW_NAME.DS.SRC_DIR, VENDOR_DIR.$class_file ); 
 	if( !file_exists( $class_path ) ) 
 	{
@@ -179,17 +178,17 @@ function _dispatch_autoload_class_file( $class_name )
 	} 
 	require_once( $class_path );
 } 
-function dispatch( $class_name ) {_dispatch_autoload_class_file( $class_name );}
+function dispatch( $class_name ) {__dispatch_autoload_class_file( $class_name );}
 
-function _direct( $url ) 
+function __direct( $url ) 
 {
-	_escape();
+	__escape();
 	header( "location: $url" );
 	exit;
 }
 function redirect( $url ) 
 {
-	_direct( $url );
+	__direct( $url );
 }
 
 /**
@@ -197,7 +196,7 @@ function redirect( $url )
  * @params
  * - $value : the value which wants to strip.
  */
-function _stripSlashesDeep( $value ) 
+function __stripSlashesDeep( $value ) 
 {
 	$value = is_array( $value ) ? array_map( 'stripSlashesDeep', $value ) : stripslashes( $value );
 	return $value;
@@ -208,7 +207,7 @@ function _stripSlashesDeep( $value )
  * The debug functions.
  */
 
-function _trace_show( $var ) 
+function __trace_show( $var ) 
 {
 	if( EMPTY_CHAR===$var ) 
 		echo 'string: ""'.nl;
@@ -242,7 +241,7 @@ function watch()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [watch]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg);
+				__trace_show($arg);
 			echo nl.'</pre>'.nl;
 		}
 	}
@@ -268,7 +267,7 @@ function write()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [write]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg);
+				__trace_show($arg);
 			echo nl.'</pre>'.nl;
 		}
 	}
@@ -294,7 +293,7 @@ function check()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [check]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg);
+				__trace_show($arg);
 			echo nl.'</pre>'.nl;
 			escape(); 
 		}
@@ -321,7 +320,7 @@ function debug()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [debug]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg);
+				__trace_show($arg);
 			echo nl.'</pre>'.nl;
 			escape(); 
 		}
@@ -346,7 +345,7 @@ function leave()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [leave]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg);
+				__trace_show($arg);
 			echo nl.'</pre>'.nl;
 			escape(); 
 		}
@@ -375,7 +374,7 @@ function quit()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [quit]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg); 
+				__trace_show($arg); 
 			echo nl.'</pre>'.nl;
 			escape(); 
 		}
@@ -404,7 +403,7 @@ function stop()
 			echo basename($back_trace['file']).':'.$back_trace['line'].' [stop]'.nl;
 			$args = $back_trace['args']; 
 			foreach( $args as $arg ) 
-				_trace_show($arg); 
+				__trace_show($arg); 
 			echo nl.'</pre>'.nl;
 			escape(); 
 		}
@@ -419,7 +418,7 @@ function stop()
 	escape(); 
 }
 
-function _trace( Exception $e ) 
+function __trace( Exception $e ) 
 {
 	echo "ERROR Message: ".$e->getMessage().nl;
 	echo "In the line ".$e->getLine()." of file :".$e->getFile().nl."The trace:".nl;
@@ -431,24 +430,24 @@ function _trace( Exception $e )
 	} 
 } 
 
-function _trace_once( Exception $e ) 
+function __trace_once( Exception $e ) 
 {
 	Zuuda\RequestHeader::DisplayCode();
-	_trace( $e );
+	__trace( $e );
 	exit;
 } 
 
 function trace( Exception $e ) 
 {
-	_trace( $e ); 
+	__trace( $e ); 
 }
 
 function trace_once( Exception $e ) 
 {
-	_trace_once( $e );
+	__trace_once( $e );
 }
 
-function _move( $old, $target ) 
+function __move( $old, $target ) 
 {
 	if( copy( $old, $target ) ) 
 		unlink( $old );
@@ -456,7 +455,7 @@ function _move( $old, $target )
 
 function move( $old, $target ) 
 {
-	_move( $old, $target );
+	__move( $old, $target );
 }
 
 function abort( $code=404, $msg=NULL ) 

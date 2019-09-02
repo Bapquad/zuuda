@@ -4,11 +4,11 @@ namespace Zuuda;
 class BTShipnelService implements iTaskService, iBTShipnelService 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService() { return self::_bootService(); }
-	public static function Task( Model $model ) { return sefl::_task( $model ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService() { return self::__bootService(); }
+	public static function Task( Model $model ) { return sefl::__task( $model ); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -24,7 +24,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -34,7 +34,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 		return $_instance;
 	}
 	
-	private static function _load( $service ) 
+	private static function __load( $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
@@ -46,13 +46,13 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 			$name = $program->name;
 			if( $name == __CLASS__ ) 
 			{
-				self::_task( $program );
+				self::__task( $program );
 				break;
 			}
 		}
 	}
 	
-	private static function _task( $program ) 
+	private static function __task( $program ) 
 	{
 		if( $program->name[ 'ship' ] != SHIPNEL )
 		{
@@ -64,7 +64,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 			$url = getSingleton( 'Global' )->get( 'url' );
 		}
 		
-		if( self::_withUrl( $program->name[ 'route' ].DOT.$program->name[ 'class' ], $url ) )
+		if( self::__withUrl( $program->name[ 'route' ].DOT.$program->name[ 'class' ], $url ) )
 		{
 			RequestHeader::Download( 'shipnel.info' );
 			echo 'info: "BTShipnelService"' . NL;
@@ -75,16 +75,16 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 		}
 	}
 	
-	private static function _withUrl( $ship, $url ) 
+	private static function __withUrl( $ship, $url ) 
 	{
 		return $ship === $url;
 	}
 	
-	private static function _bootService() 
+	private static function __bootService() 
 	{
-		$service = self::_applyConfigs(); 
+		$service = self::__applyConfigs(); 
 		if( $service ) 
-			return self::_load(_correctPath(_dispatch_service_file($service))); 
+			return self::__load(__correctPath(__dispatch_service_file($service))); 
 		return $service;
 	}
 	

@@ -455,67 +455,67 @@ class RequestHeader
 		'.zsh'	=> 'text/x-script.zsh' 
 	];
 	
-	public static function GetContentType() { self::_getContentType(); }
-	public static function Download( $export_name ) { self::_download( $export_name ); }
-	public static function Location( $direct_url ) { self::_location( $direct_url ); }
-	public static function ContentType( $type ) { self::_contentType( $type ); }
-	public static function ContentTypeUTF8( $type ) { self::_contentTypeUtf8( $type ); }
-	public static function DisplayHTML() { self::_displayHtml(); }
-	public static function DisplayCSS() { self::_displayCss(); }
-	public static function DisplayJS() { self::_displayJs(); }
-	public static function DisplayJSON() { self::_displayJson(); }
-	public static function DisplayJSON_P() { self::_displayJsonP(); }
-	public static function DisplayJPG() { self::_displayJpg(); }
-	public static function DisplayPNG() { self::_displayPng(); }
-	public static function DisplayBMP() { self::_displayBmp(); }
-	public static function DisplayGIF() { self::_displayGif(); }
-	public static function DisplayText() { self::_displayText(); }
-	public static function DisplayCode() { self::_displayCode(); }
-	public static function Charset( $encode ) { self::_charset( $encode ); }
-	public static function Request( $header_request ) { self::_request( $header_request ); }
-	public static function Stream( $name ) { self::_stream( $name ); }
+	public static function GetContentType() { self::__getContentType(); }
+	public static function Download( $export_name ) { self::__download( $export_name ); }
+	public static function Location( $direct_url ) { self::__location( $direct_url ); }
+	public static function ContentType( $type ) { self::__contentType( $type ); }
+	public static function ContentTypeUTF8( $type ) { self::__contentTypeUtf8( $type ); }
+	public static function DisplayHTML() { self::__displayHtml(); }
+	public static function DisplayCSS() { self::__displayCss(); }
+	public static function DisplayJS() { self::__displayJs(); }
+	public static function DisplayJSON() { self::__displayJson(); }
+	public static function DisplayJSON_P() { self::__displayJsonP(); }
+	public static function DisplayJPG() { self::__displayJpg(); }
+	public static function DisplayPNG() { self::__displayPng(); }
+	public static function DisplayBMP() { self::__displayBmp(); }
+	public static function DisplayGIF() { self::__displayGif(); }
+	public static function DisplayText() { self::__displayText(); }
+	public static function DisplayCode() { self::__displayCode(); }
+	public static function Charset( $encode ) { self::__charset( $encode ); }
+	public static function Request( $header_request ) { self::__request( $header_request ); }
+	public static function Stream( $name ) { self::__stream( $name ); }
 	
-	private static function _getContentType() 
+	private static function __getContentType() 
 	{
 		return self::$_content_types;
 	}
 	
-	private static function _download( $export_name ) 
+	private static function __download( $export_name ) 
 	{
-		return self::_stream( $export_name );
+		return self::__stream( $export_name );
 	}
 	
-	private static function _location( $direct_url ) 
+	private static function __location( $direct_url ) 
 	{
-		_direct( $direct_url );
+		__direct( $direct_url );
 	}
 	
-	private static function _contentType( $type ) 
+	private static function __contentType( $type ) 
 	{
 		header( 'Content-Type: ' . $type );
 	}
 	
-	private static function _contentTypeUtf8( $type ) 
+	private static function __contentTypeUtf8( $type ) 
 	{
 		header( 'Content-Type: ' . $type . '; charset=utf-8' );
 	}
 	
-	private static function _displayHtml() 
+	private static function __displayHtml() 
 	{
 		header( 'Content-Type: text/html; charset=utf-8' );
 	}
 	
-	private static function _displayCss() 
+	private static function __displayCss() 
 	{
 		header( 'Content-Type: text/css; charset=utf-8' );
 	}
 	
-	private static function _displayJs() 
+	private static function __displayJs() 
 	{
 		header( 'Content-Type: text/javascript; charset=utf-8' );
 	}
 	
-	private static function _displayJson() 
+	private static function __displayJson() 
 	{
 		header( 'Content-Type: application/json; charset=utf-8' );
 	}
@@ -525,32 +525,32 @@ class RequestHeader
 		header( 'Content-Type: application/javascript; charset=utf-8' );
 	}
 
-	private static function _displayJpg() 
+	private static function __displayJpg() 
 	{
 		header( 'Content-Type: image/jpeg' );
 	}
 	
-	private static function _displayPng() 
+	private static function __displayPng() 
 	{
 		header( 'Content-Type: image/png' );
 	}
 	
-	private static function _displayBmp() 
+	private static function __displayBmp() 
 	{
 		header( 'Content-Type: image/bmp' );
 	}
 	
-	private static function _displayGif() 
+	private static function __displayGif() 
 	{
 		header( 'Content-Type: image/gif' );
 	} 
 
-	private static function _displayText() 
+	private static function __displayText() 
 	{
 		header( 'Content-Type: text/plain' );
 	}
 	
-	private static function _displayCode() 
+	private static function __displayCode() 
 	{
 		header( 'Content-Type: text/html' ); 
 		static $useStyle = true;
@@ -561,17 +561,17 @@ class RequestHeader
 		}
 	}
 	
-	private static function _charset( $encode ) 
+	private static function __charset( $encode ) 
 	{
 		header( 'Accept-Charset: ' . $encode );
 	}
 	
-	private static function _request( $header_request ) 
+	private static function __request( $header_request ) 
 	{
 		header( $header_request );
 	}
 	
-	private static function _stream( $name ) 
+	private static function __stream( $name ) 
 	{
 		header( "Pragma: public" );
         header( "Expires: 0" );

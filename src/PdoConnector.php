@@ -43,7 +43,7 @@ class PdoConnector extends PDO
 	{
 		try 
 		{
-			parent::__construct( $this->_dns(), $this->_username, $this->_password, $this->_configs() );
+			parent::__construct( $this->_dns(), $this->_username, $this->_password, $this->__configs() );
 		}
 		catch(PDOException $e) 
 		{
@@ -54,7 +54,7 @@ class PdoConnector extends PDO
 	/**
 	 * Initialize the connection basic informations.
 	 */
-	private function _init() 
+	private function __init() 
 	{
 		global $configs;
 		$ds = $configs[ 'DATASOURCE' ];
@@ -69,14 +69,14 @@ class PdoConnector extends PDO
 	 */
 	private function _dns() 
 	{ 
-		$this->_init();
+		$this->__init();
 		return "$this->_driver:host=$this->_host;dbname=$this->_dbname";
 	}
 	
 	/**
 	 * Setup the contection options.
 	 */
-	private function _configs() 
+	private function __configs() 
 	{
 		$options = array();
 		$options += array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION ); 

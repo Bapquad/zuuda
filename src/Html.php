@@ -6,7 +6,7 @@ use Zuuda\cFile;
 
 class Html implements iHTML 
 {
-	private static function _fetchTinyUrl($url) 
+	private static function __fetchTinyUrl($url) 
 	{ 
 		$ch = curl_init(); 
 		$timeout = 5; 
@@ -27,22 +27,22 @@ class Html implements iHTML
 		return mysql_real_escape_string($data);
 	}
 
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function Link( $text, $path, $prompt = null, $confirm_msg = "Are you sure?") { return self::_link( $text, $path, $prompt, $confirm_msg ); }
-	public static function AssetPath( $file_path ) { return self::_assetPath( $file_path ); } 
-	public static function IncludeJs( $file_name ) { return self::_includeJs( $file_name ); }
-	public static function IncludeCss( $file_name ) { return self::_includeCss( $file_name ); }
-	public static function IncludeImg( $file_name, $alt_text ) { return self::_includeImg( $file_name, $alt_text ); }
-	public static function IncludeGif( $file_name, $alt_text ) { return self::_includeGif( $file_name, $atl_text ); }
-	public static function IncludePng( $file_name, $alt_text ) { return self::_includePng( $file_name, $alt_text ); }
-	public static function IncludeJpg( $file_name, $alt_text ) { return self::_includeJpeg( $file_name, $alt_text ); }
-	public static function IncludeJpeg( $file_name, $alt_text ) { return self::_includeJpeg( $file_name, $alt_text ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function Link( $text, $path, $prompt = null, $confirm_msg = "Are you sure?") { return self::__link( $text, $path, $prompt, $confirm_msg ); }
+	public static function AssetPath( $file_path ) { return self::__assetPath( $file_path ); } 
+	public static function IncludeJs( $file_name ) { return self::__includeJs( $file_name ); }
+	public static function IncludeCss( $file_name ) { return self::__includeCss( $file_name ); }
+	public static function IncludeImg( $file_name, $alt_text ) { return self::__includeImg( $file_name, $alt_text ); }
+	public static function IncludeGif( $file_name, $alt_text ) { return self::__includeGif( $file_name, $atl_text ); }
+	public static function IncludePng( $file_name, $alt_text ) { return self::__includePng( $file_name, $alt_text ); }
+	public static function IncludeJpg( $file_name, $alt_text ) { return self::__includeJpeg( $file_name, $alt_text ); }
+	public static function IncludeJpeg( $file_name, $alt_text ) { return self::__includeJpeg( $file_name, $alt_text ); }
 	public static function Write( $content ) { echo ( $content ); }
-	public static function Assign( $name, $value, $template ) { return self::_assign( $name, $value, $template ); }
+	public static function Assign( $name, $value, $template ) { return self::__assign( $name, $value, $template ); }
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -52,7 +52,7 @@ class Html implements iHTML
 		return $_instance;
 	}
 	
-	private static function _link( $text, $path, $prompt, $confirm_msg ) 
+	private static function __link( $text, $path, $prompt, $confirm_msg ) 
 	{
 		$path = str_replace( ' ', '-', $path );
 		if ($prompt) 
@@ -62,42 +62,42 @@ class Html implements iHTML
 		return $data;
 	} 
 
-	private static function _assetPath( $file_path ) 
+	private static function __assetPath( $file_path ) 
 	{
-		return _assetPath( $file_path );
+		return __assetPath( $file_path );
 	}
 	
-	private static function _includeJs( $file_name ) 
+	private static function __includeJs( $file_name ) 
 	{
 		return '<script type="text/javascript" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('js/'.$file_name.'.js', false)).'"></script>'."\n";
 	}
 	
-	private static function _includeCss( $file_name ) 
+	private static function __includeCss( $file_name ) 
 	{
 		return '<link rel="stylesheet" type="text/css" href="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('skin/css/'.$file_name.'.css', false)).'" />'."\n";
 	}
 	
-	private static function _includeImg( $file_name, $atl_text ) 
+	private static function __includeImg( $file_name, $atl_text ) 
 	{
 		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name, false)).'" />';
 	}
 	
-	private static function _includeGif( $file_name, $alt_text ) 
+	private static function __includeGif( $file_name, $alt_text ) 
 	{
 		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.gif', false)).'" />'; 
 	}
 	
-	private static function _includePng( $file_name, $alt_text ) 
+	private static function __includePng( $file_name, $alt_text ) 
 	{
 		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.png', false)).'" />';
 	}
 	
-	private static function _includeJpeg( $file_name, $alt_text ) 
+	private static function __includeJpeg( $file_name, $alt_text ) 
 	{
 		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.jpg', false)).'" />';
 	}
 	
-	private static function _assign( $name, $value, $template ) 
+	private static function __assign( $name, $value, $template ) 
 	{
 		return str_replace( "{" . $name . "}", $value, $template );
 	}

@@ -5,16 +5,16 @@ namespace Zuuda;
 class Auth 
 {
 	
-	public static function User($prop=NULL) { return self::_user($prop); } 
-	public static function Get($prop) { return self::_user($prop); } 
-	public static function GetAll() { return self::_getAll(); }
-	public static function Instance() { return self::_getInstance(); }
+	public static function User($prop=NULL) { return self::__user($prop); } 
+	public static function Get($prop) { return self::__user($prop); } 
+	public static function GetAll() { return self::__getAll(); }
+	public static function Instance() { return self::__getInstance(); }
 	
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
 	private function __clone() {} 
 	
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -24,14 +24,14 @@ class Auth
 		return $_instance;
 	}
 	
-	private static function _user($prop) 
+	private static function __user($prop) 
 	{
 		if($prop) 
 			return session::get(auth)[$prop]; 
-		return self::_getInstance(); 
+		return self::__getInstance(); 
 	} 
 	
-	private static function _getAll() 
+	private static function __getAll() 
 	{ 
 		return session::get(auth);
 	}

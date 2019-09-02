@@ -17,135 +17,135 @@ abstract class DataColumn implements iDataColumn
 	private $_onchange = false;
 	private $_onchangeData;
 	
-	protected function _getName() { return $this->_name; }
-	protected function _getLabel() { return $this->_label; }
-	protected function _getWidth() { return $this->_width; }
-	protected function _getCollection() { return $this->_collection; }
-	protected function _getType() { return $this->_type; }
-	protected function _getCollectionType() { return $this->_collectionType; }
-	protected function _getSort() { return $this->_sort; }
-	protected function _getDefaultSort() { return $this->_default_sort; }
-	protected function _getKey() { return $this->_key; }
-	protected function _getAlign() { return $this->_align; }
-	protected function _getOnchange() { return $this->_onchange; }
-	protected function _getOnchangeData() { return $this->_onchangeData; }
+	protected function __getName() { return $this->_name; }
+	protected function __getLabel() { return $this->_label; }
+	protected function __getWidth() { return $this->_width; }
+	protected function __getCollection() { return $this->_collection; }
+	protected function __getType() { return $this->_type; }
+	protected function __getCollectionType() { return $this->_collectionType; }
+	protected function __getSort() { return $this->_sort; }
+	protected function __getDefaultSort() { return $this->_default_sort; }
+	protected function __getKey() { return $this->_key; }
+	protected function __getAlign() { return $this->_align; }
+	protected function __getOnchange() { return $this->_onchange; }
+	protected function __getOnchangeData() { return $this->_onchangeData; }
 	
-	/** protected function _setName() */
-	protected function _setLabel( $value ) { $this->_label = $value; return $this; }
-	protected function _setWidth( $value ) { $this->_width = $value; return $this; }
-	/** protected function _setCollection() */
-	protected function _setType( $value ) { $this->_type = $value; return $this; }
-	protected function _setCollectionType( $value ) { $this->_collectionType = $value; return $this; }
-	protected function _setSort( $value ) { $this->_sort = $value; return $this; }
-	protected function _setDefaultSort( $value ) { $this->_default_sort = $value; return $this; }
-	protected function _setKey( $value ) { $this->_key = $value; return $this; }
-	protected function _setAlign( $value ) { $this->_align = $value; return $this; }
-	/** protected function _setOnchange() */
-	protected function _setOnchangeData( $value ) { $this->_onchangeData = $value; return $this; }
+	/** protected function __setName() */
+	protected function __setLabel( $value ) { $this->_label = $value; return $this; }
+	protected function __setWidth( $value ) { $this->_width = $value; return $this; }
+	/** protected function __setCollection() */
+	protected function __setType( $value ) { $this->_type = $value; return $this; }
+	protected function __setCollectionType( $value ) { $this->_collectionType = $value; return $this; }
+	protected function __setSort( $value ) { $this->_sort = $value; return $this; }
+	protected function __setDefaultSort( $value ) { $this->_default_sort = $value; return $this; }
+	protected function __setKey( $value ) { $this->_key = $value; return $this; }
+	protected function __setAlign( $value ) { $this->_align = $value; return $this; }
+	/** protected function __setOnchange() */
+	protected function __setOnchangeData( $value ) { $this->_onchangeData = $value; return $this; }
 	
 	/** Implements the interface of data column */
-	public function SetCollection( $collection, $type = COLLECTION_STATIC_LIST ) { return $this->_setCollection( $collection, $type ); }
-	public function SetWidth( $value ) { return $this->_setWidth( $value ); }
-	public function SetName( $value ) { return $this->_setName( $value ); }
-	public function SetLabel( $value ) { return $this->_setLabel( $value ); }
-	public function Sort( $desc = NULL ) { return $this->_sort( $desc ); }
-	public function SetOnchange( $onchangeData ) { return $this->_setOnchange( $onchangeData ); }
-	public function SetSymbol( $key ) { return $this->_setKey( $key ); }
-	public function AlignLeft() { return $this->_setAlignLeft(); }
-	public function AlignCenter() { return $this->_setAlignCenter(); }
-	public function AlignRight() { return $this->_setAlignRight(); }
+	public function SetCollection( $collection, $type = COLLECTION_STATIC_LIST ) { return $this->__setCollection( $collection, $type ); }
+	public function SetWidth( $value ) { return $this->__setWidth( $value ); }
+	public function SetName( $value ) { return $this->__setName( $value ); }
+	public function SetLabel( $value ) { return $this->__setLabel( $value ); }
+	public function Sort( $desc = NULL ) { return $this->__sort( $desc ); }
+	public function SetOnchange( $onchangeData ) { return $this->__setOnchange( $onchangeData ); }
+	public function SetSymbol( $key ) { return $this->__setKey( $key ); }
+	public function AlignLeft() { return $this->__setAlignLeft(); }
+	public function AlignCenter() { return $this->__setAlignCenter(); }
+	public function AlignRight() { return $this->__setAlignRight(); }
 	
-	public function IsSymbol() { return $this->_isSymbol(); }
-	public function IsAllowOnchange() { return $this->_isAllowOnchange(); }
-	public function GetOnchangeData() { return $this->_getOnchangeData(); }
-	public function GetLabel() { return $this->_getLabel(); }
-	public function GetName() { return $this->_getName(); }
-	public function GetWidth() { return $this->_getWidth(); }
-	public function GetCollection() { return $this->_getCollection(); }
-	public function GetType() { return $this->_getType(); }
-	public function GetCollectionType() { return $this->_getCollectionType(); }
-	public function HasSort() { return $this->_getSort(); }
-	public function GetSort() { return $this->_getSort(); }
-	public function GetDefaultSort() { return $this->_getDefaultSort(); }
-	public function GetAlign() { return $this->_getAlign(); }
+	public function IsSymbol() { return $this->__isSymbol(); }
+	public function IsAllowOnchange() { return $this->__isAllowOnchange(); }
+	public function GetOnchangeData() { return $this->__getOnchangeData(); }
+	public function GetLabel() { return $this->__getLabel(); }
+	public function GetName() { return $this->__getName(); }
+	public function GetWidth() { return $this->__getWidth(); }
+	public function GetCollection() { return $this->__getCollection(); }
+	public function GetType() { return $this->__getType(); }
+	public function GetCollectionType() { return $this->__getCollectionType(); }
+	public function HasSort() { return $this->__getSort(); }
+	public function GetSort() { return $this->__getSort(); }
+	public function GetDefaultSort() { return $this->__getDefaultSort(); }
+	public function GetAlign() { return $this->__getAlign(); }
 	
-	public function PrintWidth() { return $this->_printWidth(); }
-	public function PrintKey() { return $this->_printKey(); }
+	public function PrintWidth() { return $this->__printWidth(); }
+	public function PrintKey() { return $this->__printKey(); }
 	
 	public function __construct( $data = NULL ) 
 	{
-		$this->_setType( COLLECTION_FUNCTION_TYPE );
+		$this->__setType( COLLECTION_FUNCTION_TYPE );
 		
-		$this->_setAlignLeft();
+		$this->__setAlignLeft();
 		
 		if( !is_null( $data ) ) 
 		{
 			if( isset( $data[ 'name' ] ) )
 			{
 				$name = $data[ 'name' ];
-				$this->_setName( $name );
+				$this->__setName( $name );
 			}
 			
 			if( isset( $data[ 'label' ] ) ) 
 			{
 				$label = $data[ 'label' ];
-				$this->_setLabel( $label );
+				$this->__setLabel( $label );
 			}
 			
 			if( isset( $data[ 'width' ] ) ) 
 			{
 				$width = $data[ 'width' ];
-				$this->_setWidth( $width );
+				$this->__setWidth( $width );
 			}
 			
 			if( isset( $data[ 'collection' ] ) )
 			{
 				$collection = $data[ 'collection' ];
-				$this->_setCollection( $collection );
+				$this->__setCollection( $collection );
 			}
 		}
 	}
 	
 	
-	protected function _isSymbol() { return $this->_getKey(); }
-	protected function _isAllowOnchange() { return $this->_getOnchange(); }
+	protected function __isSymbol() { return $this->__getKey(); }
+	protected function __isAllowOnchange() { return $this->__getOnchange(); }
 	
-	protected function _printKey() 
+	protected function __printKey() 
 	{
 		echo ( !is_null( $this->_key ) ) ? '<span class="no">' . $this->_key . '</span>' : NULL;
 	}
 	
-	protected function _printWidth() 
+	protected function __printWidth() 
 	{
 		echo ( !is_null( $this->_width ) ) ? ' width="' . $this->_width . '"' : NULL;
 	}
 	
-	protected function _setName( $value ) 
+	protected function __setName( $value ) 
 	{
 		$this->_name = $value;
-		return $this->_setType( COLLECTION_FIELDSET_TYPE );
+		return $this->__setType( COLLECTION_FIELDSET_TYPE );
 	}
 	
-	protected function _setCollection( $value, $type = COLLECTION_STATIC_LIST ) 
+	protected function __setCollection( $value, $type = COLLECTION_STATIC_LIST ) 
 	{ 
 		$this->_collection = $value; 
-		return $this->_setCollectionType( $type );
+		return $this->__setCollectionType( $type );
 	}
 	
-	protected function _sort( $desc = NULL ) 
+	protected function __sort( $desc = NULL ) 
 	{
-		$this->_setSort( true );
-		return $this->_setDefaultSort( $desc );
+		$this->__setSort( true );
+		return $this->__setDefaultSort( $desc );
 	}
 	
-	protected function _setOnchange( $onchangeData ) 
+	protected function __setOnchange( $onchangeData ) 
 	{
 		$this->_onchange = true;
-		return $this->_setOnchangeData( $onchangeData );
+		return $this->__setOnchangeData( $onchangeData );
 	}
 	
-	protected function _setAlignLeft() { return $this->_setAlign( COLUMN_ALIGN_LEFT ); }
-	protected function _setAlignRight() { return $this->_setAlign( COLUMN_ALIGN_RIGHT ); }
-	protected function _setAlignCenter() { return $this->_setAlign( COLUMN_ALIGN_CENTER ); }
+	protected function __setAlignLeft() { return $this->__setAlign( COLUMN_ALIGN_LEFT ); }
+	protected function __setAlignRight() { return $this->__setAlign( COLUMN_ALIGN_RIGHT ); }
+	protected function __setAlignCenter() { return $this->__setAlign( COLUMN_ALIGN_CENTER ); }
 	
 }

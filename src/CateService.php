@@ -5,13 +5,13 @@ namespace Zuuda;
 class CateService implements  iTaskService, iCateService
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService( Application $app = NULL ) { return self::_bootService( $app ); }
-	public static function Task( Model $model ) { return self::_routing( $model, getSingleton( 'Global' )->get( 'url' ) ); }
-	public static function GetPath( $category, $item, $sp='/', $last=NULL ) { return self::_getPath( $category, $item, $sp, $last ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); }
+	public static function Task( Model $model ) { return self::__routing( $model, getSingleton( 'Global' )->get( 'url' ) ); }
+	public static function GetPath( $category, $item, $sp='/', $last=NULL ) { return self::__getPath( $category, $item, $sp, $last ); }
 	public static function GetParent( $category, $item ) { return self::getParent( $category, $item ); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -27,7 +27,7 @@ class CateService implements  iTaskService, iCateService
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -37,7 +37,7 @@ class CateService implements  iTaskService, iCateService
 		return $_instance;
 	}
 	
-	private static function _getParent( $category, $item ) 
+	private static function __getParent( $category, $item ) 
 	{
 		if( !empty($category) ) 
 			foreach( $category as $cate ) 
@@ -48,7 +48,7 @@ class CateService implements  iTaskService, iCateService
 			}
 	}
 	
-	private static function _getPath( $category, $item, $sp='/', $last=NULL ) 
+	private static function __getPath( $category, $item, $sp='/', $last=NULL ) 
 	{
 		$id = (int) $item[ 'id' ];
 		$parent_id = (int) $item[ 'parent_id' ];
@@ -60,10 +60,10 @@ class CateService implements  iTaskService, iCateService
 		if( $parent_id==0 ) 
 			return $path; 
 		
-		return self::_getPath( $category, self::_getParent( $category, $item ), $sp, $path );
+		return self::__getPath( $category, self::__getParent( $category, $item ), $sp, $path );
 	}
 	
-	private static function _routing( ServiceModel $model, $url ) 
+	private static function __routing( ServiceModel $model, $url ) 
 	{
 		$category = $model->search();
 		foreach( $category as $item ) 
@@ -78,7 +78,7 @@ class CateService implements  iTaskService, iCateService
 			}
 			else 
 			{
-				$path = self::_getPath( $category, $item, '\/' );
+				$path = self::__getPath( $category, $item, '\/' );
 				if( $item['seo_friendly_url'] == $url || $item['seo_friendly_url'].'/' == $url ) 
 				{
 					return 'category/index/sub' . '/' . $item['id'];
@@ -89,7 +89,7 @@ class CateService implements  iTaskService, iCateService
 		return false;
 	}
 	
-	private static function _load( Application $app, $service ) 
+	private static function __load( Application $app, $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
@@ -111,7 +111,7 @@ class CateService implements  iTaskService, iCateService
 					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value );
 				$table_name = implode( '_', $table_name );
 				if( Config::has( 'COM' ) && Config::has( 'SHIP' ) && !$app::hasUrl() ) 
-					if( $path = self::_routing( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $url ) ) 
+					if( $path = self::__routing( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $url ) ) 
 						$app->setUrl( $path ); 
 				break;
 			}
@@ -119,11 +119,11 @@ class CateService implements  iTaskService, iCateService
 		
 	}
 	
-	private static function _bootService( Application $app = NULL ) 
+	private static function __bootService( Application $app = NULL ) 
 	{
-		$service = self::_applyConfigs();
+		$service = self::__applyConfigs();
 		if( $service ) 
-			return self::_load($app, _correctPath(_dispatch_service_file($service)));
+			return self::__load($app, __correctPath(__dispatch_service_file($service)));
 		return false;
 	}
 	

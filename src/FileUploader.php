@@ -6,7 +6,7 @@ abstract class FileUploader
 	
 	private $_data;
 
-	public function MoveObject( $source_path, $target_path ) { return $this->_moveObject($source_path, $target_path); }
+	public function MoveObject( $source_path, $target_path ) { return $this->__moveObject($source_path, $target_path); }
 
 	public function __construct() 
 	{
@@ -18,7 +18,7 @@ abstract class FileUploader
 		var_dump($this->_data);
 	} 
 
-	public function _moveObject( $source_path, $target_path ) 
+	public function __moveObject( $source_path, $target_path ) 
 	{
 		if( file_exists( $source_path ) ) 
 		{

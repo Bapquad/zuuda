@@ -25,41 +25,41 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		HTML_ASSET	=> array()
 	);
 	
-	final protected function _getVars() { return $this->_vars; }
-	final protected function _getWidgets() { return $this->_widgets; }
+	final protected function __getVars() { return $this->_vars; }
+	final protected function __getWidgets() { return $this->_widgets; }
 	/** private function _getName */
-	final protected function _getTemplate() { return $this->_tpl_name; }
-	final protected function _getHeadAssets() { return $this->_head_assets; }
-	final protected function _getContentAssets() { return $this->_content_assets; }
+	final protected function __getTemplate() { return $this->_tpl_name; }
+	final protected function __getHeadAssets() { return $this->_head_assets; }
+	final protected function __getContentAssets() { return $this->_content_assets; }
 	
-	final protected function _setVars( $vars ) { $this->_vars = $vars; return $this; }
-	final protected function _setVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
-	final protected function _addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
-	final protected function _setName( $value ) { $this->_name = $value; return $this; }
-	final protected function _setTemplate( $value ) { $this->_tpl_name = $value; return $this; }
-	final protected function _setLayout( $value ) { $this->_tpl_name = $value; return $this; }
-	final protected function _setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
-	final protected function _setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
+	final protected function __setVars( $vars ) { $this->_vars = $vars; return $this; }
+	final protected function __setVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
+	final protected function __addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
+	final protected function __setName( $value ) { $this->_name = $value; return $this; }
+	final protected function __setTemplate( $value ) { $this->_tpl_name = $value; return $this; }
+	final protected function __setLayout( $value ) { $this->_tpl_name = $value; return $this; }
+	final protected function __setHeadAssets( $value ) { $this->_head_assets = $value; return $this; }
+	final protected function __setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
 	
-	final public function GetVars() { return $this->_getVars(); }
-	final public function SetVar( $name, $value ) { return $this->_setVar( $name, $value ); }
-	final public function AddVar( $name, $value ) { return $this->_addVar( $name, $value ); }
+	final public function GetVars() { return $this->__getVars(); }
+	final public function SetVar( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function AddVar( $name, $value ) { return $this->__addVar( $name, $value ); }
 	final public function __view__get_head_assets() { return $this->_head_assets; }
 	final public function __view__get_content_assets() { return $this->_content_assets; }
 	final public function __view__merge_vars( $vars ) { $this->_vars = array_merge( $vars, $this->_vars ); return $this; }
 
-	final public function Share( $name, $value ) { return $this->_share( $name, $value ); }
-	final public function Compact( $name, $value ) { return $this->_compact( $name, $value ); }
-	final public function Assign( $name, $value ) { return $this->_assign( $name, $value ); }
-	final public function Set( $name, $value ) { return $this->_set( $name, $value ); }
-	final public function SetTitle( $value ) { return $this->_setTitle( $value ); }
-	final public function GetName() { return $this->_getName(); }
-	final public function SetName( $value ) { return $this->_setName( $value ); }
-	final public function SetTemplate( $tpl_path ) { return $this->_setTemplate( $tpl_path ); }
-	final public function SetLayout( $tpl_path ) { return $this->_setLayout( $tpl_path ); } 
-	final public function AddWidget( $widget, $force_name = NULL ) { return $this->_addWidget( $widget, $force_name ); }
-	final public function GetWidget( $name ) { return $this->_getWidget( $name ); }
-	final public function Render( $template = NULL, $args = NULL ) { return $this->_render( $template, $args ); }
+	final public function Share( $name, $value ) { return $this->__share( $name, $value ); }
+	final public function Compact( $name, $value ) { return $this->__compact( $name, $value ); }
+	final public function Assign( $name, $value ) { return $this->__assign( $name, $value ); }
+	final public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function SetTitle( $value ) { return $this->__setTitle( $value ); }
+	final public function GetName() { return $this->__getName(); }
+	final public function SetName( $value ) { return $this->__setName( $value ); }
+	final public function SetTemplate( $tpl_path ) { return $this->__setTemplate( $tpl_path ); }
+	final public function SetLayout( $tpl_path ) { return $this->__setLayout( $tpl_path ); } 
+	final public function AddWidget( $widget, $force_name = NULL ) { return $this->__addWidget( $widget, $force_name ); }
+	final public function GetWidget( $name ) { return $this->__getWidget( $name ); }
+	final public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); }
 	
 	final public function HeadAsset( $type, $value ) 
 	{
@@ -126,18 +126,18 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		}
 	}
 	
-	private function _render( $template = NULL, $args = NULL ) 
+	private function __render( $template = NULL, $args = NULL ) 
 	{
 		if( !is_null( $template ) ) 
 		{
-			$this->_setTemplate( $template );
+			$this->__setTemplate( $template );
 		}
-		return $this->_renderLayout( $args );
+		return $this->__renderLayout( $args );
 	}
 	
-	private function _getWidget( $name ) 
+	private function __getWidget( $name ) 
 	{
-		$widgets = $this->_getWidgets();
+		$widgets = $this->__getWidgets();
 		
 		if( isset( $widgets[ $name ] ) ) 
 		{
@@ -147,7 +147,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		return NULL;
 	}
 	
-	private function _addWidget( $widget, $force_name = NULL ) 
+	private function __addWidget( $widget, $force_name = NULL ) 
 	{
 		if( is_object( $widget ) ) 
 		{
@@ -167,7 +167,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		return false;
 	}
 	
-	private function _getName() 
+	private function __getName() 
 	{
 		global $configs;
 		try 
@@ -186,45 +186,45 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		}
 	}
 	
-	private function _set( $name, $value )
+	private function __setVar( $name, $value )
 	{
 		if( is_array( $name ) ) 
 		{
-			$vars  = $this->_getVars();
-			$this->_setVars( array_merge( $vars, $name ) );
+			$vars  = $this->__getVars();
+			$this->__setVars( array_merge( $vars, $name ) );
 		} 
 		else 
 		{
-			$this->_addVar( $name, $value );
+			$this->__addVar( $name, $value );
 		} 
 		return $this;
 	}
 	
-	private function _assign( $name, $value ) 
+	private function __assign( $name, $value ) 
 	{
-		if( is_object( $value ) && $this->_addWidget( $value, $name ) != false ) 
+		if( is_object( $value ) && $this->__addWidget( $value, $name ) != false ) 
 		{
 			return $this;
 		}
-		return $this->_set( $name, $value );
+		return $this->__setVar( $name, $value );
 	}
 	
-	private function _compact( $name, $value ) 
+	private function __compact( $name, $value ) 
 	{
-		return  $this->_assign( $name, $value ); 
+		return  $this->__assign( $name, $value ); 
 	}
 	
-	private function _share( $name, $value ) 
+	private function __share( $name, $value ) 
 	{
-		return  $this->_assign( $name, $value ); 
+		return  $this->__assign( $name, $value ); 
 	}
 	
-	private function _setTitle( $value ) 
+	private function __setTitle( $value ) 
 	{
-		return $this->_assign( 'title', $value );
+		return $this->__assign( 'title', $value );
 	}
 	
-	private function _renderLayout( $args = NULL ) 
+	private function __renderLayout( $args = NULL ) 
 	{
 		global $configs, $html, $file, $_get, $_post;
 		
@@ -246,7 +246,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 				{
 					extract( $args );
 				} 
-				include( BLOCK_DIR . _correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
+				include( BLOCK_DIR . __correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
 			}
 			catch(Exception $e) 
 			{

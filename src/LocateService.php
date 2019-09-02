@@ -4,10 +4,10 @@ namespace Zuuda;
 class LocateService implements iLocateService 
 {
 	
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function BootService( Application $app = NULL ) { return self::_bootService( $app ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); }
 	
-	private static function _applyConfigs() 
+	private static function __applyConfigs() 
 	{
 		if( Config::has( 'COM' ) ) 
 		{
@@ -22,7 +22,7 @@ class LocateService implements iLocateService
 	}
 	
 	private function __construct() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) )
@@ -32,7 +32,7 @@ class LocateService implements iLocateService
 		return $_instance;
 	}
 	
-	private static function _load( Application $app, $service ) 
+	private static function __load( Application $app, $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
@@ -40,7 +40,7 @@ class LocateService implements iLocateService
 		$locate = Config::get( 'LOCATE' );
 		if( NULL!==$locate ) 
 		{
-			$locate_file = _correctPath($locate[$locate['default']]);
+			$locate_file = __correctPath($locate[$locate['default']]);
 			
 			if( Config::has( 'COM' ) ) 
 			{
@@ -70,11 +70,11 @@ class LocateService implements iLocateService
 		return false;
 	}
 	
-	private static function _bootService( Application $app = NULL ) 
+	private static function __bootService( Application $app = NULL ) 
 	{
-		$service = self::_applyConfigs(); 
+		$service = self::__applyConfigs(); 
 		if( $service ) 
-			return self::_load($app, _correctPath(_dispatch_service_file($service))); 
+			return self::__load($app, __correctPath(__dispatch_service_file($service))); 
 		return false; 
 	}
 	

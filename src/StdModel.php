@@ -24,18 +24,18 @@ class StdModel extends SQLQuery
 		}
 		$table = implode( mad, $table ); 
 		$alias = implode( mad, $alias ); 
-		$this->_setPrefix($args[$len-1]);
-		$this->_setModelName( $args[0] ); 
-		$this->_setTableName($table); 
-		$this->_setAliasName($alias); 
+		$this->__setPrefix($args[$len-1]);
+		$this->__setModelName( $args[0] ); 
+		$this->__setTableName($table); 
+		$this->__setAliasName($alias); 
 		if( isset($args[3]) )
-			$this->_setForeignKey($args[3]); 
+			$this->__setForeignKey($args[3]); 
 		else 
-			$this->_setForeignKey($this->_primaryKey); 
-		$this->_setAliasKey($args[2]); 
-		$this->_setAliasModel($args[$len-2]); 
-		$this->_initConn(); 
-		$this->_fetchCacheColumns(); 
+			$this->__setForeignKey($this->_primaryKey); 
+		$this->__setAliasKey($args[2]); 
+		$this->__setAliasModel($args[$len-2]); 
+		$this->__initConn(); 
+		$this->__fetchCacheColumns(); 
 	} 
 	
 	final public function IsLive() { return $this->_propLive; } 
@@ -44,17 +44,17 @@ class StdModel extends SQLQuery
 	
 	final public function ParseSqlSelection() 
 	{
-		return $this->_parseSqlSelection( $this->_propModel, $this->_propsUndescribe );
+		return $this->__parseSqlSelection( $this->_propModel, $this->_propsUndescribe );
 	} 
 	
 	final public function ParseSqlHasOne() 
 	{
-		return $this->_parseSqlHasOne(); 
+		return $this->__parseSqlHasOne(); 
 	} 
 	
 	final public function ParseSqlMerge() 
 	{ 
-		return $this->_parseSqlMerge(); 
+		return $this->__parseSqlMerge(); 
 	} 
 	
 	final public function ParseSqlMergeLeft() 
@@ -67,7 +67,7 @@ class StdModel extends SQLQuery
 		return $this->_parseSqlMergeRight(); 
 	} 
 	
-	protected function _initConn() 
+	protected function __initConn() 
 	{
 		global $configs;
 		if( !isset( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) ) 
@@ -78,22 +78,22 @@ class StdModel extends SQLQuery
 				$configs['DATASOURCE']['DATABASE'] 
 			); 
 		else 
-			$this->_setDBHandle($configs['DATASOURCE']['HANDLECN']); 
+			$this->__setDBHandle($configs['DATASOURCE']['HANDLECN']); 
 	} 
 	
-	private function _setForeignKey( $key ) 
+	private function __setForeignKey( $key ) 
 	{
 		$this->_propAliasKey = $key; 
 		return $this;
 	} 
 	
-	private function _setAliasKey( $key ) 
+	private function __setAliasKey( $key ) 
 	{
 		$this->_propForeignKey = $key; 
 		return $this; 
 	} 
 	
-	private function _setAliasModel( $key ) 
+	private function __setAliasModel( $key ) 
 	{
 		$this->_propAliasModel = $key; 
 	}

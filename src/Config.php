@@ -3,16 +3,16 @@ namespace Zuuda;
 
 class Config 
 {
-	public static function GetInstance() { return self::_getInstance(); }
-	public static function Get( $name ) { return self::_get( $name ); }
-	public static function Set( $name, $value ) { return self::_set( $name, $value ); }
-	public static function Die( $name ) { return self::_die( $name ); } 
-	public static function Has( $name ) { return self::_has( $name ); } 
-	public static function Trans( $data ) { return self::_trans( $data ); }
+	public static function GetInstance() { return self::__getInstance(); }
+	public static function Get( $name ) { return self::__get( $name ); }
+	public static function Set( $name, $value ) { return self::__set( $name, $value ); }
+	public static function Die( $name ) { return self::__die( $name ); } 
+	public static function Has( $name ) { return self::__has( $name ); } 
+	public static function Trans( $data ) { return self::__trans( $data ); }
 	
 	private function __construct() {}
 	private function __clone() {}
-	private static function _getInstance() 
+	private static function __getInstance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -22,25 +22,25 @@ class Config
 		return $_instance;
 	}
 	
-	private static function _set( $name, $value ) 
+	private static function __set( $name, $value ) 
 	{
 		global $configs;
 		$configs[ $name ] = $value;
 		
-		return self::_getInstance();
+		return self::__getInstance();
 	} 
 	
-	private static function _die( $name ) 
+	private static function __die( $name ) 
 	{
 		global $configs;
 		if( isset($configs[$name]) ) 
 		{
 			unset($configs[$name]);
 		} 
-		return self::_getInstance();
+		return self::__getInstance();
 	} 
 	
-	private static function _has( $name ) 
+	private static function __has( $name ) 
 	{
 		global $configs;
 		if( 'COM'===$name ) 
@@ -48,7 +48,7 @@ class Config
 		return isset($configs[$name]);
 	}
 	
-	private static function _get( $name ) 
+	private static function __get( $name ) 
 	{
 		global $configs;
 		if( isset( $configs[ $name ] ) ) 
@@ -58,12 +58,12 @@ class Config
 		return NULL;
 	} 
 	
-	private static function _trans( $data ) 
+	private static function __trans( $data ) 
 	{ 
 		global $configs; 
 		if( isset($configs['LOCATE']) ) 
 			$configs['LOCATE']['TRANS'] = $data; 
-		return self::_getInstance();
+		return self::__getInstance();
 	} 
 	
 }
