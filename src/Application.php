@@ -161,6 +161,20 @@ class Application
 		}
 		return $router['default']['controller'];
 	}
+	
+	private function _parsePort() 
+	{
+		global $configs, $_server; 
+		if( "HTTP/1.1"===$_server['SERVER_PROTOCOL'] ) 
+			$httpProtocol = $configs[ 'WEBPROTO' ]; 
+		else
+			$httpProtocol = $configs[ 'SECPROTO' ]; 
+		if( "80"===$_server['SERVER_PORT'] ) 
+			$httpPort = EMPTY_CHAR; 
+		else 
+			$httpPort = ':'.$_server['SERVER_PORT']; 
+		$configs[ 'ORIGIN_PATH' ] = $configs[ 'ORIGIN_DOMAIN' ] = $httpProtocol.$configs['DOMAIN'].$httpPort; 
+	}
 
 	static function Booting() 
 	{
@@ -249,7 +263,8 @@ class Application
 
 	public function Start() 
 	{
-		global $configs, $_get;		
+		global $configs, $_get; 
+		$this->_parsePort(); 
 		try 
 		{
 			$controller_class_name = $this->_extractController(); 
