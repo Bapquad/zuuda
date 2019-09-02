@@ -4,8 +4,8 @@ namespace Zuuda;
 class Config 
 {
 	public static function GetInstance() { return self::__getInstance(); }
-	public static function Get( $name ) { return self::__get( $name ); }
-	public static function Set( $name, $value ) { return self::__set( $name, $value ); }
+	public static function Get( $name ) { return self::__getVar( $name ); }
+	public static function Set( $name, $value ) { return self::__setVar( $name, $value ); }
 	public static function Die( $name ) { return self::__die( $name ); } 
 	public static function Has( $name ) { return self::__has( $name ); } 
 	public static function Trans( $data ) { return self::__trans( $data ); }
@@ -22,7 +22,7 @@ class Config
 		return $_instance;
 	}
 	
-	private static function __set( $name, $value ) 
+	private static function __setVar( $name, $value ) 
 	{
 		global $configs;
 		$configs[ $name ] = $value;
@@ -48,7 +48,7 @@ class Config
 		return isset($configs[$name]);
 	}
 	
-	private static function __get( $name ) 
+	private static function __getVar( $name ) 
 	{
 		global $configs;
 		if( isset( $configs[ $name ] ) ) 

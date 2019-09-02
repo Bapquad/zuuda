@@ -2245,7 +2245,7 @@ abstract class SQLQuery
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
-			call_user_func_array(array($dispatcher, '_where'), array($args, count($args)));
+			call_user_func_array(array($dispatcher, '__where'), array($args, count($args)));
 		}
 		else if($argsNum===$oneArg) 
 		{
@@ -2255,7 +2255,7 @@ abstract class SQLQuery
 				$tmp = array(key($param)); 
 				$tmp[] = $sign; 
 				$tmp[] = current($param);
-				call_user_func_array(array($dispatcher, '_where'), array($tmp, count($tmp)));
+				call_user_func_array(array($dispatcher, '__where'), array($tmp, count($tmp)));
 			}
 		}
 	} 
@@ -2271,7 +2271,7 @@ abstract class SQLQuery
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			call_user_func_array( array($dispatcher, '_where'), array($args, $argsNum) ); 
+			call_user_func_array( array($dispatcher, '__where'), array($args, $argsNum) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -2279,7 +2279,7 @@ abstract class SQLQuery
 			$tmp[] = array_shift($args); 
 			$tmp[] = $sign;
 			$tmp[] = $args;
-			call_user_func_array( array($dispatcher, '_where'), array($tmp, 3) ); 
+			call_user_func_array( array($dispatcher, '__where'), array($tmp, 3) ); 
 		}
 		else 
 		{
@@ -2301,7 +2301,7 @@ abstract class SQLQuery
 			{
 				$args[] = $sign; 
 				$args[] = NULL;
-				call_user_func_array( array($dispatcher, '_where'), array( $args, 3 ) );
+				call_user_func_array( array($dispatcher, '__where'), array( $args, 3 ) );
 			}
 			else 
 			{
@@ -2342,7 +2342,7 @@ abstract class SQLQuery
 				$tmp = $args[1];
 				$args[1] = $sign;
 				$args[2] = $tmp; 
-				call_user_func_array( array($dispatcher, '_where'), array($args, $argsNum) ); 
+				call_user_func_array( array($dispatcher, '__where'), array($args, $argsNum) ); 
 			} 
 			else 
 			{
@@ -2363,7 +2363,7 @@ abstract class SQLQuery
 						$tmp[] = $arg[1];
 					}
 					$arg = $tmp;
-					call_user_func_array( array($dispatcher, '_where'), array($arg, count($arg)) ); 
+					call_user_func_array( array($dispatcher, '__where'), array($arg, count($arg)) ); 
 				}
 			}
 		}
@@ -2382,11 +2382,11 @@ abstract class SQLQuery
 				if( $argsNum===$twoArg ) 
 				{ 
 					if( 'is not null' === strtolower($args[1]) ) 
-						call_user_func_array(array($dispatcher, '_where'), array([$args[0], 'is not', NULL], 3));
+						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'is not', NULL], 3));
 					if( 'not null' === strtolower($args[1]) )
-						call_user_func_array(array($dispatcher, '_where'), array([$args[0], 'not', NULL], 3));
+						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'not', NULL], 3));
 					else
-						call_user_func_array(array($dispatcher, '_where'), array([$args[0], '=', $args[1]], 3));
+						call_user_func_array(array($dispatcher, '__where'), array([$args[0], '=', $args[1]], 3));
 				} 
 				else if( $threeArg===$argsNum ) 
 				{
@@ -2436,7 +2436,7 @@ abstract class SQLQuery
 					$tmp[] = array_shift($args);
 					$tmp[] = array_shift($args);
 					$tmp[] = $args;
-					call_user_func_array(array($dispatcher, '_where'), array(array( $name, $ops, $args ), 3));
+					call_user_func_array(array($dispatcher, '__where'), array(array( $name, $ops, $args ), 3));
 				} 
 				else 
 				{
@@ -2445,7 +2445,7 @@ abstract class SQLQuery
 					{
 						if( $oneArg===count($args) ) 
 							continue; 
-						call_user_func_array(array($dispatcher, '_where'), array($args, count($args)));
+						call_user_func_array(array($dispatcher, '__where'), array($args, count($args)));
 					}
 				}
 			}
@@ -2870,7 +2870,7 @@ abstract class SQLQuery
 					$args = array($arg);
 					$args[] = count($arg); 
 					$args[] = true;
-					$tmps[] = call_user_func_array( array($dispatcher, '_where'), $args ); 
+					$tmps[] = call_user_func_array( array($dispatcher, '__where'), $args ); 
 				}
 				if( !empty($tmps) )
 					$this->_propsCond[] = array('OR'=>$tmps); 
@@ -3336,11 +3336,11 @@ abstract class SQLQuery
 					$tmp = $args[1]; 
 					$args[1] = '='; 
 					$args[2] = $tmp;
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) ); 
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) ); 
 				} 
 				else if( $threeArg===$argsNum ) 
 				{
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) );
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) );
 				} 
 				else if( $threeArg<$argsNum ) 
 				{
@@ -3348,7 +3348,7 @@ abstract class SQLQuery
 					$args = array(array_shift($tmp)); 
 					$args[] = array_shift($tmp); 
 					$args[] = $tmp; 
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) );
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) );
 				} 
 				else 
 				{
@@ -3837,11 +3837,11 @@ abstract class SQLQuery
 					$tmp = $args[1]; 
 					$args[1] = '='; 
 					$args[2] = $tmp;
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) ); 
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) ); 
 				} 
 				else if( $threeArg===$argsNum ) 
 				{
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) );
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) );
 				} 
 				else if( $threeArg<$argsNum ) 
 				{
@@ -3849,7 +3849,7 @@ abstract class SQLQuery
 					$args = array(array_shift($tmp)); 
 					$args[] = array_shift($tmp); 
 					$args[] = $tmp; 
-					$params[] = call_user_func_array( array($dispatcher, '_where'), array($args, $threeArg, true) );
+					$params[] = call_user_func_array( array($dispatcher, '__where'), array($args, $threeArg, true) );
 				} 
 				else 
 				{
@@ -4284,7 +4284,7 @@ abstract class SQLQuery
 					$args = array($arg);
 					$args[] = count($arg); 
 					$args[] = true;
-					$tmps[] = call_user_func_array( array($dispatcher, '_where'), $args ); 
+					$tmps[] = call_user_func_array( array($dispatcher, '__where'), $args ); 
 				}
 				if( !empty($tmps) )
 					$this->_propsCondOr[] = array('AND'=>$tmps); 
