@@ -33,7 +33,6 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	final protected function __getContentAssets() { return $this->_content_assets; }
 	
 	final protected function __setVars( $vars ) { $this->_vars = $vars; return $this; }
-	final protected function __setVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
 	final protected function __addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
 	final protected function __setName( $value ) { $this->_name = $value; return $this; }
 	final protected function __setTemplate( $value ) { $this->_tpl_name = $value; return $this; }
