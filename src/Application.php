@@ -122,7 +122,7 @@ class Application
 	private function __bootParams() 
 	{
 		global $configs;
-		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, $this->__routeURL( getSingleton( 'Global' )->get( 'url' ) ) ) );
+		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')) ); 
 		$this->__parseQuery($_SERVER[ "REQUEST_URI" ]);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
@@ -181,7 +181,7 @@ class Application
 			$_instance->__bootServices( CateService::getInstance(), $_instance );
 			$_instance->__bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}
-		$_instance->__bootParams();
+		$_instance->__bootParams(); 
 		return $_instance;
 	} 
 	
@@ -272,16 +272,11 @@ class Application
 					$action[ $key ] = strtoupper( substr( $value, 0, 1 ) ).substr( $value, 1 );
 				}
 				$action = implode( EMPTY_CHAR, $action );
-				$parse_result = $this->__bootService($action, false);
-				if($parse_result) 
-					$action = substr( $action, 0, $parse_result );
 				$actionDelimeter = '|'; 
 				$actionInjector = '/[\-\_\s]/';
 				$action = explode( $actionDelimeter, preg_replace( $actionInjector, $actionDelimeter, $action ) );
 				foreach( $action as $key => $word ) 
-				{
 					$action[$key] = ucfirst($word); 
-				}
 				$action = implode(EMPTY_CHAR, $action);
 				$action .= ACTION;
 				if($action === 'Action') $action = 'IndexAction';

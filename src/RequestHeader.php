@@ -492,67 +492,80 @@ class RequestHeader
 	
 	private static function __contentType( $type ) 
 	{
-		header( 'Content-Type: ' . $type );
+		if( !headers_sent() )
+			header( 'Content-Type: ' . $type );
 	}
 	
 	private static function __contentTypeUtf8( $type ) 
 	{
-		header( 'Content-Type: ' . $type . '; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: ' . $type . '; charset=utf-8' );
 	}
 	
 	private static function __displayHtml() 
 	{
-		header( 'Content-Type: text/html; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: text/html; charset=utf-8' );
 	}
 	
 	private static function __displayCss() 
 	{
-		header( 'Content-Type: text/css; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: text/css; charset=utf-8' );
 	}
 	
 	private static function __displayJs() 
 	{
-		header( 'Content-Type: text/javascript; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: text/javascript; charset=utf-8' );
 	}
 	
 	private static function __displayJson() 
 	{
-		header( 'Content-Type: application/json; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: application/json; charset=utf-8' );
 	}
 	
 	private static function _displayJSonP() 
 	{
-		header( 'Content-Type: application/javascript; charset=utf-8' );
+		if( !headers_sent() )
+			header( 'Content-Type: application/javascript; charset=utf-8' );
 	}
 
 	private static function __displayJpg() 
 	{
-		header( 'Content-Type: image/jpeg' );
+		if( !headers_sent() )
+			header( 'Content-Type: image/jpeg' );
 	}
 	
 	private static function __displayPng() 
 	{
-		header( 'Content-Type: image/png' );
+		if( !headers_sent() )
+			header( 'Content-Type: image/png' );
 	}
 	
 	private static function __displayBmp() 
 	{
-		header( 'Content-Type: image/bmp' );
+		if( !headers_sent() )
+			header( 'Content-Type: image/bmp' );
 	}
 	
 	private static function __displayGif() 
 	{
-		header( 'Content-Type: image/gif' );
+		if( !headers_sent() )
+			header( 'Content-Type: image/gif' );
 	} 
 
 	private static function __displayText() 
 	{
-		header( 'Content-Type: text/plain' );
+		if( !headers_sent() )
+			header( 'Content-Type: text/plain' );
 	}
 	
 	private static function __displayCode() 
 	{
-		header( 'Content-Type: text/html' ); 
+		if( !headers_sent() )
+			header( 'Content-Type: text/html' ); 
 		static $useStyle = true;
 		if($useStyle) 
 		{

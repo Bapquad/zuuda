@@ -26,7 +26,17 @@ function __($str_name)
 			$refs = &$refs[$key];
 		}
 		return ($refs)?$refs:$str_name;
-	} else return $str_name;
+	} 
+	else return $str_name;
+} 
+
+function __t($str_name) 
+{
+	global $configs;
+	if( isset($configs['LOCATE']) && isset($configs['LOCATE']['TRANS'][$str_name]) ) 
+		return $configs['LOCATE']['TRANS'][$str_name];
+	else 
+		return $str_name;
 }
 
 function __assetPath( $file_path, $file = false, $build = false ) 

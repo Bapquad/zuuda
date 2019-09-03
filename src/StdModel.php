@@ -38,9 +38,22 @@ class StdModel extends SQLQuery
 		$this->__fetchCacheColumns(); 
 	} 
 	
-	final public function IsLive() { return $this->_propLive; } 
-	final public function Blind() { return $this->_propLive = false; } 
-	final public function Unblind() { return $this->_propLive = true; } 
+	final public function IsLive() 
+	{ 
+		return $this->_propLive; 
+	} 
+	
+	final public function Blind() 
+	{ 
+		$this->_propLive = false; 
+		return $this;
+	} 
+	
+	final public function Unblind() 
+	{ 
+		$this->_propLive = true; 
+		return $this; 
+	} 
 	
 	final public function ParseSqlSelection() 
 	{
@@ -65,6 +78,16 @@ class StdModel extends SQLQuery
 	final public function ParseSqlMergeRight() 
 	{ 
 		return $this->_parseSqlMergeRight(); 
+	} 
+	
+	final public function GetForeignKey() 
+	{
+		return $this->_propForeignKey;
+	} 
+	
+	final public function GetAliasKey() 
+	{
+		return $this->_propAliasKey; 
 	} 
 	
 	protected function __initConn() 

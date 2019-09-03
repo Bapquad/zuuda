@@ -44,7 +44,6 @@ define( 'mcbm_set_limit',			'__setLimit' );
 define( 'mcbm_bound',				'__bound' );
 define( 'mhd', 						'data' );
 define( 'mhj', 						'join' );
-define( 'mad', 						'_' ); 
 
 abstract class SQLQuery 
 {
@@ -108,6 +107,7 @@ abstract class SQLQuery
 	final public function GetModelName() { return $this->__getModel(); }
 	final public function GetTableName() { return $this->__getTable(); }
 	final public function GetAliasName() { return $this->__getAlias(); }
+	final public function GetPrimaryKey() { return $this->_primaryKey; }
 	final public function Bound() { return $this->__bound( func_get_args(), func_num_args() ); }
 	final public function Unbound() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Secure() { return $this->__unbound( func_get_args(), func_num_args() ); }
@@ -278,8 +278,8 @@ abstract class SQLQuery
 	final public function Connect( $address, $account, $pwd, $name ) { return $this->__connect( $address, $account, $pwd, $name ); }
 	final public function GetError() { return $this->__getError(); } 
 	final public function GetQuery() { return $this->__getQuerySQL(); }
-	final public function GetQuerySQLs() { return $this->__getQuerySQLs(); } 
-	final public function GetQuerySQL() { return $this->__getQuerySQL(); }
+	final public function GetQuerySQLs() { return $this->_querySQLs; } 
+	final public function GetQuerySQL() { return $this->_querySQL; }
 	final public function GetCollectionString() { return $this->__buildCollectionString(); }
 	
 	final public function ShareMainQuery() { return $this->__shareMainQuery(); }
@@ -442,17 +442,20 @@ abstract class SQLQuery
 	
 	final protected function __parseSqlMerge() 
 	{
-		return "INNER JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}` "; 
+		$conds = implode(space, $this->__buildSqlConditionOn( $this->_propModel )); 
+		return "INNER JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}` {$conds} "; 
 	} 
 	
 	final protected function __parseSqlMergeLeft() 
 	{
-		return "LEFT JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}` "; 
+		$conds = implode(space, $this->__buildSqlConditionOn( $this->_propModel )); 
+		return "LEFT JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}` {$conds} "; 
 	} 
 	
 	final protected function __parseSqlMergeRight() 
 	{
-		return "RIGHT JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}` "; 
+		$conds = implode(space, $this->__buildSqlConditionOn( $this->_propModel )); 
+		return "RIGHT JOIN `{$this->_propTable}` AS `{$this->_propModel}` ON `{$this->_propModel}`.`{$this->_propForeignKey}` = `{$this->_propAliasModel}`.`{$this->_propAliasKey}`  {$conds} "; 
 	}
 	
 	final protected function __buildSqlSelection() 
@@ -509,6 +512,17 @@ abstract class SQLQuery
 		$outSql = $defSql . space . $outSql; 
 		return $outSql;
 	} 
+	
+	final protected function __buildSqlConditionOn( $propModel ) 
+	{
+		$conds = array(); 
+		foreach( $this->_propsCondOn as $key => $cond ) 
+		{
+			$cond[0] = "AND `{$propModel}`.`{$cond[0]}`"; 
+			$conds[] = implode(space, $cond);
+		} 
+		return $conds;
+	}
 	
 	final protected function __buildSqlCondition() 
 	{ 
@@ -596,6 +610,7 @@ abstract class SQLQuery
 	
 	private function __fetchResult( $qr ) 
 	{
+		global $configs;
 		$out = array(); 
 		if( $qr ) 
 		{
@@ -609,14 +624,26 @@ abstract class SQLQuery
 					$tmps[$ts[$i]][$fs[$i]] = $r[$i];
 				
 				if( $this->_flagHasMany && !empty($this->_propsHasMany) ) 
-				{
-					leave($this->_propsHasMany);
-				} 
-				
+					foreach( $this->_propsHasMany as $key => $model ) 
+						if( $model->isLive() )
+							$tmps[$model->getModelName()] = $model->where($model->GetForeignKey(), $tmps[$this->_propModel][$this->_primaryKey])->search();
 				if( $this->_flagHasMABTM && !empty($this->_propsHasMABTM) ) 
-				{ 
-					leave($this->_propsHasMABTM); 
-				} 
+					foreach($this->_propsHasMABTM as $key => $model ) 
+						if($model['data']->isLive()) 
+						{
+							$main = $model['data']; 
+							$join = $model['join']; 
+							$configs['tmp_fk'] = $join['fk_main'];
+							$configs['tmp_val'] = $tmps[$this->_propModel][$this->_primaryKey];
+							$main->merge($join['md_name'],$join['as_name'],$join['fk_data'],$main->getPrimaryKey(), function($merge) 
+							{
+								global $configs;
+								$merge->whereOn( $configs['tmp_fk'], $configs['tmp_val'] ); 
+								unset( $configs['tmp_fk'], $configs['tmp_val'] );
+							});
+							$tmps[$main->getModelName()] = $main->search();
+						}
+						
 				array_push($out,$tmps); 
 			} 
 			$this->free_result($qr); 
@@ -4466,15 +4493,15 @@ abstract class SQLQuery
 				if( $oneArg===$argsNum ) 
 				{
 					$model = current($args);
-					if( array_key_exists($model, $this->_propsHasOne) ) 
+					if( array_key_exists($model, $this->_propsHasMany) ) 
 						return $this->_propsHasMany[$model];
 					else 
 						return;
 				}
 				else if( $fourArg===$argsNum ) 
 				{
-					if( array_key_exists($args[$zeroArg], $this->_propsHasOne) ) 
-						return $this->_propsHasOne[ $args[$zeroArg] ]; 
+					if( array_key_exists($args[$zeroArg], $this->_propsHasMany) ) 
+						return $this->_propsHasMany[ $args[$zeroArg] ]; 
 					
 					$args[] = $this->_propTable;
 					$args[] = $this->_propPrefix;
@@ -4525,13 +4552,13 @@ abstract class SQLQuery
 					$dataModel = new StdModel( $data ); 
 					$dataAlias = explode(mad, $dataModel->getAliasName()); 
 					$mainAlias = explode(mad, $this->getAliasName()); 
-					$table = array_merge($dataAlias, $mainAlias); 
-					sort($table); 
-					foreach( $table as $key => $word ) 
-						$table[$key] = $inflect->pluralize(strtolower($word)); 
-					$table = $this->_propPrefix.implode(mad, $table); 
+					$alias = array_merge($dataAlias, $mainAlias); 
+					sort($alias); 
+					foreach( $alias as $key => $word ) 
+						$alias[$key] = $inflect->singularize(strtolower($word)); 
 					$joinModel = array(
-						'tb_name' => $table, 
+						'md_name' => implode(EMPTY_CHAR, $alias), 
+						'as_name' => implode(mad, $alias), 
 						'fk_main' => $args[3], 
 						'fk_data' => $args[2], 
 					);
@@ -4564,6 +4591,7 @@ abstract class SQLQuery
 		try 
 		{
 			$fourArg = 4; 
+			$fiveArg = 5; 
 			if( $fourArg===$argsNum ) 
 			{
 				if( array_key_exists($args[head], $this->_propsMerge) ) 
@@ -4573,6 +4601,12 @@ abstract class SQLQuery
 				$model = new StdModel($args); 
 				$this->_propsMerge += array( $args[head]=>$model );
 				return $model;
+			} 
+			else if( $fiveArg===$argsNum ) 
+			{
+				$cb = array_pop($args);
+				$merge = $this->__orderMerge( $args, count($args) );
+				$cb($merge);
 			}
 			else 
 				throw new Exception( "Usage <strong>Model::merge()</strong> is incorrect." ); 
