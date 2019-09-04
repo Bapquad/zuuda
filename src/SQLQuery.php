@@ -4,7 +4,8 @@ namespace Zuuda;
 
 use Exception;
 
-define( 'mcbm_order_import', 		'__orderImport' );
+define( 'mcbm_order_import_once',	'__orderImport' );
+define( 'mcbm_order_import_all', 	'__orderImportAll' );
 define( 'mcbm_order_merge', 		'__orderMerge' );
 define( 'mcbm_order_merge_left', 	'__orderMergeLeft' );
 define( 'mcbm_order_merge_right', 	'__orderMergeRight' );
@@ -27,7 +28,7 @@ define( 'mcbm_item',				'__item' );
 define( 'mcbm_paginate',			'__paginate' );
 define( 'mcbm_delete',				'__delete' );
 define( 'mcbm_save',				'__save' );
-define( 'mcbm_total_pages',			'___totalPages' );
+define( 'mcbm_total_pages',			'__totalPages' );
 define( 'mcbm_total',				'__total' );
 define( 'mcbm_count',				'__count' );
 define( 'mcbm_distinct',			'__distinct' );
@@ -78,6 +79,7 @@ abstract class SQLQuery
 	protected $_flagHasMany 	= false; 
 	protected $_flagHasMABTM 	= false; 
 	protected $_propsImport		= array();
+	protected $_propsImportAll	= array();
 	protected $_propsMerge		= array(); 
 	protected $_propsMergeLeft	= array(); 
 	protected $_propsMergeRight	= array(); 
@@ -245,7 +247,8 @@ abstract class SQLQuery
 	final public function HasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_order_has_mabtm], array(func_get_args(), func_num_args())); } 
 	final public function BlindHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_hide_has_mabtm], array()); }
 	final public function DisplayHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_show_has_mabtm], array()); }
-	final public function Import() { return call_user_func_array([$this, mcbm_order_import], array(func_get_args(), func_num_args())); } 
+	final public function Import() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
+	final public function ImportOnce() { return call_user_func_array([$this, mcbm_order_import_once], array(func_get_args(), func_num_args())); } 
 	final public function Merge() { return call_user_func_array([$this, mcbm_order_merge], array(func_get_args(), func_num_args())); } 
 	final public function MergeLeft() { return call_user_func_array([$this, mcbm_order_merge_left], array(func_get_args(), func_num_args())); } 
 	final public function MergeRight() { return call_user_func_array([$this, mcbm_order_merge_right], array(func_get_args(), func_num_args())); } 
@@ -281,8 +284,7 @@ abstract class SQLQuery
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
 	final public function GetQuerySQL() { return $this->_querySQL; }
 	final public function GetCollectionString() { return $this->__buildCollectionString(); }
-	
-	final public function ShareMainQuery() { return $this->__shareMainQuery(); }
+	final public function FuildSqlQuery() { return $this->__buildSqlQuery(); } 
 	final public function GenRandString( $len=10 ) { return $this->__genRandString($len); }
 	
 	abstract protected function __initConn();
@@ -354,6 +356,7 @@ abstract class SQLQuery
 		$this->_flagHasMany 	= false; 
 		$this->_flagHasMABTM 	= false; 
 		$this->_propsImport		= array();
+		$this->_propsImportAll	= array();
 		$this->_propsMerge		= array(); 
 		$this->_propsMergeLeft	= array(); 
 		$this->_propsMergeRight	= array(); 
@@ -608,6 +611,45 @@ abstract class SQLQuery
 		return "ORDER BY `{$this->_propModel}`.`{$this->_primaryKey}` DESC ";
 	}
 	
+	final protected function __buildSqlImport() 
+	{
+		$sql = EMPTY_CHAR;
+		if( !empty($this->_propsImportAll) ) 
+		{
+			$tmp = array();
+			foreach( $this->_propsImportAll as $model ) 
+				$tmp[] = $model->fuildSqlQuery(); 
+			$sql = ' UNION ALL '. implode(' UNION ALL ', $tmp); 
+		} 
+		return $sql;
+	} 
+	
+	final protected function __buildSqlImportOnce() 
+	{
+		$sql = EMPTY_CHAR;
+		if( !empty($this->_propsImport) ) 
+		{
+			$tmp = array();
+			foreach( $this->_propsImport as $model ) 
+				$tmp[] = $model->fuildSqlQuery(); 
+			$sql = ' UNION '. implode(' UNION ', $tmp); 
+		} 
+		return $sql;
+	} 
+	
+	final protected function __buildSqlQuery() 
+	{
+		$selectSql = $this->__buildSQLSelection(); 
+		$fromSql = $this->__buildSqlFrom(); 
+		$condSql = $this->__buildSqlCondition(); 
+		$groupSql = $this->__buildSqlGroup(); 
+		$orderSql = $this->__buildSqlOrder(); 
+		$rangeSql = $this->__buildSqlRange(); 
+		$importSql = $this->__buildSqlImport(); 
+		$importOnceSql = $this->__buildSqlImportOnce(); 
+		return $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql . $importSql . $importOnceSql; 
+	}
+	
 	private function __fetchResult( $qr ) 
 	{
 		global $configs;
@@ -653,507 +695,8 @@ abstract class SQLQuery
 	}
 	
 	private function __search( $args, $argsNum ) 
-	{
-		$selectSql = $this->__buildSQLSelection(); 
-		$fromSql = $this->__buildSqlFrom(); 
-		$condSql = $this->__buildSqlCondition(); 
-		$groupSql = $this->__buildSqlGroup(); 
-		$orderSql = $this->__buildSqlOrder(); 
-		$rangeSql = $this->__buildSqlRange(); 
-		$sql = $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql; 
-		$queryResult = $this->__query( $sql ); 
-		
-		return $this->__fetchResult($queryResult); 
-		
-		global $inflect;
-		$commandTable = 'command'; 
-		$conditionsChild = '';
-		$fromChild = '';
-		$prefix = $this->_retrivePrefix();
-		
-		
-		$this->__buildMainQuery( $prefix );
-		$result = array();
-		$table = array();
-		$field = array();
-		$tempResults = array();
-		$rsNumRows = 0;
-		array_push( $this->_querySQLs, $this->_querySQL );
-		
-		if( $this->_result ) 
-		{
-			$rsNumRows = mysqli_num_rows( $this->_result );
-			if( $rsNumRows > 0 ) 
-			{
-				$numOfFields = mysqli_num_fields( $this->_result );
-				while( $field_info = mysqli_fetch_field($this->_result) )
-				{
-					$ignoreField = false;
-					foreach( $this->_propsUndescribe as $columnName ) 
-					{
-						if( stripos($columnName, DOT) ) 
-						{
-							if( "$field_info->table.$field_info->name" === $columnName ) 
-								$ignoreField = true;
-						}
-						else if( $field_info->name === $columnName && $field_info->table === $this->_propModel ) 
-						{
-							$ignoreField = true; 
-						}
-					} 
-
-					if( $ignoreField ) 
-					{
-						array_push( $table, NULL );
-						array_push( $field, NULL );
-					}
-					else 
-					{
-						if( $field_info->table == EMPTY_CHAR ) 
-						{
-							if( EMPTY_CHAR!==$this->_propModel )
-								$commandTable = $this->_propModel;
-							array_push( $table, $commandTable );
-						}
-						else
-							array_push( $table, $field_info->table );
-						array_push( $field, $field_info->name );
-					} 
-				}
-
-				while( $row = mysqli_fetch_row( $this->_result ) ) 
-				{
-					for( $i=0; $i<$numOfFields; ++$i ) 
-						if( NULL!==$table[$i] && NULL!==$field[$i] ) 
-							$tempResults[$table[$i]][$field[$i]] = $row[$i];
-					if( $this->_flagHasMany && isset( $this->_hasMany ) ) 
-					{
-						foreach ( $this->_hasMany as $modelChild => $aliasChild ) 
-						{
-							if( in_array( $modelChild, $this->_hasManyBlind ) ) 
-							{
-								continue; 
-							}
-
-							$queryChild = '';
-							$conditionsChild = '';
-							$limitChild = NL."LIMIT 1000";
-							$orderChild = "";
-							$fromChild = '';
-							$aliasKey = $aliasChild[ 'key' ];
-							$tableChild = $aliasChild[ 'table' ];
-							$aliasChild = explode( '_', $aliasChild[ 'table' ] );
-							if( ($aliasChild[0].'_')===$prefix ) unset($aliasChild[0]);
-							foreach( $aliasChild as $key => $value ) 
-								$aliasChild[ $key ] = ucfirst( $inflect->singularize( $value ) );
-							$modelAlias = implode( '', $aliasChild );
-							$fromChild .= '`'.$tableChild.'` as `'.$modelAlias.'`';
-							$conditionsChild .= '`'.$modelAlias.'`.`'.$aliasKey.'` = \''.$tempResults[$this->_propModel][ID].'\' '.NL;
-
-							if( isset($this->_hasMany[ $modelChild ][ 'conds' ]) ) 
-							{
-								if( is_array($this->_hasMany[ $modelChild ][ 'conds' ]) ) 
-								{
-									$conds = $this->_hasMany[ $modelChild ][ 'conds' ];
-									foreach( $conds as $cond ) 
-									{
-										switch( $cond[ 'operator' ] ) 
-										{
-											case 'BETWEEN':
-												if( is_string($cond[ 'start' ]) ) 
-													$sql_start_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'start' ] )."'";
-												elseif( is_bool($cond[ 'start' ]) ) 
-													$sql_start_value = ($cond[ 'start' ])?1:0; 
-												elseif( is_null($cond[ 'start' ]) ) 
-													$sql_start_value = 'NULL';
-												else
-													$sql_start_value = $cond[ 'start' ];
-
-												if( is_string($cond[ 'end' ]) )
-													$sql_end_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'end' ] )."'"; 
-												elseif( is_bool($cond[ 'end' ]) ) 
-													$sql_end_value = ($cond[ 'end' ])?1:0;
-												elseif( is_null($cond[ 'end' ]) )
-													$sql_end_value = 'NULL';
-												else 
-													$sql_end_value = $cond[ 'end' ];
-
-												$sql_value = $sql_start_value . " AND " . $sql_end_value;
-												break;
-
-											case 'IN': 
-											case 'NOT IN': 
-												$sql_value = $cond[ 'value' ];
-												break; 
-
-											case 'LIKE': 
-											case 'NOT LIKE': 
-												try 
-												{
-													if( is_null($cond[ 'value' ]) ) 
-														throw new Exception("The value with ".$cond[ 'operator' ]." operator could not be NULL", 1);
-													elseif( is_bool($cond[ 'value' ]) ) 
-														throw new Exception("The value with ".$cond[ 'operator' ]." operator could not be BOOLEAN", 1);
-													else 
-														$sql_value = "'%".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'value' ] )."%'";
-												} 
-												catch( Exception $e ) 
-												{
-													trace_once( $e );
-												}
-												break;
-
-											default:
-												if( is_string($cond[ 'value' ]) ) 
-													$sql_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'value' ] )."'";
-												elseif( is_null($cond[ 'value' ]) ) 
-													$sql_value = 'NULL';
-												elseif( is_bool($cond[ 'value' ]) ) 
-													$sql_value = ($cond[ 'value' ])?1:0;
-												else 
-													$sql_value = $cond[ 'value' ];
-												break;
-										}
-										$conditionsChild .= "AND `".$modelAlias."`.`".$cond[ 'field' ]."` ".$cond[ 'operator' ]." ".$sql_value." ".NL;
-									}
-								}
-							} 
-
-							$describeArr_r = array();
-							if( isset($this->_hasMany[ $modelChild ][ 'describe' ]) ) 
-							{
-								$describes = $this->_hasMany[ $modelChild ][ 'describe' ];
-								if( is_array($describes) ) 
-								{
-									foreach( $describes as $describe ) 
-									{
-										foreach($describe[ 'field' ] as $field_r) 
-										{
-											$describeSql_r = "`".$modelAlias."`.`".$field_r."`";
-											if( isset($describe[ 'label' ]) && isset($describe[ 'label' ][ $field_r ]) )
-												$describeSql_r .= " AS '".$describe[ 'label' ][ $field_r ]."'";
-											array_push( $describeArr_r, $describeSql_r );
-										}
-									}
-								}
-							}
-							if( !empty($describeArr_r) ) 
-							{
-								$includeColume = implode( ', ', $describeArr_r );
-							} 
-							else 
-							{
-								$includeColume = '*';
-							} 
-
-							if( isset($this->_hasMany[ $modelChild ][ 'num__rows' ]) ) 
-							{
-								$limitChild = NL."LIMIT ".$this->_hasMany[ $modelChild ][ 'num__rows' ];
-							}
-
-							if( isset($this->_hasMany[ $modelChild ][ 'reverse' ]) ) 
-							{
-								$orderChild = NL."ORDER BY `".$modelAlias."`.`".mysqli_real_escape_string($this->_dbHandle, $this->_hasMany[ $modelChild ][ 'reverse' ])."` DESC";
-							}
-
-							$queryChild =  'SELECT '.$includeColume.' FROM '.$fromChild.' WHERE '.$conditionsChild.$orderChild.$limitChild;	
-							$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
-							
-							$tableChild = array();
-							$fieldChild = array();
-							$temp_results_child = array();
-							$results_child = array();
-							array_push( $this->_querySQLs, $queryChild );
-
-							if( $resultChild ) 
-							{
-								if( mysqli_num_rows($resultChild) > 0 ) 
-								{
-									$undescribes = NULL;
-									if( isset($this->_hasMany[ $modelChild ][ 'undescribe' ]) ) 
-									{
-										$undescribes = $this->_hasMany[ $modelChild ][ 'undescribe' ];
-									}
-									
-									$numOfFieldsChild = mysqli_num_fields( $resultChild );
-
-									while( $field_info = mysqli_fetch_field($resultChild) ) 
-									{
-										if( NULL!==$undescribes && in_array($field_info->name, $undescribes) ) 
-										{
-											array_push( $fieldChild, 0 );
-										}
-										else
-										{
-											array_push( $fieldChild, $field_info->name );
-										}
-										array_push( $tableChild, $field_info->table );
-									}
-
-									while( $rowChild = mysqli_fetch_row($resultChild) ) 
-									{
-										for ($j = 0;$j < $numOfFieldsChild; ++$j) 
-										{
-											if($fieldChild[$j])
-												$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
-										}
-										array_push( $results_child, $temp_results_child );
-									}
-								}
-								
-								if(!empty( $results_child ))
-									$tempResults[ $modelChild ] = $results_child;
-								else 
-									unset( $tempResults[ $modelChild ] );
-								
-								mysqli_free_result($resultChild);
-							}
-						} 
-					}
-
-					if ($this->_flagHasMABTM && isset($this->_hasManyAndBelongsToMany)) 
-					{
-						foreach ($this->_hasManyAndBelongsToMany as $modelChild => $aliasChild) 
-						{
-							$queryChild = '';
-							$conditionsChild = '';
-							$limitChild = NL."LIMIT 1000";
-							$orderChild = "";
-							$fromChild = '';
-
-							$cacheChild = $aliasChild;
-							
-							// $joinKey = strtolower($inflect->singularize($aliasChild)).'_id';
-							// if( isset( $cacheChild[ 'join' ] ) ) 
-							// {
-							// 	$tableModel = $this->_propModelSort( $cacheChild['data']['table'] );
-							// 	$joinTable = $prefix . $this->_propTableSort( $cacheChild['join']['table'] );
-							// 	$joinModel = $this->_propModelSort( $cacheChild['join']['table'] );
-							// 	$aliasKey = $cacheChild['join']['key'];
-							// } 
-							// else 
-							// {
-							// 	$pluralAliasTable = strtolower($this->_propAlias);
-							// 	$pluralAliasChild = strtolower($aliasChild);
-							// 	$sortTables = explode( '_', $pluralAliasTable.'_'.$pluralAliasChild );
-							// 	sort($sortTables);
-							// 	foreach( $sortTables as $key => $value ) 
-							// 	{
-									
-							// 	}
-							// 	$joinTable = $prefix . implode('_',$sortTables);
-							// 	$tableModel = $this->_propModelSort( $aliasChild );
-							// 	$tableChild = $prefix . $this->_propTableSort( $aliasChild );
-							// 	$sortAliases = array( $this->_propModel, $tableModel );
-							// 	sort($sortAliases);
-							// 	$joinModel = implode('', $sortAliases);
-							// 	$aliasKey = $this->_propAlias.'_id';
-							// }
-							
-							$tableChild = $cacheChild['data']['table'];
-							$aliasChild = explode( '_', $tableChild );
-							if( ($aliasChild[0].'_')===$prefix ) unset($aliasChild[0]);
-							foreach( $aliasChild as $key => $value )
-								$aliasChild[ $key ] = ucfirst( $inflect->singularize( $value ) ); 
-							$tableModel = implode( '', $aliasChild ); 
-							$joinTable = $cacheChild['join']['table'];
-							$joinAlias = explode( '_', $joinTable );
-							if( ($joinAlias[0].'_')===$prefix ) unset($joinAlias[0]);
-							foreach( $joinAlias as $key => $value )
-								$joinAlias[ $key ] = ucfirst( $inflect->singularize( $value ) ); 
-							$joinModel = implode( '', $joinAlias ); 
-							$fromChild .= '`'.$tableChild.'` as `'.$tableModel.'`,';
-							$fromChild .= '`'.$joinTable.'` as `'.$joinModel.'`,';
-							$conditionsChild .= "`".$joinModel."`.`".$cacheChild['data']['key']."` = `".$tableModel."`.`id`"." ".NL;
-							$conditionsChild .= "AND `".$joinModel."`.`".$cacheChild['join']['key']."` = '".$tempResults[$this->_propModel]['id']."'"." ".NL;
-
-							if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'conds' ]) ) 
-							{
-								if( is_array($this->_hasManyAndBelongsToMany[ $modelChild ][ 'conds' ] ) ) 
-								{
-									$conds = $this->_hasManyAndBelongsToMany[ $modelChild ][ 'conds' ];
-									foreach( $conds as $cond ) 
-									{
-										switch( $cond[ 'operator' ] ) 
-										{
-											case 'BETWEEN':
-												if( is_string($cond[ 'start' ]) ) 
-													$sql_start_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'start' ] )."'";
-												elseif( is_bool($cond[ 'start' ]) ) 
-													$sql_start_value = ($cond[ 'start' ])?1:0; 
-												elseif( is_null($cond[ 'start' ]) ) 
-													$sql_start_value = 'NULL';
-												else
-													$sql_start_value = $cond[ 'start' ];
-
-												if( is_string($cond[ 'end' ]) )
-													$sql_end_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'end' ] )."'"; 
-												elseif( is_bool($cond[ 'end' ]) ) 
-													$sql_end_value = ($cond[ 'end' ])?1:0;
-												elseif( is_null($cond[ 'end' ]) )
-													$sql_end_value = 'NULL';
-												else 
-													$sql_end_value = $cond[ 'end' ];
-
-												$sql_value = $sql_start_value . " AND " . $sql_end_value;
-												break;
-
-											case 'IN': 
-											case 'NOT IN': 
-												$sql_value = $cond[ 'value' ];
-												break; 
-
-											case 'LIKE': 
-											case 'NOT LIKE': 
-												try 
-												{
-													if( is_null($cond[ 'value' ]) ) 
-														throw new Exception("The value with ".$cond[ 'operator' ]." operator could not be NULL", 1);
-													elseif( is_bool($cond[ 'value' ]) ) 
-														throw new Exception("The value with ".$cond[ 'operator' ]." operator could not be BOOLEAN", 1);
-													else 
-														$sql_value = "'%".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'value' ] )."%'";
-												} 
-												catch( Exception $e ) 
-												{
-													trace_once( $e );
-												}
-												break;
-
-											default:
-												if( is_string($cond[ 'value' ]) ) 
-													$sql_value = "'".mysqli_real_escape_string( $this->_dbHandle, $cond[ 'value' ] )."'";
-												elseif( is_null($cond[ 'value' ]) ) 
-													$sql_value = 'NULL';
-												elseif( is_bool($cond[ 'value' ]) ) 
-													$sql_value = ($cond[ 'value' ])?1:0;
-												else 
-													$sql_value = $cond[ 'value' ];
-												break;
-										}
-										$conditionsChild .= "AND `".$tableModel."`.`".$cond[ 'field' ]."` ".$cond[ 'operator' ]." ".$sql_value." ".NL;
-									}
-								}
-							} 
-
-							$describeArr_r = array();
-							if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'describe' ]) ) 
-							{
-								$describes = $this->_hasManyAndBelongsToMany[ $modelChild ][ 'describe' ];
-								if( is_array($describes) ) 
-								{
-									foreach( $describes as $describe ) 
-									{
-										foreach($describe[ 'field' ] as $field_r) 
-										{
-											$describeSql_r = "`".$tableModel."`.`".$field_r."`";
-											if( isset($describe[ 'label' ]) && isset($describe[ 'label' ][ $field_r ]) )
-												$describeSql_r .= " AS '".$describe[ 'label' ][ $field_r ]."'";
-											array_push( $describeArr_r, $describeSql_r );
-										}
-									}
-								}
-							}
-							if( !empty($describeArr_r) ) 
-							{
-								$includeColume = implode( ', ', $describeArr_r );
-							} 
-							else 
-							{
-								$includeColume = '*';
-							} 
-
-							if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'num__rows' ]) ) 
-							{
-								$limitChild = NL."LIMIT ".$this->_hasManyAndBelongsToMany[ $modelChild ][ 'num__rows' ];
-							} 
-
-							if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'reverse' ]) ) 
-							{
-								$orderChild = NL."ORDER BY `".$tableModel."`.`".mysqli_real_escape_string( $this->_dbHandle, $this->_hasManyAndBelongsToMany[ $modelChild ][ 'reverse' ])."` DESC";
-							} 
-
-							$fromChild = substr($fromChild,0,-1);
-							$queryChild =  'SELECT '.$includeColume.' FROM '.$fromChild.' WHERE '.$conditionsChild.$orderChild.$limitChild;
-							$resultChild = mysqli_query( $this->_dbHandle, $queryChild );
-							$tableChild = array();
-							$fieldChild = array();
-							$temp_results_child = array();
-							$results_child = array();
-							array_push( $this->_querySQLs, $queryChild );
-							
-							if( $resultChild ) 
-							{
-								if ( mysqli_num_rows( $resultChild ) > 0 ) 
-								{
-									$undescribes = NULL;
-									if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'undescribe' ]) ) 
-									{
-										$undescribes = $this->_hasManyAndBelongsToMany[ $modelChild ][ 'undescribe' ];
-									}
-
-									$numOfFieldsChild = mysqli_num_fields( $resultChild );
-
-									while( $field_info = mysqli_fetch_field($resultChild) ) 
-									{
-										if( NULL!==$undescribes && in_array($field_info->name, $undescribes) ) 
-										{
-											array_push( $fieldChild, 0 );
-										}
-										else 
-										{
-											array_push( $fieldChild, $field_info->name );
-										}
-										array_push( $tableChild, $field_info->table );
-									}
-
-									while ( $rowChild = mysqli_fetch_row( $resultChild ) ) 
-									{
-										for ( $j = 0;$j < $numOfFieldsChild; ++$j ) 
-										{
-											if( isset($this->_hasManyAndBelongsToMany[ $modelChild ][ 'hide_rel' ]) ) 
-												$showRelative = $joinModel !== $tableChild[$j];
-											else
-												$showRelative = true;
-
-											if($fieldChild[$j] && $showRelative) 
-											{
-												$temp_results_child[$tableChild[$j]][$fieldChild[$j]] = $rowChild[$j];
-											}
-										}
-										array_push( $results_child,$temp_results_child );
-									}
-								}
-								
-								if( !empty($results_child) ) 
-									$tempResults[ $modelChild ] = $results_child; 
-								else 
-									unset( $tempResults[ $modelChild ] );
-
-								mysqli_free_result( $resultChild );
-							}
-						}
-					}
-					array_push( $result,$tempResults );
-				}
-			} 	
-			mysqli_free_result( $this->_result );
-		}
-		$this->clear();
-		// Make eloquent item.
-		if( $this->id != NULL && $rsNumRows === 1 ) 
-		{
-			$this->__setData( $result[0][$this->_propModel] );
-			if( $this->_flagHasOne || $this->_flagHasMany || $this->_flagHasMABTM ) 
-				return $result[0]; 
-			else 
-				return $this;	// Eloquent item. 
-		} 
-		else if( strpos($this->_collection, 'COUNT') !== false ) 
-		{
-			return (int)each($result[0][$commandTable])['value'];
-		} 
-		return $result;
+	{		
+		return $this->__fetchResult( $this->__query($this->__buildSqlQuery()) ); 
 	} 
 	
 	private function __find( $args, $argsNum ) 
@@ -4584,7 +4127,8 @@ abstract class SQLQuery
 	private function __showHasManyAsBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
 	private function __hideHasManyAsBelongsToMany() { $this->_flagHasMABTM = false; return $this; } 
 	
-	private function __orderImport( $model ) { $this->_propsImport[] = $model; return $this; } 
+	private function __orderImport( $model ) { $this->_propsImport[] = current($model); return $this; } 
+	private function __orderImportAll( $model ) { $this->_propsImportAll[] = current($model); return $this; } 
 	
 	private function __orderMerge( $args, $argsNum ) 
 	{
@@ -4665,101 +4209,6 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __shareMainQuery() 
-	{
-		$remcols = $this->_collection; 
-		$this->_collection = '*'; 
-		$prefix = $this->_retrivePrefix(); 
-		$this->__buildMainQuery( $prefix ); 
-		$query = $this->_querySQL; 
-		$this->_collection = $remcols; 
-		$this->clear(); 
-		return substr( $query, 0, strlen($query)-1 ); 
-	}
-
-	private function __buildMainQuery( $prefix ) 
-	{
-		global $inflect;
-
-		$collections = $this->__buildCollectionString();
-		$from = '`'.$this->_propTable.'` as `'.$this->_propModel.'` ';
-		$conditions = '\'1\'=\'1\' AND ';
-		$groupBy = '';
-		$groupWith = ''; 
-		$orderBy = '';
-		$limit = '';
-		$hasOne = '';
-		$combine = '';
-
-		if( isset($this->id) ) 
-		{
-			$conditions .= '`'.$this->_propModel.'`.`id` = \''.mysqli_real_escape_string( $this->_dbHandle, $this->id ).'\' AND ';
-		}
-		$conditions .= $this->_extraConditions;
-		$conditions = ' WHERE ' . substr( $conditions, 0, -4 );
-
-		if( isset( $this->_propsGroupBy ) ) 
-		{
-			$groupBy .= " GROUP BY `".$this->_propModel."`.`".$this->_propsGroupBy."`";
-		} 
-		
-		if( isset( $this->_propsOrderCmd ) ) 
-		{
-			$orderBy .= ' ORDER BY `'.$this->_propModel.'`.`'.$this->_propsOrderCmd.'` '.$this->_propsOrder;
-		}
-
-		if ( isset( $this->_propPage ) ) 
-		{
-			if( isset($this->_propOffset) ) 
-				$offset = $this->_propOffset;
-			else
-				$offset = ( $this->_propPage-1 ) * $this->_propLimit;
-			$limit .= ' LIMIT '.$this->_propLimit.' OFFSET '.$offset;
-		}
-
-		if( $this->_flagHasOne && !empty($this->_propsHasOne) ) 
-		{
-			foreach ( $this->_propsHasOne as $modelChild => $modelChildParams ) 
-			{
-				if( $modelChildParams['live'] ) 
-				{
-					$aliasKey = $modelChildParams['alias_key']; 
-					$foreignKey = $modelChildParams['foreign_key']; 
-					$tableChild = $modelChildParams['table'];
-					$hasOne .= 'LEFT JOIN `'.$tableChild.'` as `'.$modelChild.'` ON `'.$this->_propModel.'`.`'.$foreignKey.'` = `'.$modelChild.'`.`'.$aliasKey.'` ';
-				}
-			}
-		}
-
-		if( $this->_combineFlg && isset($this->_imerge) ) 
-		{
-			$combine = $this->_imerge; 
-		} 
-		
-		$this->_querySQL = 'SELECT '.$collections.' FROM '.$from.$hasOne.$combine.$conditions.$groupBy.$groupWith.$orderBy.$limit; 
-
-		if( $this->_propsImport ) 
-		{
-			$unionQuery = ' UNION ALL ' . implode( ' UNION ALL ', $this->_propsImport ); 
-			if( $this->_flagHasOne && $hasOne ) 
-			{
-				$selfQuery = 'SELECT * FROM ' . $from . $conditions; 
-				$unionQuery = $selfQuery . $unionQuery;
-				$this->_querySQL = 'SELECT ' . $collections . ' FROM ( ' . $unionQuery . ' ) AS `' . $this->_propModel . '` ' . $hasOne . $groupBy . $groupWith . $orderBy . $limit; 
-			}
-			else if( false!==strpos($collections, 'COUNT') ) 
-			{
-				$selfQuery = 'SELECT * FROM ' . $from . $conditions; 
-				$unionQuery = $selfQuery . $unionQuery;
-				$this->_querySQL = 'SELECT ' . $collections . ' FROM ( ' . $unionQuery . ' ) AS `' . $this->_propModel . '` ' . $hasOne . $groupBy . $groupWith . $orderBy . $limit; 
-			}
-			else 
-			{
-				$this->_querySQL .= $unionQuery; 
-			}
-		}
-	} 
-
 	private function __getError() 
 	{
 		return array( 
@@ -4794,7 +4243,7 @@ abstract class SQLQuery
 		$fs = array(); 
 		while($f=mysqli_fetch_field($rs)) 
 		{
-			$ts[] = $f->table;
+			$ts[] = ($f->table)?$f->table:$this->_propModel;
 			$fs[] = $f->name;
 		} 
 		return count($fs);

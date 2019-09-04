@@ -72,13 +72,18 @@ class StdModel extends SQLQuery
 	
 	final public function ParseSqlMergeLeft() 
 	{ 
-		return $this->_parseSqlMergeLeft(); 
+		return $this->__parseSqlMergeLeft(); 
 	} 
 	
 	final public function ParseSqlMergeRight() 
 	{ 
-		return $this->_parseSqlMergeRight(); 
+		return $this->__parseSqlMergeRight(); 
 	} 
+	
+	final public function BuildSqlQuery() 
+	{
+		return $this->__buildSqlQuery(); 
+	}
 	
 	final public function GetForeignKey() 
 	{
