@@ -247,10 +247,16 @@ abstract class SQLQuery
 	final public function HasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_order_has_mabtm], array(func_get_args(), func_num_args())); } 
 	final public function BlindHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_hide_has_mabtm], array()); }
 	final public function DisplayHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_show_has_mabtm], array()); }
+	final public function UnionAll() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
 	final public function Import() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
+	final public function Union() { return call_user_func_array([$this, mcbm_order_import_once], array(func_get_args(), func_num_args())); } 
 	final public function ImportOnce() { return call_user_func_array([$this, mcbm_order_import_once], array(func_get_args(), func_num_args())); } 
+	final public function Bind() { return call_user_func_array([$this, mcbm_order_merge], array(func_get_args(), func_num_args())); } 
+	final public function Join() { return call_user_func_array([$this, mcbm_order_merge], array(func_get_args(), func_num_args())); } 
 	final public function Merge() { return call_user_func_array([$this, mcbm_order_merge], array(func_get_args(), func_num_args())); } 
+	final public function JoinLeft() { return call_user_func_array([$this, mcbm_order_merge_left], array(func_get_args(), func_num_args())); } 
 	final public function MergeLeft() { return call_user_func_array([$this, mcbm_order_merge_left], array(func_get_args(), func_num_args())); } 
+	final public function JoinRight() { return call_user_func_array([$this, mcbm_order_merge_right], array(func_get_args(), func_num_args())); } 
 	final public function MergeRight() { return call_user_func_array([$this, mcbm_order_merge_right], array(func_get_args(), func_num_args())); } 
 	final public function New() { return $this->__new(); }
 	final public function Reset() { return $this->__new(); }
@@ -284,7 +290,7 @@ abstract class SQLQuery
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
 	final public function GetQuerySQL() { return $this->_querySQL; }
 	final public function GetCollectionString() { return $this->__buildCollectionString(); }
-	final public function FuildSqlQuery() { return $this->__buildSqlQuery(); } 
+	final public function FluidSqlQuery() { return $this->__buildSqlQuery(); } 
 	final public function GenRandString( $len=10 ) { return $this->__genRandString($len); }
 	
 	abstract protected function __initConn();
@@ -529,10 +535,10 @@ abstract class SQLQuery
 	
 	final protected function __buildSqlCondition( $fluid = false ) 
 	{ 
-		if( !$fluid ) 
-			$defSql = "WHERE 1=1"; 
+		if( $fluid ) 
+			$defSql = EMPTY_CHAR; 
 		else 
-			$defSql = EMPTY_STRING; 
+			$defSql = "WHERE 1=1"; 
 		$outSql = EMPTY_STRING; 
 		$sqls = array(); 
 		
@@ -618,9 +624,57 @@ abstract class SQLQuery
 		return $outSql;
 	} 
 	
-	final protected function __buildSqlOrder() 
+	final public function FluidSqlGroup() 
 	{
-		$defSql = "ORDER BY"; 
+		return $this->__buildSqlGroup(); 
+	} 
+	
+	final protected function __buildHasOneSqlGroup() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsHasOne as $model ) 
+		{
+			$outSql .= $model->fluidSqlGroup(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeSqlGroup() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMerge as $model ) 
+		{
+			$outSql .= $model->fluidSqlGroup(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeRSqlGroup() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeRight as $model ) 
+		{
+			$outSql .= $model->fluidSqlGroup(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeLSqlGroup() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeLeft as $model ) 
+		{
+			$outSql .= $model->fluidSqlGroup(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildSqlOrder( $fluid = false ) 
+	{
+		if( $fluid )
+			$defSql = EMPTY_CHAR;
+		else 
+			$defSql = "ORDER BY"; 
 		$outSql = EMPTY_STRING;
 		if( !empty($this->_propsOrder) ) 
 			foreach( $this->_propsOrder as $field ) 
@@ -632,6 +686,51 @@ abstract class SQLQuery
 		if( EMPTY_STRING!==$outSql ) 
 			$outSql = $defSql . space . $outSql; 
 		return $outSql;
+	} 
+	
+	final protected function FluidSqlOrder() 
+	{
+		return $this->__buildSqlOrder( true ); 
+	} 
+	
+	final protected function __buildHasOneSqlOrder() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsHasOne as $model ) 
+		{
+			$outSql .= $model->fluidSqlOrder(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeSqlOrder() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMerge as $model ) 
+		{
+			$outSql .= $model->fluidSqlOrder(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeRSqlOrder() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeRight as $model ) 
+		{
+			$outSql .= $model->fluidSqlOrder(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeLSqlOrder() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeLeft as $model ) 
+		{
+			$outSql .= $model->fluidSqlOrder(); 
+		} 
+		return $outSql; 
 	} 
 	
 	final protected function __buildSqlIdCondition( $value ) 
@@ -666,7 +765,7 @@ abstract class SQLQuery
 		{
 			$tmp = array();
 			foreach( $this->_propsImportAll as $model ) 
-				$tmp[] = $model->fuildSqlQuery(); 
+				$tmp[] = $model->fluidSqlQuery(); 
 			$sql = ' UNION ALL '. implode(' UNION ALL ', $tmp); 
 		} 
 		return $sql;
@@ -679,7 +778,7 @@ abstract class SQLQuery
 		{
 			$tmp = array();
 			foreach( $this->_propsImport as $model ) 
-				$tmp[] = $model->fuildSqlQuery(); 
+				$tmp[] = $model->fluidSqlQuery(); 
 			$sql = ' UNION '. implode(' UNION ', $tmp); 
 		} 
 		return $sql;
@@ -689,50 +788,42 @@ abstract class SQLQuery
 	{
 		$selectSql = $this->__buildSQLSelection(); 
 		$fromSql = $this->__buildSqlFrom(); 
-		
 		$condSql = $this->__buildSqlCondition(); 
 		$condHasOneSql = $this->__buildHasOneSqlCondation();
 		$condMergeSql = $this->__buildMergeSqlCondation();
 		$condMergeRSql = $this->__buildMergeRSqlCondation();
-		$condMergeLSql = $this->__buildMergeLSqlCondation();
-		
+		$condMergeLSql = $this->__buildMergeLSqlCondation(); 
 		$groupSql = $this->__buildSqlGroup(); 
-		// $groupHasOneSql = $this->__buildHasOneSqlGroup();
-		// $groupMergeSql = $this->__buildMergeSqlGroup();
-		// $groupMergeRSql = $this->__buildMergeRSqlGroup();
-		// $groupMergeLSql = $this->__buildMergeLSqlGroup();
-		
+		$groupHasOneSql = $this->__buildHasOneSqlGroup();
+		$groupMergeSql = $this->__buildMergeSqlGroup();
+		$groupMergeRSql = $this->__buildMergeRSqlGroup();
+		$groupMergeLSql = $this->__buildMergeLSqlGroup(); 
 		$orderSql = $this->__buildSqlOrder(); 
-		// $orderHasOneSql = $this->__buildHasOneSqlOrder(); 
-		// $orderMergeSql = $this->__buildMergeSqlOrder(); 
-		// $orderMergeRSql = $this->__buildMergeRSqlOrder(); 
-		// $orderMergeLSql = $this->__buildMergeLSqlOrder(); 
-		
+		$orderHasOneSql = $this->__buildHasOneSqlOrder(); 
+		$orderMergeSql = $this->__buildMergeSqlOrder(); 
+		$orderMergeRSql = $this->__buildMergeRSqlOrder(); 
+		$orderMergeLSql = $this->__buildMergeLSqlOrder(); 
 		$rangeSql = $this->__buildSqlRange(); 
 		$importSql = $this->__buildSqlImport(); 
 		$importOnceSql = $this->__buildSqlImportOnce(); 
 		
 		return $selectSql 
 		. $fromSql 
-		
 		. $condSql 
 		. $condHasOneSql 
 		. $condMergeSql 
 		. $condMergeRSql 
 		. $condMergeLSql 
-		
 		. $groupSql 
-		// . $groupHasOneSql
-		// . $groupMergeSql
-		// . $groupMergeRSql
-		// . $groupMergeLSql
-		
+		. $groupHasOneSql
+		. $groupMergeSql
+		. $groupMergeRSql
+		. $groupMergeLSql
 		. $orderSql 
-		// . $orderHasOneSql
-		// . $orderMergeSql
-		// . $orderMergeRSql 
-		// . $orderMergeLSql
-		
+		. $orderHasOneSql
+		. $orderMergeSql
+		. $orderMergeRSql 
+		. $orderMergeLSql
 		. $rangeSql 
 		. $importSql 
 		. $importOnceSql; 
