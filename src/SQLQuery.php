@@ -524,12 +524,15 @@ abstract class SQLQuery
 			$cond[0] = "AND `{$propModel}`.`{$cond[0]}`"; 
 			$conds[] = implode(space, $cond);
 		} 
-		return $conds;
+		return $conds; 
 	}
 	
-	final protected function __buildSqlCondition() 
+	final protected function __buildSqlCondition( $fluid = false ) 
 	{ 
-		$defSql = "WHERE 1=1"; 
+		if( !$fluid ) 
+			$defSql = "WHERE 1=1"; 
+		else 
+			$defSql = EMPTY_STRING; 
 		$outSql = EMPTY_STRING; 
 		$sqls = array(); 
 		
@@ -543,8 +546,53 @@ abstract class SQLQuery
 			$outSql .= "AND ";
 		$outSql .= implode("AND ", $sqls);
 		$outSql = $defSql . space . $outSql;
-		return $outSql;
+		return $outSql; 
 	} 
+	
+	final public function FuildSqlCondation() 
+	{
+		return $this->__buildSqlCondition( true ); 
+	}
+	
+	final protected function __buildHasOneSqlCondation() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsHasOne as $model ) 
+		{
+			$outSql .= $model->fuildSqlCondation(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeSqlCondation() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMerge as $model ) 
+		{
+			$outSql .= $model->fuildSqlCondation(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeRSqlCondation() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeRight as $model ) 
+		{
+			$outSql .= $model->fuildSqlCondation(); 
+		} 
+		return $outSql; 
+	} 
+	
+	final protected function __buildMergeLSqlCondation() 
+	{
+		$outSql = EMPTY_CHAR;
+		foreach( $this->_propsMergeLeft as $model ) 
+		{
+			$outSql .= $model->fuildSqlCondation(); 
+		} 
+		return $outSql; 
+	}
 	
 	final protected function __buildSqlRange() 
 	{
@@ -641,13 +689,53 @@ abstract class SQLQuery
 	{
 		$selectSql = $this->__buildSQLSelection(); 
 		$fromSql = $this->__buildSqlFrom(); 
+		
 		$condSql = $this->__buildSqlCondition(); 
+		$condHasOneSql = $this->__buildHasOneSqlCondation();
+		$condMergeSql = $this->__buildMergeSqlCondation();
+		$condMergeRSql = $this->__buildMergeRSqlCondation();
+		$condMergeLSql = $this->__buildMergeLSqlCondation();
+		
 		$groupSql = $this->__buildSqlGroup(); 
+		// $groupHasOneSql = $this->__buildHasOneSqlGroup();
+		// $groupMergeSql = $this->__buildMergeSqlGroup();
+		// $groupMergeRSql = $this->__buildMergeRSqlGroup();
+		// $groupMergeLSql = $this->__buildMergeLSqlGroup();
+		
 		$orderSql = $this->__buildSqlOrder(); 
+		// $orderHasOneSql = $this->__buildHasOneSqlOrder(); 
+		// $orderMergeSql = $this->__buildMergeSqlOrder(); 
+		// $orderMergeRSql = $this->__buildMergeRSqlOrder(); 
+		// $orderMergeLSql = $this->__buildMergeLSqlOrder(); 
+		
 		$rangeSql = $this->__buildSqlRange(); 
 		$importSql = $this->__buildSqlImport(); 
 		$importOnceSql = $this->__buildSqlImportOnce(); 
-		return $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql . $importSql . $importOnceSql; 
+		
+		return $selectSql 
+		. $fromSql 
+		
+		. $condSql 
+		. $condHasOneSql 
+		. $condMergeSql 
+		. $condMergeRSql 
+		. $condMergeLSql 
+		
+		. $groupSql 
+		// . $groupHasOneSql
+		// . $groupMergeSql
+		// . $groupMergeRSql
+		// . $groupMergeLSql
+		
+		. $orderSql 
+		// . $orderHasOneSql
+		// . $orderMergeSql
+		// . $orderMergeRSql 
+		// . $orderMergeLSql
+		
+		. $rangeSql 
+		. $importSql 
+		. $importOnceSql; 
 	}
 	
 	private function __fetchResult( $qr ) 
@@ -971,16 +1059,21 @@ abstract class SQLQuery
 			$oneArg = 1; 
 			if( $oneArg===$argsNum ) 
 			{
-				$id = current($args); 
+				$data = current($args); 
+				if( method_exists($this, 'down') ) 
+					$this->down( $data ); 
 				$condSql = $this->__buildSqlCondition(); 
-				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = {$id}"; 
+				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = {$data}"; 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql . $deleteCondSql; 
 			} 
 			else 
 			{
+				$data = $args; 
+				if( method_exists($this, 'down') ) 
+					$this->down( $data ); 
 				$condSql = $this->__buildSqlCondition(); 
-				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` IN (".implode(comma, $args).")"; 
+				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` IN (".implode(comma, $data).")"; 
 				$rangeSql = $this->__buildSqlRange(); 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql . $deleteCondSql . $rangeSql; 
@@ -989,7 +1082,7 @@ abstract class SQLQuery
 			$this->clear(); 
 			if( $result ) 
 				if( method_exists($this, 'ondown') ) 
-					$this->ondown(); 
+					$this->ondown( $data ); 
 			else 
 				return $args; 
 			// throw new Exception( "Usage <strong>Model::delete()</strong> is incorrect." ); 
@@ -1016,7 +1109,7 @@ abstract class SQLQuery
 						$saveSql = array(); 
 						
 						if(method_exists($this, 'ride')) 
-							$this->_eventRide = $this->ride();
+							$this->_eventRide = $this->ride($data);
 
 						foreach ( $this->_propsDescribe as $field ) 
 						{
@@ -1053,7 +1146,7 @@ abstract class SQLQuery
 						if( !$qr ) 
 							return NULL; 
 						if( method_exists($this, 'onride') ) 
-							$this->onride(); 
+							$this->onride( $data ); 
 						return $data; 
 					}
 					else 
@@ -1061,11 +1154,11 @@ abstract class SQLQuery
 						$fields = array();
 						$values = array(); 
 						if(method_exists($this, 'boot')) 
-							$this->_eventBoot = $this->boot();
+							$this->_eventBoot = $this->boot( $data );
 						foreach ($this->_propsDescribe as $field ) 
 							if( array_key_exists($field, $data) ) 
 							{
-								$values[] = $this->escape_string( $data[$field] );
+								$values[] = "'".$this->escape_string( $data[$field] )."'";
 								$fields[] = "`".$field."`";
 							}
 							else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
@@ -1075,14 +1168,14 @@ abstract class SQLQuery
 								$data[$field] = $this->_eventBoot[$field]; 
 							}
 						$fields = implode( comma, $fields );
-						$values = implode( "','", $values );
-						$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ('{$values}')"; 
+						$values = implode( ",", $values );
+						$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ({$values})"; 
 						$qr = $this->__query( $sql ); 
 						if( $qr ) 
 						{
 							$data[$this->_primaryKey] = $this->insert_id(); 
 							if( method_exists($this, 'onboot') ) 
-								$this->onboot(); 
+								$this->onboot( $data ); 
 							return $data;
 						} 
 						else 
