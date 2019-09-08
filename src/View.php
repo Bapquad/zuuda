@@ -94,6 +94,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function PreloadTag( $value ) { return $this->__preloadTag( $value ); }
 	final public function PreloadCss( $value ) { return $this->__preloadCss( $value ); }
 	final public function PreloadJs( $value ) { return $this->__preloadJs( $value ); }
+	final public function RequireJs( $value ) { return $this->__preloadJs( $value ); }
 	final public function ContentAsset( $type, $value ) { return $this->__contentAsset( $type, $value ); }
 	final public function AddContentAsset( $type, $value ) { return $this->__addContentAsset( $type, $value ); }
 	final public function ContentHtml( $value ) { return $this->__contentHtml( $value ); }

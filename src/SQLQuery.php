@@ -389,9 +389,9 @@ abstract class SQLQuery
 				$sql = str_replace( ':table', $this->_propTable, $sql ); 
 				$sql = str_replace( ':model', $this->_propModel, $sql ); 
 				$qr = $this->__query( $sql );
-				$out = array(); 
-				if( $qr ) 
+				if( mysqli_num_rows($qr) ) 
 				{
+					$out = array(); 
 					$ts;
 					$fs; 
 					$numf = $this->fetch_field( $qr, $ts, $fs ); 
@@ -404,8 +404,9 @@ abstract class SQLQuery
 						array_push($out,$tmps);
 					}
 					$this->free_result($qr); 
-				}
-				return $out;
+					return $out;
+				} 
+				return true;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::".$mn."()</strong> is incorrect." ); 
@@ -432,10 +433,30 @@ abstract class SQLQuery
 		$sqls = array(); 
 		foreach( $c as $f ) 
 		{ 
-			if(is_numeric($f[2])) 
+			if( is_numeric($f[2]) ) 
 			{
 				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]} ";
 			} 
+			else  if( is_array($f[2]) ) 
+			{
+				$values = array(); 
+				foreach( $f[2] as $value ) 
+					if( is_numeric($value) ) 
+						$values[] = $value; 
+					else 
+						$values[] = "'".$this->escape_string($value)."'"; 
+				switch($f[1]) 
+				{
+					case 'BETWEEN': 
+					case 'NOT BETWEEN': 
+						$f[2] = implode(' AND ', $values); 
+						break; 
+					default: 
+						$f[2] = "(".implode(comma, $values).")"; 
+						break;
+				}
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]}";
+			}
 			else 
 			{
 				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} '{$this->escape_string($f[2])}' ";
@@ -748,14 +769,21 @@ abstract class SQLQuery
 		return $outSql;
 	} 
 	
+	final protected function __buildSqRevertOrder() 
+	{
+		return "ORDER BY `{$this->_propModel}`.`{$this->_primaryKey}` DESC ";
+	}
+	
 	final protected function __buildSqlOneRange() 
 	{
 		return "LIMIT 1 OFFSET 0 ";
 	} 
 	
-	final protected function __buildSqRevertOrder() 
+	final protected function __resetAutoIncrement() 
 	{
-		return "ORDER BY `{$this->_propModel}`.`{$this->_primaryKey}` DESC ";
+		$sql = ["ALTER TABLE `{$this->_propTable}` AUTO_INCREMENT = 1"]; 
+		$this->call_user_func_array([$this, mcbm_custom], array($sql, count($sql))); 
+		return $this; 
 	}
 	
 	final protected function __buildSqlImport() 
@@ -1091,7 +1119,7 @@ abstract class SQLQuery
 					$replacement = 'SELECT COUNT(*) AS `total` FROM $2';
 					$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
 					$qr = $this->__query( $sql ); 
-					$this->__reset();
+					$this->__clear();
 					if( $qr ) 
 					{
 						$result = $this->fetch_assoc( $qr ); 
@@ -1991,17 +2019,24 @@ abstract class SQLQuery
 	
 	private function __between_operator( $args, $argsNum, $sign ) 
 	{
+		$threeArg = 3;
 		$twoArg = 2;
 		$oneArg = 1; 
 		$dispatcher = $this;
-		if( $argsNum===$twoArg ) 
+		if( $threeArg===$argsNum ) 
+		{
+			$args[2] = [$args[1], $args[2]]; 
+			$args[1] = $sign; 
+			call_user_func_array(array($dispatcher, '__where'), array($args, count($args)));
+		}
+		else if( $twoArg===$argsNum ) 
 		{
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
 			call_user_func_array(array($dispatcher, '__where'), array($args, count($args)));
 		}
-		else if($argsNum===$oneArg) 
+		else if( $oneArg===$argsNum ) 
 		{
 			$params = current($args); 
 			foreach( $params as $param ) 
