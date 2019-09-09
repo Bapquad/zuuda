@@ -177,7 +177,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			if( $column->getType() == COLLECTION_FIELDSET_TYPE ) 
 			{
-				$model->select( $column->getName() );
+				$model->bound( $column->getName() );
 			}
 		}
 		
@@ -208,7 +208,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$this->__setPagePrinter( $printer );
 		
 		// Computing the total pages.
-		$length = $model->length();
+		$length = $model->total();
 		$this->__setLength( $length );
 		if( !is_null( $option_data ) ) 
 		{
@@ -218,8 +218,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			$num_of_rows = $default_num_rows;
 		} 
-		$model->setLimit( $num_of_rows );
-		
+		$model->limit( $num_of_rows );
 		$total_pages = (int)ceil( $length/$num_of_rows );
 		$this->__setTotalPages( $total_pages );
 		
@@ -247,7 +246,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		}
 
 		// Final building the data
-		return $this->__setData( $model->setPage( $current_page )->query() );
+		return $this->__setData( $model->setPage( $current_page )->search() );
 	}
 	
 	protected function __buildColumns() 
@@ -287,7 +286,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	
 	protected function __deleteRow( $id ) 
 	{
-		$this->__getModel()->setId( $id )->delete();
+		$this->__getModel()->delete( $id );
 		return $this;
 	}
 	

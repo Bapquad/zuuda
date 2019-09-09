@@ -1110,29 +1110,32 @@ abstract class SQLQuery
 		{
 			if( zero===$argsNum ) 
 			{
+				$qr = null; 
 				if( $this->_querySQL ) 
 				{
 					if( $this->_propLimit ) 
-						$pattern = '/SELECT (.*?) FROM (.*)LIMIT(.*)/i';
+						$pattern = "/SELECT (.*?) FROM (.*)LIMIT(.*)/i";
 					else
-						$pattern = '/SELECT (.*?) FROM (.*)/i'; 
-					$replacement = 'SELECT COUNT(*) AS `total` FROM $2';
+						$pattern = "/SELECT (.*?) FROM (.*)/i"; 
+					$replacement = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM $2";
 					$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
 					$qr = $this->__query( $sql ); 
 					$this->__clear();
-					if( $qr ) 
-					{
-						$result = $this->fetch_assoc( $qr ); 
-						$this->free_result( $qr ); 
-						return (int)$result['total'];
-					}
-					else 
-						return $qr; 
 				} 
 				else 
 				{
-					check("calulator total");
-				}
+					$sql = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM `{$this->_propTable}`"; 
+					$qr = $this->__query( $sql ); 
+					$this->__clear(); 
+				} 
+				if( $qr ) 
+				{
+					$result = $this->fetch_assoc( $qr ); 
+					$this->free_result( $qr ); 
+					return (int)$result['total'];
+				} 
+				
+				else return null; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::total()</strong> is unvalidable." ); 
@@ -1495,11 +1498,14 @@ abstract class SQLQuery
 	{
 		try 
 		{
-			if( $argsNum ) 
+			if( !$argsNum ) 
 			{
 				global $configs;
 				$result = $this->query( 'SELECT table_name as `table_name` FROM information_schema.tables where table_schema="' . $configs['DATASOURCE']['DATABASE'] . '"' );
-				return $result;
+				$tables = array();
+				foreach( $result as $table ) 
+					$tables[] = $table['tables']['table_name'];
+				return $tables;
 			}
 			else 
 				throw new Exception( "Usage <strong>Model::dbList()</strong> is incorrect." ); 
