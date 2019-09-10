@@ -24,6 +24,7 @@ define( 'mcbm_findid',				'__find' );
 define( 'mcbm_first',				'__first' );
 define( 'mcbm_last',				'__last' );
 define( 'mcbm_entity',				'__entity' );
+define( 'mcbm_role',				'__role' );
 define( 'mcbm_item',				'__item' );
 define( 'mcbm_paginate',			'__paginate' );
 define( 'mcbm_delete',				'__delete' );
@@ -86,6 +87,7 @@ abstract class SQLQuery
 	protected $_propsHasOne 	= array(); 
 	protected $_propsHasMany 	= array(); 
 	protected $_propsHasMABTM 	= array(); 
+	protected $_propsRole	 	= array(); 
 	
 	final protected function __setDBHandle( $handle ) { $this->_dbHandle=$handle; return $this; }
 	final protected function __setPrefix( $value ) { $this->_propPrefix = $value; return $this; }
@@ -284,6 +286,8 @@ abstract class SQLQuery
 	final public function Length() { return call_user_func_array([$this, mcbm_length], array(func_get_args(), func_num_args())); } 
 	final public function DBList() { return call_user_func_array([$this, mcbm_db_list], array(func_get_args(), func_num_args())); }
 	final public function Row() { return call_user_func_array([$this, mcbm_row], array(func_get_args(), func_num_args())); } 
+	final public function Role() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
+	final public function Data() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Connect( $address, $account, $pwd, $name ) { return $this->__connect( $address, $account, $pwd, $name ); }
 	final public function GetError() { return $this->__getError(); } 
 	final public function GetQuery() { return $this->__getQuerySQL(); }
@@ -413,7 +417,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -931,7 +935,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 	}
 	
@@ -960,7 +964,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -989,7 +993,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -1017,7 +1021,48 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
+		}
+	} 
+	
+	public function __get( $name ) 
+	{
+		if( $name === 'data' ) 
+			return $this->_propsRole; 
+	}
+	
+	private function __role( $args, $argsNum ) 
+	{ 
+		try 
+		{
+			$twoArg = 2;
+			$oneArg = 1; 
+			if( $oneArg===$argsNum ) 
+			{
+				$values = current($args); 
+				if( is_array($values) ) 
+					foreach( $values as $key => $value ) 
+					{
+						$this->_propsRole[$key] = $value; 
+					}
+				else if( is_string($values) ) 
+					return $this->_propsRole[$values]; 
+				else 
+					throw new Exception( "Usage <strong>Model::role()</strong> is incorrect." ); 
+			} 
+			else if( $twoArg===$argsNum ) 
+			{ 
+				$this->_propsRole[$args[0]] = $args[1]; 
+			} 
+			else 
+			{
+				return $this->_propsRole; 
+			} 
+			return $this;
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() );
 		}
 	} 
 	
@@ -1100,7 +1145,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	}
 	
@@ -1142,7 +1187,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1170,7 +1215,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 	} 
 	
@@ -1183,7 +1228,7 @@ abstract class SQLQuery
 			{
 				$data = current($args); 
 				if( method_exists($this, 'down') ) 
-					$this->down( $data ); 
+					$this->down( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
 				$condSql = $this->__buildSqlCondition(); 
 				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = {$data}"; 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
@@ -1204,14 +1249,14 @@ abstract class SQLQuery
 			$this->clear(); 
 			if( $result ) 
 				if( method_exists($this, 'ondown') ) 
-					$this->ondown( $data ); 
+					$this->ondown( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
 			else 
 				return $args; 
 			// throw new Exception( "Usage <strong>Model::delete()</strong> is incorrect." ); 
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	}
 
@@ -1231,7 +1276,7 @@ abstract class SQLQuery
 						$saveSql = array(); 
 						
 						if(method_exists($this, 'ride')) 
-							$this->_eventRide = $this->ride($data);
+							$this->_eventRide = $this->ride( array_merge($this->_propsRole, $data) );
 
 						foreach ( $this->_propsDescribe as $field ) 
 						{
@@ -1268,7 +1313,7 @@ abstract class SQLQuery
 						if( !$qr ) 
 							return NULL; 
 						if( method_exists($this, 'onride') ) 
-							$this->onride( $data ); 
+							$this->onride( array_merge($this->_propsRole, $data) ); 
 						return $data; 
 					}
 					else 
@@ -1276,7 +1321,7 @@ abstract class SQLQuery
 						$fields = array();
 						$values = array(); 
 						if(method_exists($this, 'boot')) 
-							$this->_eventBoot = $this->boot( $data );
+							$this->_eventBoot = $this->boot( array_merge($this->_propsRole, $data) );
 						foreach ($this->_propsDescribe as $field ) 
 							if( array_key_exists($field, $data) ) 
 							{
@@ -1297,7 +1342,7 @@ abstract class SQLQuery
 						{
 							$data[$this->_primaryKey] = $this->insert_id(); 
 							if( method_exists($this, 'onboot') ) 
-								$this->onboot( $data ); 
+								$this->onboot( array_merge($this->_propsRole, $data) ); 
 							return $data;
 						} 
 						else 
@@ -1322,7 +1367,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	}
 	
@@ -1345,7 +1390,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1360,7 +1405,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1384,7 +1429,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1408,7 +1453,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1432,7 +1477,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1456,7 +1501,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1473,7 +1518,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 	} 
 	
@@ -1490,7 +1535,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -1512,7 +1557,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	}
 	
@@ -1533,7 +1578,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	}
 	
@@ -1564,7 +1609,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this;
 	} 
@@ -1664,7 +1709,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1696,7 +1741,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 		return $this;
 	} 
@@ -1728,7 +1773,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1744,7 +1789,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	} 
@@ -1760,7 +1805,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1776,7 +1821,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this; 
 	} 
@@ -1792,7 +1837,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this; 
 	} 
@@ -1808,7 +1853,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this;
 	}
@@ -1824,7 +1869,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;  
 	} 
@@ -1840,7 +1885,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this; 
 	} 
@@ -1856,7 +1901,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	} 
@@ -1872,7 +1917,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	} 
@@ -1888,7 +1933,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this; 
 	} 
@@ -1904,7 +1949,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1920,7 +1965,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -1936,7 +1981,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1952,7 +1997,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -1968,7 +2013,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -1984,7 +2029,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this;
 	} 
@@ -2002,7 +2047,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -2018,7 +2063,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	} 
@@ -2247,7 +2292,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this;
 	} 
@@ -2263,7 +2308,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -2278,7 +2323,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2294,7 +2339,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2310,7 +2355,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2326,7 +2371,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2342,7 +2387,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2357,7 +2402,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2373,7 +2418,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2389,7 +2434,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2405,7 +2450,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2421,7 +2466,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2437,7 +2482,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2453,7 +2498,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2469,7 +2514,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2485,7 +2530,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -2500,7 +2545,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -2516,7 +2561,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -2532,7 +2577,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2548,7 +2593,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2675,7 +2720,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -2690,7 +2735,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -2705,7 +2750,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2721,7 +2766,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2737,7 +2782,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2753,7 +2798,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2769,7 +2814,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2785,7 +2830,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2801,7 +2846,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2817,7 +2862,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2833,7 +2878,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2849,7 +2894,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2865,7 +2910,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2881,7 +2926,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2897,7 +2942,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2913,7 +2958,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -2928,7 +2973,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -2944,7 +2989,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -2960,7 +3005,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -2976,7 +3021,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3160,7 +3205,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -3175,7 +3220,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -3190,7 +3235,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3206,7 +3251,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3222,7 +3267,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3238,7 +3283,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3254,7 +3299,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3270,7 +3315,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3286,7 +3331,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3302,7 +3347,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3318,7 +3363,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3334,7 +3379,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3350,7 +3395,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3366,7 +3411,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3382,7 +3427,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3398,7 +3443,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3414,7 +3459,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -3429,7 +3474,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -3445,7 +3490,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -3461,7 +3506,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3477,7 +3522,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3661,7 +3706,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -3676,7 +3721,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -3691,7 +3736,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3707,7 +3752,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3723,7 +3768,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3739,7 +3784,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3755,7 +3800,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3771,7 +3816,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3787,7 +3832,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3803,7 +3848,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3819,7 +3864,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3835,7 +3880,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3851,7 +3896,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3867,7 +3912,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3883,7 +3928,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3899,7 +3944,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 	} 
 	
@@ -3914,7 +3959,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -3930,7 +3975,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -3946,7 +3991,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -3962,7 +4007,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	}
@@ -4089,7 +4134,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 	} 
 	
@@ -4109,7 +4154,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 		return $this;
 	} 
@@ -4171,7 +4216,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	}
@@ -4240,7 +4285,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		} 
 		return $this;
 	} 
@@ -4285,7 +4330,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 		return $this;
 	} 
@@ -4344,7 +4389,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		}
 		return $this;
 	} 
@@ -4382,7 +4427,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 400, $e->getMessage() );
+			abort( 500, $e->getMessage() );
 		}
 	} 
 	
@@ -4406,7 +4451,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 	} 
 	
@@ -4430,7 +4475,7 @@ abstract class SQLQuery
 		} 
 		catch( Exception $e ) 
 		{ 
-			abort( 400, $e->getMessage() ); 
+			abort( 500, $e->getMessage() ); 
 		} 
 	} 
 	
