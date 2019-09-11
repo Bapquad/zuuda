@@ -56,7 +56,6 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	protected function __setLength( $value ) { $this->_length = $value; return $this; }
 	protected function __setTotalPages( $value ) { $this->_total_pages = $value; return $this; }
 	protected function __setCurrentPage( $value ) { $this->_current_page = $value; return $this; }
-	protected function __setPagePrinter( $value ) { $this->_page_printer = $value; return $this; }
 	protected function __setDefaultNumOfRows( $value ) { $this->_default_num_of_rows = $value; return $this; }
 	protected function __setKeyword( $value ) { $this->_keyword = $value; return $this; }
 	protected function __setFilter( $value ) { $this->_filter = $value; return $this; }
@@ -64,6 +63,18 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	protected function __setOrder( $value ) { $this->_order = $value; return $this; }
 	protected function __setData( $value ) { $this->_data_grid = $value; return $this->_data_grid; }
 	protected function __setPaging( $value ) { $this->_paging = $value; return $this; }
+	protected function __setPagePrinter( $pagePattern, $data = NULL ) 
+	{
+		$params = array();
+		if( NULL!==$data )
+			foreach( $data as $name => $value ) 
+				$params[] = "$name=$value";
+		
+		if( count($params) ) 
+			$pagePattern .= '?' . implode( '&', $params );
+		$this->_page_printer = $pagePattern; 
+		return $this;
+	}
 	
 	/** Implements Interface iData */
 	public function SetModel( Model $model = NULL ) { return $this->__setModel( $model ); }
@@ -80,7 +91,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	public function SetTotalPages( $value ) { return $this->__setTotalPages( $value ); }
 	public function SetCurrentPage( $value ) { return $this->__setCurrentPage( $value ); }
 	public function GetCurrentPage() { return $this->__getCurrentPage(); }
-	public function SetPagePrinter( $printer ) { return $this->__setPagePrinter( $printer ); }
+	public function SetPagePrinter( $printer, $data=NULL ) { return $this->__setPagePrinter( $printer, $data ); }
 	public function GetPagePrinter() { return $this->__getPagePrinter(); }
 	public function EnablePagePrint() { return $this->__enablePagePrint(); }
 	public function DestroyPagePrint() { return $this->__destroyPagePrint(); }
@@ -171,20 +182,21 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$extra_printer = '';
 		$sort = $this->__getSort();
 		$order = $this->__getOrder();
-		
 		// Field of select.
+		$bounds = array(); 
 		foreach( $columns as $key => $column ) 
 		{
 			if( $column->getType() == COLLECTION_FIELDSET_TYPE ) 
 			{
-				$model->bound( $column->getName() );
+				$bounds[] = $column->getName();
 			}
 		}
+		$model->bound( $bounds );
 		
 		if( !is_null( $filter ) && !is_null( $keyword ) ) 
 		{
 			$opera = strtolower( $filter[ 'opera' ] );
-			$model->$opera( $filter[ 'field' ], $keyword );
+			$model->$opera( $filter[ 'field' ], '%'.$keyword.'%' );
 			$extra_printer .= 'key={key}&';
 		}
 		
@@ -208,8 +220,6 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$this->__setPagePrinter( $printer );
 		
 		// Computing the total pages.
-		$length = $model->total();
-		$this->__setLength( $length );
 		if( !is_null( $option_data ) ) 
 		{
 			$num_of_rows = $option_data[ 'num_of_rows' ];
@@ -219,6 +229,9 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$num_of_rows = $default_num_rows;
 		} 
 		$model->limit( $num_of_rows );
+		$result = $model->page( $current_page )->limit( $num_of_rows )->search(); 
+		$length = $model->total();
+		$this->__setLength( $length );
 		$total_pages = (int)ceil( $length/$num_of_rows );
 		$this->__setTotalPages( $total_pages );
 		
@@ -246,7 +259,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		}
 
 		// Final building the data
-		return $this->__setData( $model->setPage( $current_page )->search() );
+		return $this->__setData( $result );
 	}
 	
 	protected function __buildColumns() 

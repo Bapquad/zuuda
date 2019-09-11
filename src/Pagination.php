@@ -48,7 +48,7 @@ class Pagination implements iHTML, iPagination
 	public function AlwaysShow() { return $this->__setAlwaysShow( true ); }
 	public function GetCanonicalUrl() { return $this->__getCanonicalUrl(); }
 	public function GetPageParam() { return $this->__getPageParam(); }
-	public function GetPageUrl( $page = NULL ) { return $this->__getPageUrl( $page ); }
+	public function GetPageUrl( $page = NULL, $data = NULL ) { return $this->__getPageUrl( $page, $data ); }
 	public function GetRelPrevNextLinkTags() { return $this->__getRelPrevNextLinkTags(); }
 	public function Parse() { return $this->__parse(); }
 	public function SetClasses( $classes ) { return $this->__setClasses( $classes ); }
@@ -108,19 +108,25 @@ class Pagination implements iHTML, iPagination
 		return '?' . ( $key ) . '=' . ( (int) $page );
 	}
 	
-	protected function __getPageUrl( $page = NULL ) 
+	protected function __getPageUrl( $page = NULL, $data = NULL ) 
 	{
 		global $configs;
 		$url = $this->__getPath();
 		$key = $this->__getKey();
 		$params = ( isset( $configs[ 'REQUEST_VARIABLES' ] ) ) ? $configs[ 'REQUEST_VARIABLES' ] : array();
-		
 		if( stripos( $url, "{".$key."}") ) 
 		{
 			$key = "{".$key."}";
 			foreach( $params as $name => $value ) 
 				$url = str_replace( "{".$name."}", $value, $url );
-			$href = $url;
+			$params = array();
+			if( NULL!==$data )
+				foreach( $data as $name => $value ) 
+					$params[] = "$name=$value";
+			if( count($params) ) 
+				$href = $url . '?' . implode( '&', $params );
+			else
+				$href = $url;
 			$href = ORIGIN_DOMAIN . $href;
 		}
 		else 
