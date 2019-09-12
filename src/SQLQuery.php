@@ -4502,9 +4502,9 @@ abstract class SQLQuery
 	private function errno() { return mysqli_errno( $this->_dbHandle ); } 
 	private function error() { return mysqli_error( $this->_dbHandle ); } 
 	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
-	private function fetch_assoc( $rs ) {return mysqli_fetch_assoc( $rs ); } 
-	private function fetch_row( $rs ) { return mysqli_fetch_row( $rs ); } 
-	private function free_result( $rs ) { return mysqli_free_result( $rs ); } 
+	private function fetch_assoc( $rs ) {return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
+	private function fetch_row( $rs ) { return ($rs)?mysqli_fetch_row( $rs ):$rs; } 
+	private function free_result( $rs ) { return ($rs)?mysqli_free_result( $rs ):$rs; } 
 	private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
 	
 	private function fetch_field( $rs, &$ts, &$fs ) 
