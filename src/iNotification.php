@@ -4,6 +4,4 @@ namespace Zuuda;
 interface Notification 
 {
 	
-	
-	
 }

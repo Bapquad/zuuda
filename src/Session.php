@@ -40,16 +40,16 @@ class Session
 	
 	private static function __modify( $name, $value ) 
 	{
-		$_SESSION[ $name ] = $value;
-		self::$data[ $name ] = $value;
+		$_SESSION[$name] = $value;
+		self::$data[$name] = $value;
 	}
 
 	private static function __register( $name, $value ) 
 	{
 		if( !array_key_exists( $name, self::$data ) ) 
 		{
-			$_SESSION[ $name ] = $value;
-			self::$data[ $name ] = $value;
+			$_SESSION[$name] = $value;
+			self::$data[$name] = $value;
 			return true;
 		}
 		return false;
@@ -59,8 +59,8 @@ class Session
 	{
 		if( array_key_exists( $name, self::$data ) ) 
 		{
-			unset( $_SESSION[ $name ] );
-			unset( self::$data[ $name ] );
+			unset( $_SESSION[$name] );
+			unset( self::$data[$name] );
 		}
 	}
 
@@ -76,13 +76,13 @@ class Session
 
 	private static function __getVar( $name = NULL ) 
 	{
-		if( $name === NULL ) 
+		if( NULL===$name ) 
 		{
 			return self::$data;
 		}
 		if( array_key_exists( $name, self::$data ) ) 
 		{
-			return self::$data[ $name ];
+			return self::$data[$name];
 		}
 		else 
 		{

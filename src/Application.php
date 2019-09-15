@@ -160,6 +160,11 @@ class Application
 			return $_extract;
 		}
 		return $router['default']['controller'];
+	} 
+	
+	private function __release() 
+	{
+		flash::clear();
 	}
 
 	static function Booting() 
@@ -311,7 +316,8 @@ class Application
 		{
 			abort( 400 );
 		}
-		escape();
+		$this->__release(); 
+		escape(); 
 		return $this;
 	}
 }

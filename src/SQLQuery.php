@@ -14,10 +14,10 @@ define( 'mcbm_order_has_many',		'__orderHasMany' );
 define( 'mcbm_order_has_mabtm',		'__orderHasMABTM' );
 define( 'mcbm_show_has_one',		'__showHasOne' );
 define( 'mcbm_show_has_many',		'__showHasMany' );
-define( 'mcbm_show_has_mabtm',		'__showHasManyAsBelongsToMany' );
+define( 'mcbm_show_has_mabtm',		'__showHasManyAndBelongsToMany' );
 define( 'mcbm_hide_has_one',		'__hideHasOne' );
 define( 'mcbm_hide_has_many',		'__hideHasMany' );
-define( 'mcbm_hide_has_mabtm',		'__hideHasManyAsBelongsToMany' );
+define( 'mcbm_hide_has_mabtm',		'__hideHasManyAndBelongsToMany' );
 define( 'mcbm_custom',				'__custom' );
 define( 'mcbm_search',				'__search' );
 define( 'mcbm_findid',				'__find' );
@@ -246,9 +246,9 @@ abstract class SQLQuery
 	final public function HasMany() { return call_user_func_array(array($this, mcbm_order_has_many), array(func_get_args(), func_num_args())); } 
 	final public function BlindHasMany() { return call_user_func_array([$this, mcbm_hide_has_many], array()); }
 	final public function DisplayHasMany() { return call_user_func_array([$this, mcbm_show_has_many], array()); }
-	final public function HasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_order_has_mabtm], array(func_get_args(), func_num_args())); } 
-	final public function BlindHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_hide_has_mabtm], array()); }
-	final public function DisplayHasManyAsBelongsToMany() { return call_user_func_array([$this, mcbm_show_has_mabtm], array()); }
+	final public function HasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_order_has_mabtm], array(func_get_args(), func_num_args())); } 
+	final public function BlindHasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_hide_has_mabtm], array()); }
+	final public function DisplayHasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_show_has_mabtm], array()); }
 	final public function UnionAll() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
 	final public function Import() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
 	final public function Union() { return call_user_func_array([$this, mcbm_order_import_once], array(func_get_args(), func_num_args())); } 
@@ -266,6 +266,7 @@ abstract class SQLQuery
 	final public function Query() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args(), 'Query')); } 
 	final public function Custom() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args())); }
 	final public function Search() { return call_user_func_array([$this, mcbm_search], array(func_get_args(), func_num_args())); } 
+	final public function Load() { return call_user_func_array([$this, mcbm_findid], array(func_get_args(), func_num_args())); } 
 	final public function Find() { return call_user_func_array([$this, mcbm_findid], array(func_get_args(), func_num_args())); } 
 	final public function First() { return call_user_func_array([$this, mcbm_first], array(func_get_args(), func_num_args())); } 
 	final public function Last() { return call_user_func_array([$this, mcbm_last], array(func_get_args(), func_num_args())); } 
@@ -4244,8 +4245,8 @@ abstract class SQLQuery
 	private function __require( $model ) 
 	{
 		if( method_exists($this, $model) ) 
-			call_user_func_array(array($this, $model), array()); 
-		return $this;
+			return call_user_func_array(array($this, $model), array()); 
+		return NULL;
 	}
 	
 	private function __orderHasOne( $args, $argsNum ) 
@@ -4268,13 +4269,13 @@ abstract class SQLQuery
 				}
 				else if( $fourArg===$argsNum ) 
 				{
-					if( array_key_exists($args[$zeroArg], $this->_propsHasOne) ) 
-						return $this->_propsHasOne[ $args[$zeroArg] ]; 
+					if( array_key_exists($args[head], $this->_propsHasOne) ) 
+						return $this->_propsHasOne[ $args[head] ]; 
 					
 					$args[] = $this->_propModel;
 					$args[] = $this->_propPrefix;
 					$model = new StdModel($args); 
-					$this->_propsHasOne += array( $args[$zeroArg]=>$model );
+					$this->_propsHasOne += array( $args[head]=>$model );
 					return $model;
 				}
 				else
@@ -4313,13 +4314,13 @@ abstract class SQLQuery
 				}
 				else if( $fourArg===$argsNum ) 
 				{
-					if( array_key_exists($args[$zeroArg], $this->_propsHasMany) ) 
-						return $this->_propsHasMany[ $args[$zeroArg] ]; 
+					if( array_key_exists($args[head], $this->_propsHasMany) ) 
+						return $this->_propsHasMany[ $args[head] ]; 
 					
 					$args[] = $this->_propTable;
 					$args[] = $this->_propPrefix;
 					$model = new StdModel($args); 
-					$this->_propsHasMany += array( $args[$zeroArg]=>$model );
+					$this->_propsHasMany += array( $args[head]=>$model );
 					return $model;
 				}
 				else
@@ -4346,6 +4347,7 @@ abstract class SQLQuery
 			if( $argsNum ) 
 			{ 
 				$fiveArg = 5; 
+				$sixArg = 6; 
 				$oneArg = 1; 
 				$zeroArg = 0; 
 				if( $oneArg===$argsNum ) 
@@ -4358,8 +4360,8 @@ abstract class SQLQuery
 				} 
 				else if( $fiveArg===$argsNum ) 
 				{
-					if( array_key_exists($args[$zeroArg], $this->_propsHasMABTM) ) 
-						return $this->_propsHasMABTM[$args[$zeroArg]][mhd]; 
+					if( array_key_exists($args[head], $this->_propsHasMABTM) ) 
+						return $this->_propsHasMABTM[$args[head]][mhd]; 
 					
 					$data = array( $args[0], $args[1], $args[2], $args[4], $this->_propTable, $this->_propPrefix ); 
 					$dataModel = new StdModel( $data ); 
@@ -4379,13 +4381,35 @@ abstract class SQLQuery
 						mhd => $dataModel, 
 						mhj => $joinModel, 
 					); 
-					$this->_propsHasMABTM += array( $args[$zeroArg]=>$model ); 
+					$this->_propsHasMABTM += array( $args[head]=>$model ); 
 				} 
+				else if( $sixArg===$argsNum ) 
+				{
+					if( array_key_exists($args[head], $this->_propsHasMABTM) ) 
+						return $this->_propsHasMABTM[$args[head]][mhd]; 
+					$data = array( $args[0], $args[1], $args[2], $args[5], $this->_propTable, $this->_propPrefix ); 
+					$dataModel = new StdModel( $data ); 
+					$alias = explode(mad, $args[3]); 
+					sort($alias); 
+					foreach( $alias as $key => $word ) 
+						$alias[$key] = $inflect->singularize(strtolower($word)); 
+					$joinModel = array(
+						'md_name' => implode(EMPTY_CHAR, $alias), 
+						'as_name' => implode(mad, $alias), 
+						'fk_main' => $args[4], 
+						'fk_data' => $args[2], 
+					);
+					$model = array(
+						mhd => $dataModel, 
+						mhj => $joinModel, 
+					); 
+					$this->_propsHasMABTM += array( $args[head]=>$model ); 
+				}
 				else 
-					throw new Exception( "Usage <strong>Model::hasManyAsBelongsToMany()</strong> is incorrect." ); 
+					throw new Exception( "Usage <strong>Model::hasManyAndBelongsToMany()</strong> is incorrect." ); 
 			} 
 			else 
-				throw new Exception( "Usage <strong>Model::hasManyAsBelongsToMany()</strong> is incorrect." ); 
+				throw new Exception( "Usage <strong>Model::hasManyAndBelongsToMany()</strong> is incorrect." ); 
 		}
 		catch( Exception $e ) 
 		{
@@ -4394,8 +4418,8 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __showHasManyAsBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
-	private function __hideHasManyAsBelongsToMany() { $this->_flagHasMABTM = false; return $this; } 
+	private function __showHasManyAndBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
+	private function __hideHasManyAndBelongsToMany() { $this->_flagHasMABTM = false; return $this; } 
 	
 	private function __orderImport( $model ) { $this->_propsImport[] = current($model); return $this; } 
 	private function __orderImportAll( $model ) { $this->_propsImportAll[] = current($model); return $this; } 
