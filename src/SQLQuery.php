@@ -1235,7 +1235,7 @@ abstract class SQLQuery
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql . $deleteCondSql; 
 			} 
-			else 
+			else if( 1<$argsNum ) 
 			{
 				$data = $args; 
 				if( method_exists($this, 'down') ) 
@@ -1246,14 +1246,28 @@ abstract class SQLQuery
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql . $deleteCondSql . $rangeSql; 
 			} 
+			else if( zero===$argsNum ) 
+			{ 
+				if( method_exists($this, 'down') ) 
+					$this->down( $args ); 
+				$condSql = $this->__buildSqlCondition(); 
+				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
+				$sql = $deleteSql . $condSql; 
+			} 
 			$result = $this->__query( $sql ); 
 			$this->clear(); 
 			if( $result ) 
+			{
 				if( method_exists($this, 'ondown') ) 
-					$this->ondown( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
+					if( $oneArg===$argsNum || 1<$argsNum ) 
+						$this->ondown( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
+					else 
+						$this->ondown( $this->_propsRole ); 
+			}
 			else 
+			{
 				return $args; 
-			// throw new Exception( "Usage <strong>Model::delete()</strong> is incorrect." ); 
+			}
 		}
 		catch( Exception $e ) 
 		{
