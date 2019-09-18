@@ -1285,9 +1285,9 @@ abstract class SQLQuery
 			{
 				if( is_string(key($data)) ) 
 				{
-					if( array_key_exists($this->_primaryKey, $data) ) 
+					if( array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey] ) 
 					{
-						$condSql = "`{$this->_primaryKey}` = {$data[$this->_primaryKey]}"; 
+						$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` = {$data[$this->_primaryKey]}"; 
 						$saveSql = array(); 
 						
 						if(method_exists($this, 'ride')) 
@@ -1340,7 +1340,12 @@ abstract class SQLQuery
 						foreach ($this->_propsDescribe as $field ) 
 							if( array_key_exists($field, $data) ) 
 							{
-								$values[] = "'".$this->escape_string( $data[$field] )."'";
+								if( !$data[$this->_primaryKey] && $this->_primaryKey==$field ) 
+									continue;
+								if( EMPTY_CHAR===$data[$field] ) 
+									$values[] = "NULL";
+								else 
+									$values[] = "'".$this->escape_string( $data[$field] )."'";
 								$fields[] = "`".$field."`";
 							}
 							else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
