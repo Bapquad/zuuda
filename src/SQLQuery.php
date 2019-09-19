@@ -433,6 +433,52 @@ abstract class SQLQuery
 		return $sqls; 
 	} 
 	
+	final protected function __parseSqlConditionOr( $m, $c ) 
+	{
+		$sqls = array(); 
+		foreach( $c as $f ) 
+		{ 
+			if( is_numeric($f[2]) ) 
+			{
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]} ";
+			} 
+			elseif( is_null($f[2]) ) 
+			{
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} NULL ";
+			}
+			elseif( is_array($f[2]) ) 
+			{
+				$values = array(); 
+				foreach( $f[2] as $value ) 
+					if( is_numeric($value) ) 
+						$values[] = $value; 
+					else 
+						$values[] = "'".$this->escape_string($value)."'"; 
+				switch($f[1]) 
+				{
+					case 'BETWEEN': 
+					case 'NOT BETWEEN': 
+						$f[2] = implode(' AND ', $values); 
+						break; 
+					default: 
+						$f[2] = "(".implode(comma, $values).")"; 
+						break;
+				}
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]}";
+			}
+			else 
+			{
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} '{$this->escape_string($f[2])}' ";
+			}
+		} 
+		return $sqls;
+	} 
+	
+	final protected function __parseSqlConditionCmd( $m, $c ) 
+	{
+		leave($m);
+	}
+	
 	final protected function __parseSqlCondition( $m, $c ) 
 	{
 		$sqls = array(); 
@@ -442,7 +488,11 @@ abstract class SQLQuery
 			{
 				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]} ";
 			} 
-			else  if( is_array($f[2]) ) 
+			elseif( is_null($f[2]) ) 
+			{
+				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} NULL ";
+			}
+			elseif( is_array($f[2]) ) 
 			{
 				$values = array(); 
 				foreach( $f[2] as $value ) 
@@ -567,16 +617,18 @@ abstract class SQLQuery
 			$defSql = "WHERE 1=1"; 
 		$outSql = EMPTY_STRING; 
 		$sqls = array(); 
-		
+		$orSqls = array(); 
 		if( !empty($this->_propsCond) ) 
 			$sqls += $this->__parseSqlCondition( $this->_propModel, $this->_propsCond ); 
 		if( !empty($this->_propsCondOr) ) 
-			leave($this->_propsCondOr);  
+			$orSqls += $this->__parseSqlConditionOr( $this->_propModel, $this->_propsCond ); 
 		if( !empty($this->_propsCondCmd) ) 
-			leave($this->_propsCondCmd); 
+			$sqls += $this->__parseSqlConditionCmd( $this->_propModel, $this->_propsCond ); 
 		if( !empty($sqls) ) 
 			$outSql .= "AND ";
 		$outSql .= implode("AND ", $sqls);
+		if(!empty($orSqls))
+			$outSql .= ' OR '.implode("AND ", $orSqls);
 		$outSql = $defSql . space . $outSql;
 		return $outSql; 
 	} 
@@ -2243,7 +2295,7 @@ abstract class SQLQuery
 				{ 
 					if( 'is not null' === strtolower($args[1]) ) 
 						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'is not', NULL], 3));
-					if( 'not null' === strtolower($args[1]) )
+					elseif( 'not null' === strtolower($args[1]) )
 						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'not', NULL], 3));
 					else
 						call_user_func_array(array($dispatcher, '__where'), array([$args[0], '=', $args[1]], 3));

@@ -312,9 +312,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 	{
 		global $_server, $_get, $_post, $_put, $_delete, $_file, $configs;
 
-		if( isset( $_SERVER[ 'REQUEST_URI' ] ) ) 
+		if( isset($_SERVER['REQUEST_URI']) ) 
 		{
-			$url = $_SERVER[ 'REQUEST_URI' ];
+			$url = $_SERVER['REQUEST_URI'];
 		} 
 		else 
 		{
@@ -323,7 +323,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 
 		$thread_id = md5( $url );
 
-		if( !empty( $_FILES ) && isset( $configs[ 'MEDIA' ] ) ) 
+		if( !empty( $_FILES ) && isset( $configs['MEDIA'] ) ) 
 		{
 			$n = 'name';
 			$t = 'type';
@@ -334,31 +334,31 @@ abstract class Controller implements iController, iDeclare, iBlock
 
 			foreach ($_FILES as $key => $value) 
 			{
-				if(is_array( $_FILES[ $key ][ $n ] ) ) 
+				if(is_array( $_FILES[$key][$n] ) ) 
 				{
-					foreach( $_FILES[ $key ][ $n ] as $akey => $file ) 
+					foreach( $_FILES[$key][$n] as $akey => $file ) 
 					{
-						$tn = $_FILES[ $key ][ $p ][ $akey ];
-						$fn = $_FILES[ $key ][ $n ][ $akey ];
-						$tp = $_FILES[ $key ][ $t ][ $akey ];
+						$tn = $_FILES[$key][$p][$akey];
+						$fn = $_FILES[$key][$n][$akey];
+						$tp = $_FILES[$key][$t][$akey];
 						if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
 						{
 							$tp = TMP_DIR . $md . DS . $fn;
 							move_uploaded_file( $tn, $tp );
-							$_FILES[ $key ][ $p ][ $akey ] = $tp;
+							$_FILES[$key][$p][$akey] = $tp;
 						}
 					}
 				} 
 				else 
 				{
-					$tn = $_FILES[ $key ][ $p ];
-					$fn = $_FILES[ $key ][ $n ];
-					$tp = $_FILES[ $key ][ $t ];
+					$tn = $_FILES[$key][$p];
+					$fn = $_FILES[$key][$n];
+					$tp = $_FILES[$key][$t];
 					if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
 					{
 						$tp = TMP_DIR . $md . DS . $fn;
 						move_uploaded_file( $tn, $tp );
-						$_FILES[ $key ][ $p ] = $tp;
+						$_FILES[$key][$p] = $tp;
 					}
 				}
 			}
