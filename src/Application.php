@@ -8,7 +8,6 @@ const HEADER_LAYOUT = 'header';
 const FOOTER_LAYOUT = 'footer';
 const MAIN_LAYOUT 	= 'main'; 
 
-use Kuwamoto; 
 use ReflectionClass;
 use Exception;
 
@@ -62,7 +61,7 @@ class Application
 	{
 		GlobalModifier::set( 'cache', new Cache() );
 		GlobalModifier::set( 'irregularWords', array() );
-		GlobalModifier::set( 'inflect', new Kuwamoto\Inflection() );
+		GlobalModifier::set( 'inflect', new Inflection() );
 		GlobalModifier::set( 'html', Html::getInstance() );
 		GlobalModifier::set( 'file', cFile::getInstance() );
 		GlobalModifier::set( '_post', array() );
