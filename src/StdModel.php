@@ -9,23 +9,25 @@ class StdModel extends SQLQuery
 	
 	protected $_propLive = true;
 	
-	public function __construct( $args ) 
+	public function __construct( $args, $hoFlg=false ) 
 	{
 		global $inflect; 
-		$model = $this;
 		$len = count($args);
 		$alias = explode( mad, $args[1] );
 		sort($alias); 
 		$table = array();
+		$model = array();
 		foreach( $alias as $key => $word ) 
 		{
 			$alias[$key] = $inflect->singularize(strtolower($word)); 
 			$table[$key] = $inflect->pluralize(strtolower($word)); 
+			$model[$key] = ucfirst($inflect->singularize(strtolower($word))); 
 		}
 		$table = implode( mad, $table ); 
-		$alias = implode( mad, $alias ); 
+		$alias = implode( mad, $alias );
+		$model = (!$hoFlg)?implode( EMPTY_CHAR, $model ):$args[0]; 
 		$this->__setPrefix($args[$len-1]);
-		$this->__setModelName( $args[0] ); 
+		$this->__setModelName($model); 
 		$this->__setTableName($table); 
 		$this->__setAliasName($alias); 
 		if( isset($args[3]) )

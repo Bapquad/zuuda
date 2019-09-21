@@ -10,8 +10,11 @@ define( 'mcbm_order_merge', 		'__orderMerge' );
 define( 'mcbm_order_merge_left', 	'__orderMergeLeft' );
 define( 'mcbm_order_merge_right', 	'__orderMergeRight' );
 define( 'mcbm_order_has_one', 		'__orderHasOne' );
+define( 'mcbm_rename_has_one', 		'__renameHasOne' );
 define( 'mcbm_order_has_many',		'__orderHasMany' );
+define( 'mcbm_rename_has_many',		'__renameHasMany' );
 define( 'mcbm_order_has_mabtm',		'__orderHasMABTM' );
+define( 'mcbm_rename_has_mabtm',	'__renameHasMABTM' );
 define( 'mcbm_show_has_one',		'__showHasOne' );
 define( 'mcbm_show_has_many',		'__showHasMany' );
 define( 'mcbm_show_has_mabtm',		'__showHasManyAndBelongsToMany' );
@@ -243,12 +246,15 @@ abstract class SQLQuery
 	final public function HasOne() { return call_user_func_array([$this, mcbm_order_has_one], array(func_get_args(), func_num_args())); } 
 	final public function BlindHasOne() { return call_user_func_array([$this, mcbm_hide_has_one], array()); }
 	final public function DisplayHasOne() { return call_user_func_array([$this, mcbm_show_has_one], array()); } 
+	final public function RenameHasOne() { return call_user_func_array([$this, mcbm_rename_has_one], array(func_get_args(), func_num_args())); } 
 	final public function HasMany() { return call_user_func_array(array($this, mcbm_order_has_many), array(func_get_args(), func_num_args())); } 
 	final public function BlindHasMany() { return call_user_func_array([$this, mcbm_hide_has_many], array()); }
 	final public function DisplayHasMany() { return call_user_func_array([$this, mcbm_show_has_many], array()); }
+	final public function RenameHasMany() { return call_user_func_array([$this, mcbm_rename_has_many], array(func_get_args(), func_num_args())); }
 	final public function HasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_order_has_mabtm], array(func_get_args(), func_num_args())); } 
 	final public function BlindHasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_hide_has_mabtm], array()); }
 	final public function DisplayHasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_show_has_mabtm], array()); }
+	final public function RenameHasManyAndBelongsToMany() { return call_user_func_array([$this, mcbm_rename_has_mabtm], array(func_get_args(), func_num_args())); }
 	final public function UnionAll() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
 	final public function Import() { return call_user_func_array([$this, mcbm_order_import_all], array(func_get_args(), func_num_args())); } 
 	final public function Union() { return call_user_func_array([$this, mcbm_order_import_once], array(func_get_args(), func_num_args())); } 
@@ -932,7 +938,7 @@ abstract class SQLQuery
 				if( $this->_flagHasMany && !empty($this->_propsHasMany) ) 
 					foreach( $this->_propsHasMany as $key => $model ) 
 						if( $model->isLive() )
-							$tmps[$model->getModelName()] = $model->where($model->GetForeignKey(), $tmps[$this->_propModel][$this->_primaryKey])->search();
+							$tmps[$key] = $model->where($model->GetForeignKey(), $tmps[$this->_propModel][$this->_primaryKey])->search();
 				if( $this->_flagHasMABTM && !empty($this->_propsHasMABTM) ) 
 					foreach($this->_propsHasMABTM as $key => $model ) 
 						if($model['data']->isLive()) 
@@ -947,7 +953,7 @@ abstract class SQLQuery
 								$merge->whereOn( $configs['tmp_fk'], $configs['tmp_val'] ); 
 								unset( $configs['tmp_fk'], $configs['tmp_val'] );
 							});
-							$tmps[$main->getModelName()] = $main->search();
+							$tmps[$key] = $main->search();
 						}
 						
 				array_push($out,$tmps); 
@@ -1208,24 +1214,15 @@ abstract class SQLQuery
 		{
 			if( zero===$argsNum ) 
 			{
-				$qr = null; 
-				if( $this->_querySQL ) 
-				{
-					if( $this->_propLimit ) 
-						$pattern = "/SELECT (.*?) FROM (.*)LIMIT(.*)/i";
-					else
-						$pattern = "/SELECT (.*?) FROM (.*)/i"; 
-					$replacement = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM $2";
-					$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
-					$qr = $this->__query( $sql ); 
-					$this->__clear();
-				} 
-				else 
-				{
-					$sql = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM `{$this->_propTable}`"; 
-					$qr = $this->__query( $sql ); 
-					$this->__clear(); 
-				} 
+				if( $this->_propLimit ) 
+					$pattern = "/SELECT (.*?) FROM (.*)LIMIT(.*)/i";
+				else
+					$pattern = "/SELECT (.*?) FROM (.*)/i"; 
+				$replacement = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM $2";
+				$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
+				$qr = $this->__query( $sql ); 
+				$this->__clear();
+				
 				if( $qr ) 
 				{
 					$result = $this->fetch_assoc( $qr ); 
@@ -1292,7 +1289,7 @@ abstract class SQLQuery
 				$data = $args; 
 				if( method_exists($this, 'down') ) 
 					$this->down( $data ); 
-				$condSql = $this->__buildSqlCondition(); 
+				$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
 				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` IN (".implode(comma, $data).")"; 
 				$rangeSql = $this->__buildSqlRange(); 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
@@ -1302,7 +1299,7 @@ abstract class SQLQuery
 			{ 
 				if( method_exists($this, 'down') ) 
 					$this->down( $args ); 
-				$condSql = $this->__buildSqlCondition(); 
+				$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql; 
 			} 
@@ -1392,7 +1389,7 @@ abstract class SQLQuery
 						foreach ($this->_propsDescribe as $field ) 
 							if( array_key_exists($field, $data) ) 
 							{
-								if( !$data[$this->_primaryKey] && $this->_primaryKey==$field ) 
+								if( !isset($data[$this->_primaryKey]) && $this->_primaryKey==$field ) 
 									continue;
 								if( EMPTY_CHAR===$data[$field] ) 
 									$values[] = "NULL";
@@ -1470,8 +1467,18 @@ abstract class SQLQuery
 	{
 		try 
 		{
-			if( $argsNum ) 
-				return $this->_select('count')->__search();
+			if( zero===$argsNum ) 
+			{
+				$sql = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM `{$this->_propTable}` AS `{$this->_propModel}` " . $this->__buildSqlCondition(); 
+				$qr = $this->__query( $sql ); 
+				$this->__clear(); 
+				if( $qr ) 
+				{
+					$result = $this->fetch_assoc( $qr ); 
+					$this->free_result( $qr ); 
+					return (int)$result['total'];
+				} 
+			}
 			else 
 				throw new Exception( "Usage <strong>Model::count()</strong> is incorrect." ); 
 		} 
@@ -4320,6 +4327,30 @@ abstract class SQLQuery
 		return NULL;
 	}
 	
+	private function __renameHasOne( $args, $argsNum ) 
+	{
+		try 
+		{
+			$twoArg = 2;
+			if( $twoArg===$argsNum ) 
+			{
+				if( array_key_exists($args[head], $this->_propsHasOne) )
+				{
+					$tmp = $this->_propsHasOne[$args[head]];
+					unset($this->_propsHasOne[$args[head]]);
+					$this->_propsHasOne[$args[1]] = $tmp;
+				}
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::renameHasOne()</strong> is incorrect." ); 
+			
+		}
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		}
+	}
+	
 	private function __orderHasOne( $args, $argsNum ) 
 	{
 		global $inflect; 
@@ -4345,7 +4376,7 @@ abstract class SQLQuery
 					
 					$args[] = $this->_propModel;
 					$args[] = $this->_propPrefix;
-					$model = new StdModel($args); 
+					$model = new StdModel($args, true); 
 					$this->_propsHasOne += array( $args[head]=>$model );
 					return $model;
 				}
@@ -4364,6 +4395,30 @@ abstract class SQLQuery
 	
 	private function __showHasOne() { $this->_flagHasOne = true; return $this; } 
 	private function __hideHasOne() { $this->_flagHasOne = false; return $this; } 
+	
+	private function __renameHasMany( $args, $argsNum ) 
+	{
+		try 
+		{
+			$twoArg = 2;
+			if( $twoArg===$argsNum ) 
+			{
+				if( array_key_exists($args[head], $this->_propsHasMany) )
+				{
+					$tmp = $this->_propsHasMany[$args[head]];
+					unset($this->_propsHasMany[$args[head]]);
+					$this->_propsHasMany[$args[1]] = $tmp;
+				}
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::renameHasMany()</strong> is incorrect." ); 
+			
+		}
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		}
+	}
 	
 	private function __orderHasMany( $args, $argsNum ) 
 	{ 
@@ -4409,6 +4464,30 @@ abstract class SQLQuery
 	
 	private function __showHasMany() { $this->_flagHasMany = true; return $this; }
 	private function __hideHasMany() { $this->_flagHasMany = false; return $this; } 
+
+	private function __renameHasMABTM( $args, $argsNum ) 
+	{
+		try 
+		{
+			$twoArg = 2;
+			if( $twoArg===$argsNum ) 
+			{
+				if( array_key_exists($args[head], $this->_propsHasMABTM) )
+				{
+					$tmp = $this->_propsHasMABTM[$args[head]];
+					unset($this->_propsHasMABTM[$args[head]]);
+					$this->_propsHasMABTM[$args[1]] = $tmp;
+				}
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::renameHasMABTM()</strong> is incorrect." ); 
+			
+		}
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		}
+	}
 	
 	private function __orderHasMABTM( $args, $argsNum ) 
 	{

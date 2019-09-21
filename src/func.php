@@ -43,31 +43,27 @@ function __assetPath( $file_path, $file = false, $build = false )
 {
 	global $configs;
 	$theme_path = EMPTY_CHAR;
-	if( isset( $configs[ 'themes' ] ) && isset( $configs[ 'SHIP' ] ) ) 
+	if( isset($configs['Theme']) && isset($configs['SHIP']) ) 
 	{
-		$theme_path = $configs[ 'themes' ] . $file_path;
-		$path = WEB_DIR . $theme_path;
-		if( call( Zuuda\cFile::get(), $path )->exist() || $build ) 
+		$theme_path = $configs['Theme'].$file_path;
+		$path = WEB_DIR.$theme_path;
+		if( call(Zuuda\cFile::get(), $path)->exist() || $build ) 
 		{
 			if( $file ) 
-			{
 				return $path;
-			}
-			return ( WEB_PATH . $configs[ 'themes' ] . $file_path );
+			return WEB_PATH.$configs['Theme'].$file_path;
 		}
 	} 
 	
 	if( $file ) 
 	{
-		$path = WEB_DIR . $file_path;
+		$path = WEB_DIR.$file_path;
 		if( call(Zuuda\cFile::get(), $path)->exist() )
 			return $path;
 		$file_path = __correctPath($file_path);
 		$theme_path = __correctPath($theme_path); 
 		if(false!==stripos($file_path, CACHE_TPL_NAME_DIR)) 
-		{
-			return WEB_DIR . $file_path; 
-		} 
+			return WEB_DIR.$file_path; 
 		if( EMPTY_CHAR!==$file_path ) 
 			abort( 400, "<strong style=\"\">$file_path</strong> is not found.<br/><strong style=\"\">$theme_path</strong> is not found also.</p>" );
 		else 

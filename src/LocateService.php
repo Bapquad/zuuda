@@ -37,14 +37,14 @@ class LocateService implements iLocateService
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
 		
-		$locate = Config::get( 'LOCATE' );
+		$locate = Config::get('LOCATE');
 		if( NULL!==$locate ) 
 		{
 			$locate_file = __correctPath($locate[$locate['default']]);
 			
-			if( Config::has( 'COM' ) ) 
+			if( Config::has('COM') ) 
 			{
-				$theme = Config::get( 'themes' );
+				$theme = Config::get('Theme');
 				$theme_locate_path = WEB_DIR . $theme . $locate_file;
 				if( call(cFile::get(), $theme_locate_path)->exist() ) 
 				{
@@ -64,7 +64,7 @@ class LocateService implements iLocateService
 			}
 			
 			if(!isset($theme_locate_path) && !isset($locate_path)) 
-				Config::die( 'LOCATE' );
+				Config::die('LOCATE');
 		}
 		
 		return false;

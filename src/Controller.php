@@ -331,17 +331,16 @@ abstract class Controller implements iController, iDeclare, iBlock
 			$e = 'error';
 			$p = 'tmp_name';
 			$md = 'media';
-
 			foreach ($_FILES as $key => $value) 
 			{
-				if(is_array( $_FILES[$key][$n] ) ) 
+				if( is_array($_FILES[$key][$n]) ) 
 				{
 					foreach( $_FILES[$key][$n] as $akey => $file ) 
 					{
 						$tn = $_FILES[$key][$p][$akey];
 						$fn = $_FILES[$key][$n][$akey];
 						$tp = $_FILES[$key][$t][$akey];
-						if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
+						if( file_exists($tn) && array_key_exists($tp, $configs['MEDIA']) ) 
 						{
 							$tp = TMP_DIR . $md . DS . $fn;
 							move_uploaded_file( $tn, $tp );
@@ -354,7 +353,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 					$tn = $_FILES[$key][$p];
 					$fn = $_FILES[$key][$n];
 					$tp = $_FILES[$key][$t];
-					if( file_exists( $tn ) && array_key_exists( $tp, $configs[ 'MEDIA' ] ) ) 
+					if( file_exists($tn) && array_key_exists($tp, $configs['MEDIA']) ) 
 					{
 						$tp = TMP_DIR . $md . DS . $fn;
 						move_uploaded_file( $tn, $tp );
@@ -370,7 +369,6 @@ abstract class Controller implements iController, iDeclare, iBlock
 			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_POST ) );
 			__direct( $url );
 		}
-
 		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );
 		$_mass_vertifier_data = Session::Get( "_mass_vertifier" . $thread_id );
 		

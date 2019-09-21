@@ -66,7 +66,7 @@ class Inflection
         'man'    => 'men',
         'tooth'  => 'teeth',
         'person' => 'people',
-        'admin' => 'admin'
+        'admin'  => 'admin'
     );
 
     static $uncountable = array(
@@ -78,7 +78,8 @@ class Inflection
         'money',
         'rice',
         'information',
-        'equipment'
+        'equipment', 
+        'media', 
     );
 
     public static function pluralize( $string )
