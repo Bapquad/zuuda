@@ -300,6 +300,7 @@ abstract class SQLQuery
 	final public function GetQuery() { return $this->__getQuerySQL(); }
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
 	final public function GetQuerySQL() { return $this->_querySQL; }
+	final public function ToSql() { return $this->_querySQL; }
 	final public function GetCollectionString() { return $this->__buildCollectionString(); }
 	final public function FluidSqlQuery() { return $this->__buildSqlQuery(); } 
 	final public function GenRandString( $len=10 ) { return $this->__genRandString($len); }
@@ -1058,7 +1059,7 @@ abstract class SQLQuery
 	
 	private function __clone() 
 	{
-		$out = clone $this; 
+		$out = deep_copy($this); 
 		return $out->__reset(); 
 	}
 	
@@ -1068,10 +1069,11 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				$entity = $this->__clone();
-				$dataResult = $entity->find( current($args) ); 
-				if( isset($dataResult[$this->_propModel]) ) 
-					return $entity->assign( $dataResult[$this->_propModel] ); 
+				$model = $this->_propModel;
+				$data = $this->find(current($args));
+				$entity = $this->__clone(); 
+				if( isset($data[$model]) ) 
+					return $entity->assign($data[$model]); 
 				else 
 					return NULL; 
 			} 

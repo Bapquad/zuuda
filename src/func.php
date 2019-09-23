@@ -196,6 +196,10 @@ function redirect( $url )
 {
 	__direct( $url );
 }
+function deep_copy($object) 
+{
+	return unserialize(serialize($object));
+}
 
 /**
  * Initialize the strip slash function.
