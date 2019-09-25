@@ -176,6 +176,7 @@ class Application
 		Cookie::Start();
 		$_instance = new Application();
 		$_instance->__bootService();
+		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
 		if( Config::has( 'COM' ) ) 
 		{
 			$_instance->__bootServices( BTShipnelService::getInstance() );
@@ -189,10 +190,16 @@ class Application
 		return $_instance;
 	} 
 	
-	static function Handling() 
+	static function Handling( Controller $dispatcher, String $action ) 
 	{
+		global $configs; 
 		$_instance = Application::Booting();
-		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
+		call_user_func_array(array($dispatcher, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
+		call_user_func_array(array($dispatcher, "BeforeAction"), $configs["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, $action), $configs["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, "AfterAction"), $configs["QUERY_STRING"]); 
+		call_user_func_array(array($dispatcher, "BeforeRender"), $configs["QUERY_STRING"]); 
+		call_user_func_array(array($dispatcher, "FinalRender" ), $configs["QUERY_STRING"]);
 		return $_instance;
 	}
 	
@@ -294,12 +301,7 @@ class Application
 							$configs["QUERY_STRING"][ $i ] = strtolower( $configs["QUERY_STRING"][ $i ] );
 						}
 					} 
-					call_user_func_array(array($dispatch, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
-					call_user_func_array(array($dispatch, "BeforeAction"), $configs["QUERY_STRING"]);
-					call_user_func_array(array($dispatch, $action), $configs["QUERY_STRING"]);
-					call_user_func_array(array($dispatch, "AfterAction"), $configs["QUERY_STRING"]); 
-					call_user_func_array(array($dispatch, "BeforeRender"), $configs["QUERY_STRING"]); 
-					call_user_func_array(array($dispatch, "FinalRender" ), [ Application::Handling() ]);
+					Application::Handling($dispatch, $action);
 				}
 				else if( $configs[DEVELOPER_WARNING] )
 					abort( 400, "Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>." ); 

@@ -76,7 +76,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function Resting( $seconds=2 ) { $this->__resting( $seconds ); } 
 	
 	final public function rootName() { return __CLASS__; }
-	final public function FinalRender( Application $appInst ) { $this->__finalRender( $this->_template ); }
+	final public function FinalRender( $query = NULL ) { $this->__finalRender( $this->_template ); }
 
 	public function __construct() 
 	{

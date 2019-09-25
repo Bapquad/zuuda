@@ -984,11 +984,11 @@ abstract class SQLQuery
 				$rangeSql = $this->__buildSqlRange(); 
 				$sql = $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql; 
 				$queryResult = $this->__query( $sql ); 
-				$dataResult = $this->__fetchResult($queryResult); 
-				if( isset($dataResult[head]) )
-					return $dataResult[head]; 
+				$out = $this->__fetchResult($queryResult); 
+				if( isset($out[head]) )
+					return $out[head]; 
 				else 
-					return $dataResult;
+					return $out;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::find()</strong> is incorrect." ); 
@@ -1301,7 +1301,10 @@ abstract class SQLQuery
 			{ 
 				if( method_exists($this, 'down') ) 
 					$this->down( $args ); 
-				$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
+				if( is_null($this->{$this->_primaryKey}) ) 
+					$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
+				else 
+					$condSql = " WHERE `{$this->_propTable}`.`{$this->_primaryKey}` = {$this->{$this->_primaryKey}} ";
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql; 
 			} 
@@ -1325,6 +1328,41 @@ abstract class SQLQuery
 			abort( 500, $e->getMessage() ); 
 		}
 	}
+	
+	private function __parseFields( $data ) 
+	{
+		$outSql = array(); 
+		foreach ( $this->_propsDescribe as $field ) 
+		{
+			if( $field == $this->_primaryKey ) 
+				continue;
+			else if( array_key_exists($field, $data) ) 
+				if( is_null($data[$field]) ) 
+				{
+					$outSql[] = "`{$field}` = NULL"; 
+				} 
+				else 
+				{
+					$value = $this->escape_string( $data[$field] ); 
+					$outSql[] = "`{$field}` = '{$value}'"; 
+				}
+			else if( is_array($this->_eventRide) ) 
+				if( array_key_exists($field, $this->_eventRide) ) 
+				{
+					$value = $this->escape_string( $this->_eventRide[$field] ); 
+					$outSql[] = "`{$field}` = '{$value}'"; 
+					$data[$field] = $value;
+				} 
+			else if( isset($this->timestamp) && is_array($this->timestamp) ) 
+				if( in_array($field, $this->timestamp) ) 
+				{
+					$value = date('Y-m-d H:i:s'); 
+					$outSql[] = "`{$field}` = '{$value}'"; 
+					$data[$field] = $value;
+				} 
+		}
+		return implode( comma, $outSql ); 
+	}
 
 	private function __save( $args, $argsNum ) 
 	{
@@ -1339,41 +1377,11 @@ abstract class SQLQuery
 					if( array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey] ) 
 					{
 						$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` = {$data[$this->_primaryKey]}"; 
-						$saveSql = array(); 
 						
 						if(method_exists($this, 'ride')) 
 							$this->_eventRide = $this->ride( array_merge($this->_propsRole, $data) );
 
-						foreach ( $this->_propsDescribe as $field ) 
-						{
-							if( $field == $this->_primaryKey ) 
-								continue;
-							else if( array_key_exists($field, $data) ) 
-								if( is_null($data[$field]) ) 
-								{
-									$saveSql[] = "`{$field}` = NULL"; 
-								} 
-								else 
-								{
-									$value = $this->escape_string( $data[$field] ); 
-									$saveSql[] = "`{$field}` = '{$value}'"; 
-								}
-							else if( is_array($this->_eventRide) ) 
-								if( array_key_exists($field, $this->_eventRide) ) 
-								{
-									$value = $this->escape_string( $this->_eventRide[$field] ); 
-									$saveSql[] = "`{$field}` = '{$value}'"; 
-									$data[$field] = $value;
-								} 
-							else if( isset($this->timestamp) && is_array($this->timestamp) ) 
-								if( in_array($field, $this->timestamp) ) 
-								{
-									$value = date('Y-m-d H:i:s'); 
-									$saveSql[] = "`{$field}` = '{$value}'"; 
-									$data[$field] = $value;
-								} 
-						}
-						$saveSql = implode( comma, $saveSql ); 
+						$saveSql = $this->__parseFields($data);
 						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} WHERE {$condSql}"; 
 						$qr = $this->__query( $sql ); 
 						if( !$qr ) 
