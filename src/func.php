@@ -6,7 +6,9 @@ function __numeral( $number )
 
 function __correctPath( $class_path ) 
 {
-	return str_replace( PS, DS, $class_path );
+	if( DS===BS ) // Usually it's windows system.
+		return str_replace( PS, BS, $class_path ); 
+	return str_replace( BS, PS, $class_path ); 
 } 
 
 function __buildPath( $file_path, $file = false ) 
@@ -38,6 +40,11 @@ function __t($str_name)
 	else 
 		return $str_name;
 }
+
+function asset( $filePath ) 
+{
+	return str_replace(DS, PS, __assetPath($filePath)); 
+} 
 
 function __assetPath( $file_path, $file = false, $build = false ) 
 {
@@ -71,15 +78,15 @@ function __assetPath( $file_path, $file = false, $build = false )
 	}
 	else 
 	{
-		return WEB_PATH . $file_path;
+		return WEB_PATH.$file_path;
 	}
 }
 
 function __currentControllerFile() 
 {
 	global $configs;
-	$controller = $configs[ 'MODULE' ].DS.CTRLER_DIR.$configs[ 'CONTROLLER' ].CONTROLLER.$configs[ 'EXT' ];
-	if( $configs[ 'COM' ] && isset( $configs['SHIP'] ) ) 
+	$controller = $configs['MODULE'].DS.CTRLER_DIR.$configs['CONTROLLER'].CONTROLLER.$configs['EXT']; 
+	if( $configs['COM'] && isset( $configs['SHIP'] ) ) 
 	{
 		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL).$controller;
 
@@ -162,17 +169,19 @@ function __escape()
 
 function __dispatch_service_file( $service_namespace ) 
 {
-	return str_replace(FW_NAME.DS, FW_NAME.DS.SRC_DIR ,implode(EMPTY_CHAR, $service_namespace));
+	$service_path = __correctPath(implode(EMPTY_CHAR, $service_namespace)); 
+	$output_path = str_replace(FW_NAME.DS, FW_NAME.DS.SRC_DIR ,$service_path); 
+	return $output_path;
 }
 
 function __dispatch_autoload_class_file( $class_name ) 
 {
 	global $configs; 
-	$class_file = __correctPath( $class_name.$configs[ 'EXT' ] ); 
+	$class_file = __correctPath( $class_name.$configs['EXT'] ); 
 	$class_path = str_replace( FW_NAME.DS, FW_NAME.DS.SRC_DIR, VENDOR_DIR.$class_file ); 
 	if( !file_exists( $class_path ) ) 
 	{
-		if( $configs[ 'COM' ] ) 
+		if( $configs['COM'] ) 
 		{
 			$class_path = COM . $class_file;
 			if( !file_exists( $class_path ) ) 
@@ -208,7 +217,7 @@ function deep_copy($object)
  */
 function __stripSlashesDeep( $value ) 
 {
-	$value = is_array( $value ) ? array_map( 'stripSlashesDeep', $value ) : stripslashes( $value );
+	$value = is_array( $value ) ? array_map( '__stripSlashesDeep', $value ) : stripslashes( $value );
 	return $value;
 }
 

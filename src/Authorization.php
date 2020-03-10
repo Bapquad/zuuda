@@ -17,21 +17,21 @@ abstract class Authorization implements iAuthorization
 	final public function ConfigOpenAuth( $data ) { return $this->__configOpenAuth( $data ); }
 	final public function Destroy() { return $this->__destroyAuth(); }
 	final public function Clear() { return $this->__destroyAuth(); }
-	final public function GetAuth($key=NULL) { return $this->__getAuth($key); }
-	/** abstract public function Authorizing( $input ); */
+	final public function GetAuth($key=NULL) { return $this->__getAuth($key); } 
+	final public function Data($key=NULL) { return $this->__getAuth($key); } 
 	
 	protected function __setUserModel( $user_model ) { $this->_user_model = $user_model; return $this; }
 	protected function __setData( $data, $value = NULL ) 
 	{
-		if( NULL != $value ) 
+		if( NULL!=$value ) 
 		{
 			try 
 			{
-				if( !is_string( $data ) ) 
+				if( !is_string($data) ) 
 				{
 					throw new Exception("Authorization::__setData parameter 1 must be a string key.", 1);
 				}
-				$this->_data[ $data ] = $value;
+				$this->_data[$data] = $value;
 				return $this;
 			} 
 			catch( \Exception $e ) 

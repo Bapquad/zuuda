@@ -9,6 +9,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	private $_view;
 	private $_template;
 	private $_model;
+	private $_downloader;
 	
 	protected function __getModule() { return $this->_module; }
 	protected function __getControler() { return $this->_controller; }
@@ -61,6 +62,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
 	public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
 	public function Json( $args ) { return $this->__json( $args ); } 
+	public function Download( $loader, $name=NULL ) { return $this->__download( $loader, $name ); } 
 	public function CustomRender( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
 	public function RenderBy( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
 	public function RenderWith( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
@@ -255,11 +257,18 @@ abstract class Controller implements iController, iDeclare, iBlock
 		}
 	} 
 	
-	final protected function __json( $args ) { $this->__getView()->jsonLayout( $args ); }
+	final protected function __json( $args ) { $this->__getView()->jsonLayout( $args ); } 
+	final protected function __download($fileLoader, $filename) 
+	{
+		$this->_downloader = $fileLoader->__download($filename);
+		return $this;
+	} 
 	
 	final protected function __finalRender() 
 	{
-		$view = $this->__getView();
+		if( isset($this->_downloader) ) 
+			return;
+		$view = $this->__getView(); 
 		if( $json = $view->isJson() ) 
 			$view->renderJson( $json ); 
 		else 
@@ -366,7 +375,14 @@ abstract class Controller implements iController, iDeclare, iBlock
 		
 		if( !empty($_POST) ) 
 		{
-			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_POST ) );
+			$data = array();
+			foreach($_POST as $key => $value) 
+			{
+				if( !is_array($value) && !strlen($value) ) 
+					$value = NULL;
+				$data[$key] = $value; 
+			}
+			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$data ) );
 			__direct( $url );
 		}
 		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );

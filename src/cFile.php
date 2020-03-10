@@ -11,12 +11,15 @@ class cFile implements iFile
 	public static function ReadDir( $path ) { return self::__readDir( $path ); }
 	public static function CloseDir( $path ) { return self::__closeDir( $path ); }
 	public static function LookFile( $path, $file ) { return self::__lookFile( $path, $file ); }
-	public static function LookDir( $path, $file = NULL ) { return self::__lookDir( $path, $file ); }
+	public static function LookDir( $path, $file = NULL ) { return self::__lookDir( $path, $file ); } 
+	public static function MakeDir( $path ) { return self::__make_dir($path); } 
+	public static function RemoveDir( $path ) { return self::__remove_dir($path); } 
+	public static function Remove( $path ) { return self::__remove($path); } 
 	
 	public static function AssetPath( $path, $file = true ) { return __assetPath( $path, $file ); }
 	public static function BuildPath( $path, $file = true ) { return __assetPath( $path, $file, true ); }
 	
-	public function __invoke( $name ) { return new FileInfo( $name ); }
+	public function __invoke( $name ) { return new FileInfo( $name, true ); }
 	private function __clone(){}
 	private function __construct(){} 
 	private static function __getInstance() 
@@ -122,6 +125,21 @@ class cFile implements iFile
 		}
 		
 		return $out_path;
+	} 
+	
+	private static function __make_dir( $path ) 
+	{
+		return mkdir($path); 
 	}
+	
+	private static function __remove_dir( $path ) 
+	{
+		return rmdir($path); 
+	}
+	
+	private static function __remove( $path ) 
+	{ 
+		return unlink($path); 
+	} 
 	
 }
