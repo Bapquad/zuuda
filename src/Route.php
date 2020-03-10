@@ -45,7 +45,7 @@ class Route implements iRoute
 				else
 					return preg_replace( $pattern, $result, $url );
 			}
-		}
+		} 
 		return $url;
 	}
 	

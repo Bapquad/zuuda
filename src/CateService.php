@@ -43,24 +43,27 @@ class CateService implements  iTaskService, iCateService
 			foreach( $category as $cate ) 
 			{
 				$cate = $cate['Category'];
-				if( $item[ 'parent_id' ] == $cate[ 'id' ] ) 
+				if( $item['parent_id'] == $cate['id'] ) 
 					return $cate;
 			}
 	}
 	
 	private static function __getPath( $category, $item, $sp='/', $last=NULL ) 
 	{
-		$id = (int) $item[ 'id' ];
-		$parent_id = (int) $item[ 'parent_id' ];
-		$path = $item[ 'name' ];
-		
-		if( !is_null($last) ) 
-			$path = $path . $sp . $last; 
-		
-		if( $parent_id==0 ) 
-			return $path; 
-		
-		return self::__getPath( $category, self::__getParent( $category, $item ), $sp, $path );
+		if( NULL!==$item ) 
+		{
+			$id = (int) $item['id'];
+			$parent_id = (int) $item['parent_id'];
+			$path = $item['name'];
+			
+			if( !is_null($last) ) 
+				$path = $path . $sp . $last; 
+			
+			if( $parent_id==0 ) 
+				return $path; 
+			
+			return self::__getPath( $category, self::__getParent( $category, $item ), $sp, $path );
+		} 
 	}
 	
 	private static function __routing( ServiceModel $model, $url ) 

@@ -30,6 +30,7 @@ define( 'mcbm_entity',				'__entity' );
 define( 'mcbm_role',				'__role' );
 define( 'mcbm_item',				'__item' );
 define( 'mcbm_paginate',			'__paginate' );
+define( 'mcbm_insert',				'__insert' );
 define( 'mcbm_delete',				'__delete' );
 define( 'mcbm_save',				'__save' );
 define( 'mcbm_total_pages',			'__totalPages' );
@@ -64,6 +65,7 @@ abstract class SQLQuery
 	protected $_propsDescribe 	= array(); 
 	protected $_propsUndescribe = array(); 
 	protected $_propsCond 		= array(); 
+	protected $_propsCondEx		= array(); 
 	protected $_propsCondOr 	= array(); 
 	protected $_propsCondOn 	= array();
 	protected $_propsCondCmd 	= array();
@@ -104,7 +106,6 @@ abstract class SQLQuery
 	final public function __getAlias() { return $this->_propAlias; } 
 	final public function Set() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
 	final public function Assign() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
-	final public function SetData() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
 	final public function Require( $model ) { return $this->__require( $model ); } 
 	final public function SetPrefix( $value ) { return $this->__setPrefix( $value ); }
 	final public function SetModelName( $value ) { return $this->__setModelName( $value ); }
@@ -237,6 +238,8 @@ abstract class SQLQuery
 	final public function Sort() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function SortBy() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function Order() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
+	final public function OrderDesc( $field ) { return $this->__orderDesc( $field ); } 
+	final public function OrderAsc( $field ) { return $this->__orderAsc( $field ); } 
 	final public function OrderBy() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function Limit() { return $this->__setLimit( func_get_args(), func_num_args() ); }
 	final public function Offset() { return $this->__setSeek( func_get_args(), func_num_args() ); }
@@ -279,7 +282,9 @@ abstract class SQLQuery
 	final public function Entity() { return call_user_func_array([$this, mcbm_entity], array(func_get_args(), func_num_args())); } 
 	final public function Item() { return call_user_func_array([$this, mcbm_item], array(func_get_args(), func_num_args())); }
 	final public function Paginate() { return call_user_func_array([$this, mcbm_paginate], array(func_get_args(), func_num_args())); }
+	final public function Remove() { return call_user_func_array([$this, mcbm_delete], array(func_get_args(), func_num_args())); }
 	final public function Delete() { return call_user_func_array([$this, mcbm_delete], array(func_get_args(), func_num_args())); }
+	final public function Insert() { return call_user_func_array([$this, mcbm_insert], array(func_get_args(), func_num_args())); }
 	final public function Save() { return call_user_func_array([$this, mcbm_save], array(func_get_args(), func_num_args())); }
 	final public function TotalPages() { return call_user_func_array([$this, mcbm_total_pages], array(func_get_args(), func_num_args())); } 
 	final public function Total() { return call_user_func_array([$this, mcbm_total], array(func_get_args(), func_num_args())); } 
@@ -365,6 +370,7 @@ abstract class SQLQuery
 		}
 		$this->_propsUndescribe = $this->__fetchCacheColumns(); 
 		$this->_propsCond 		= array(); 
+		$this->_propsCondEx		= array(); 
 		$this->_propsCondOr 	= array(); 
 		$this->_propsCondOn 	= array();
 		$this->_propsCondCmd 	= array();
@@ -401,7 +407,7 @@ abstract class SQLQuery
 				$sql = str_replace( ':table', $this->_propTable, $sql ); 
 				$sql = str_replace( ':model', $this->_propModel, $sql ); 
 				$qr = $this->__query( $sql );
-				if( mysqli_num_rows($qr) ) 
+				if( $this->num_rows($qr) ) 
 				{
 					$out = array(); 
 					$ts;
@@ -491,14 +497,22 @@ abstract class SQLQuery
 		$sqls = array(); 
 		foreach( $c as $f ) 
 		{ 
-			if( is_numeric($f[2]) ) 
+			if( !isset($f[2]) || is_null($f[2]) ) 
+			{
+				if( array_key_exists('OR', $f) ) 
+				{
+					$orSqls = $this->__parseSqlConditionOr( $m, $f['OR'] ); 
+					$sqls[] = "( ".implode(' OR ', $orSqls).") "; 
+				} 
+				else 
+				{
+					$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} NULL ";
+				}
+			}
+			elseif( is_numeric($f[2]) ) 
 			{
 				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} {$f[2]} ";
 			} 
-			elseif( is_null($f[2]) ) 
-			{
-				$sqls[] = "`{$m}`.`{$f[0]}` {$f[1]} NULL ";
-			}
 			elseif( is_array($f[2]) ) 
 			{
 				$values = array(); 
@@ -616,21 +630,32 @@ abstract class SQLQuery
 		return $conds; 
 	}
 	
-	final protected function __buildSqlCondition( $fluid = false ) 
+	final protected function __buildSqlCondition( $propModel = NULL, $fluid = false ) 
 	{ 
 		if( $fluid ) 
 			$defSql = EMPTY_CHAR; 
 		else 
 			$defSql = "WHERE 1=1"; 
+		if( NULL===$propModel ) 
+			$propModel = $this->_propModel; 
 		$outSql = EMPTY_STRING; 
 		$sqls = array(); 
-		$orSqls = array(); 
+		$orSqls = array();
+		if( !empty($this->_propsCondEx) )
+		{
+			foreach($this->_propsCondEx as $key => $conds) 
+			{
+				$sqls += $this->__parseSqlCondition( $key, $conds ); 
+			} 
+		} 
 		if( !empty($this->_propsCond) ) 
-			$sqls += $this->__parseSqlCondition( $this->_propModel, $this->_propsCond ); 
+		{
+			$sqls += $this->__parseSqlCondition( $propModel, $this->_propsCond ); 
+		}
 		if( !empty($this->_propsCondOr) ) 
-			$orSqls += $this->__parseSqlConditionOr( $this->_propModel, $this->_propsCond ); 
+			$orSqls += $this->__parseSqlConditionOr( $propModel, $this->_propsCondOr ); 
 		if( !empty($this->_propsCondCmd) ) 
-			$sqls += $this->__parseSqlConditionCmd( $this->_propModel, $this->_propsCond ); 
+			$sqls += $this->__parseSqlConditionCmd( $propModel, $this->_propsCond ); 
 		if( !empty($sqls) ) 
 			$outSql .= "AND ";
 		$outSql .= implode("AND ", $sqls);
@@ -642,7 +667,7 @@ abstract class SQLQuery
 	
 	final public function FuildSqlCondation() 
 	{
-		return $this->__buildSqlCondition( true ); 
+		return $this->__buildSqlCondition( NULL, true ); 
 	}
 	
 	final protected function __buildHasOneSqlCondation() 
@@ -1158,51 +1183,59 @@ abstract class SQLQuery
 	{
 		try 
 		{
-			if( $argsNum ) 
+			if( 1===$argsNum ) 
 			{
 				$options = current($args); 
-				if( isset($options['page']) ) 
-				{
-					$page = $options['page']; 
-					call_user_func_array( [$this, mcbm_set_page], array([$page], 1) ); 
-				}
-				elseif( is_null($this->_propPage) ) 
-				{
-					$page = 1; 
-					call_user_func_array( [$this, mcbm_set_page], array([$page], 1) ); 
-				} 
-				else 
-				{
-					$page = $this->_propPage;
-				}
-				
-				if( isset($options['limit']) ) 
-				{
-					$limit = $options['limit'];
-					call_user_func_array( [$this, mcbm_set_limit], array([$limit], 1) );
-				}
-				elseif( is_null($this->_propLimit) ) 
-				{
-					$limit = 1000; 
-					call_user_func_array( [$this, mcbm_set_limit], array([$limit], 1) ); 
-				} 
-				else 
-				{
-					$limit = $this->_propLimit; 
-				} 
-					
-				$data = call_user_func_array( [$this, mcbm_search], array([], 0) ); 
-				$total = call_user_func_array( [$this, mcbm_total], array([], 0) ); 
-				$pages = (int) ceil( $total/$limit ); 
-				
-				return array(
-					'pages'	=> $pages, 
-					'total' => $total, 
-					'data'	=> $data,
-					'page'	=> (int) $page, 
-					'limit' => (int) $limit, 
+			} 
+			elseif( 2===$argsNum ) 
+			{ 
+				$options = array(
+					'page'	=> $args[0], 
+					'limit'	=> $args[1] 
 				); 
+			} 
+			
+			if( isset($options['page']) ) 
+			{
+				$page = $options['page']; 
+				call_user_func_array( [$this, mcbm_set_page], array([$page], 1) ); 
 			}
+			elseif( is_null($this->_propPage) ) 
+			{
+				$page = 1; 
+				call_user_func_array( [$this, mcbm_set_page], array([$page], 1) ); 
+			} 
+			else 
+			{
+				$page = $this->_propPage;
+			}
+			
+			if( isset($options['limit']) ) 
+			{
+				$limit = $options['limit'];
+				call_user_func_array( [$this, mcbm_set_limit], array([$limit], 1) );
+			}
+			elseif( is_null($this->_propLimit) ) 
+			{
+				$limit = 1000; 
+				call_user_func_array( [$this, mcbm_set_limit], array([$limit], 1) ); 
+			} 
+			else 
+			{
+				$limit = $this->_propLimit; 
+			} 
+				
+			$data = call_user_func_array( [$this, mcbm_search], array([], 0) ); 
+			$total = call_user_func_array( [$this, mcbm_total], array([], 0) ); 
+			$pages = (int) ceil( $total/$limit ); 
+			
+			return array(
+				'pages'	=> $pages, 
+				'total' => $total, 
+				'data'	=> $data,
+				'page'	=> (int) $page, 
+				'limit' => (int) $limit, 
+			); 
 		}
 		catch( Exception $e ) 
 		{
@@ -1220,6 +1253,7 @@ abstract class SQLQuery
 					$pattern = "/SELECT (.*?) FROM (.*)LIMIT(.*)/i";
 				else
 					$pattern = "/SELECT (.*?) FROM (.*)/i"; 
+				
 				$replacement = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM $2";
 				$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
 				$qr = $this->__query( $sql ); 
@@ -1271,6 +1305,33 @@ abstract class SQLQuery
 		} 
 	} 
 	
+	private function __insert( $args, $argsNum ) 
+	{ 
+		try 
+		{
+			if( $argsNum ) 
+			{
+				dump($args[0]); 
+				$keys = array(); 
+				foreach( $args[0] as $key => $value ) 
+				{
+					$keys[] = $key;
+				} 
+				dd($keys); 
+				dd($args);
+				
+			} 
+			else 
+			{ 
+				throw new Exception( "Usage <strong>Model::insert()</strong> is incorrect." ); 
+			}
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		}
+	}
+	
 	private function __delete( $args, $argsNum ) 
 	{
 		try 
@@ -1282,7 +1343,10 @@ abstract class SQLQuery
 				if( method_exists($this, 'down') ) 
 					$this->down( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
 				$condSql = $this->__buildSqlCondition(); 
-				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = {$data}"; 
+				if( is_string($data) ) 
+					$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = '{$data}'"; 
+				elseif( is_numeric($data) ) 
+					$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` =  {$data} "; 
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql . $deleteCondSql; 
 			} 
@@ -1308,15 +1372,14 @@ abstract class SQLQuery
 				$deleteSql = "DELETE FROM `{$this->_propTable}` "; 
 				$sql = $deleteSql . $condSql; 
 			} 
-			$result = $this->__query( $sql ); 
+			$qr = $this->__query( $sql ); 
 			$this->clear(); 
-			if( $result ) 
+			if( $qr ) 
 			{
+				$data = ( $oneArg===$argsNum || 1<$argsNum ) ? array_merge($this->_propsRole, array($this->_primaryKey=>$data)) : $data = $this->_propsRole; 
 				if( method_exists($this, 'ondown') ) 
-					if( $oneArg===$argsNum || 1<$argsNum ) 
-						$this->ondown( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
-					else 
-						$this->ondown( $this->_propsRole ); 
+					$this->ondown( $data ); 
+				return $data; 
 			}
 			else 
 			{
@@ -1334,9 +1397,14 @@ abstract class SQLQuery
 		$outSql = array(); 
 		foreach ( $this->_propsDescribe as $field ) 
 		{
-			if( $field == $this->_primaryKey ) 
-				continue;
-			else if( array_key_exists($field, $data) ) 
+			if( $field==$this->_primaryKey && 
+				isset($data[$this->_primaryKey]) && 
+				is_numeric($data[$field]) ) 
+			{
+				continue; 
+			}
+			elseif( array_key_exists($field, $data) ) 
+			{
 				if( is_null($data[$field]) ) 
 				{
 					$outSql[] = "`{$field}` = NULL"; 
@@ -1345,21 +1413,26 @@ abstract class SQLQuery
 				{
 					$value = $this->escape_string( $data[$field] ); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
-				}
-			else if( is_array($this->_eventRide) ) 
+				} 
+			}
+			elseif( is_array($this->_eventRide) ) 
+			{ 
 				if( array_key_exists($field, $this->_eventRide) ) 
 				{
 					$value = $this->escape_string( $this->_eventRide[$field] ); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
 					$data[$field] = $value;
 				} 
-			else if( isset($this->timestamp) && is_array($this->timestamp) ) 
+			} 
+			elseif( isset($this->timestamp) && is_array($this->timestamp) ) 
+			{
 				if( in_array($field, $this->timestamp) ) 
 				{
 					$value = date('Y-m-d H:i:s'); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
 					$data[$field] = $value;
 				} 
+			}
 		}
 		return implode( comma, $outSql ); 
 	}
@@ -1374,61 +1447,57 @@ abstract class SQLQuery
 			{
 				if( is_string(key($data)) ) 
 				{
-					if( array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey] ) 
+					if( !empty($this->_propsCond) ) 
 					{
-						$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` = {$data[$this->_primaryKey]}"; 
-						
+						$saveSql = $this->__parseFields($data); 
+						$condSql = $this->__buildSqlCondition( $this->_propTable ); 
+						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} {$condSql}"; 
+						$qr = $this->__query( $sql ); 
+						$this->clear(); 
+						if( !$qr ) 
+							$data = $this->__getError(); 
+						else
+							$data = array_merge($this->_propsRole, $data); 
+						return $data; 
+					}
+					elseif( array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey] ) 
+					{
+						if( is_string($data[$this->_primaryKey]) ) 
+						{
+							$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` = '{$data[$this->_primaryKey]}'"; 
+							$sql = "SELECT `{$this->_primaryKey}` FROM `{$this->_propTable}` WHERE " . $condSql ." LIMIT 1"; 
+							$qr = $this->__query( $sql ); 
+							if( zero===$this->num_rows($qr) ) 
+							{
+								return $this->__create($data); 
+							} 
+						}
+						elseif( is_numeric($data[$this->_primaryKey]) ) 
+						{
+							$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` =  {$data[$this->_primaryKey]} "; 
+						}
+
 						if(method_exists($this, 'ride')) 
 							$this->_eventRide = $this->ride( array_merge($this->_propsRole, $data) );
 
 						$saveSql = $this->__parseFields($data);
 						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} WHERE {$condSql}"; 
 						$qr = $this->__query( $sql ); 
+						$this->clear(); 
 						if( !$qr ) 
-							return NULL; 
-						if( method_exists($this, 'onride') ) 
-							$this->onride( array_merge($this->_propsRole, $data) ); 
-						return $data; 
-					}
-					else 
-					{
-						$fields = array();
-						$values = array(); 
-						if(method_exists($this, 'boot')) 
-							$this->_eventBoot = $this->boot( array_merge($this->_propsRole, $data) );
-						foreach ($this->_propsDescribe as $field ) 
-							if( array_key_exists($field, $data) ) 
-							{
-								if( !isset($data[$this->_primaryKey]) && $this->_primaryKey==$field ) 
-									continue;
-								if( EMPTY_CHAR===$data[$field] ) 
-									$values[] = "NULL";
-								else 
-									$values[] = "'".$this->escape_string( $data[$field] )."'";
-								$fields[] = "`".$field."`";
-							}
-							else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
-							{
-								$values[] = $this->escape_string( $this->_eventBoot[$field] ); 
-								$fields[] = "`".$field."`";
-								$data[$field] = $this->_eventBoot[$field]; 
-							}
-						$fields = implode( comma, $fields );
-						$values = implode( ",", $values );
-						$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ({$values})"; 
-						$qr = $this->__query( $sql ); 
-						if( $qr ) 
-						{
-							$data[$this->_primaryKey] = $this->insert_id(); 
-							if( method_exists($this, 'onboot') ) 
-								$this->onboot( array_merge($this->_propsRole, $data) ); 
-							return $data;
-						} 
-						else 
 						{
 							$data = $this->__getError(); 
+						} 
+						else if( method_exists($this, 'onride') ) 
+						{
+							$data = array_merge($this->_propsRole, $data); 
+							$this->onride( $data ); 
 						}
 						return $data; 
+					} 
+					else 
+					{
+						return $this->__create($data); 
 					} 
 				} 
 				else 
@@ -1448,7 +1517,49 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() ); 
 		}
-	}
+	} 
+	
+	private function __create( $data ) 
+	{ 
+		$fields = array();
+		$values = array(); 
+		if(method_exists($this, 'boot')) 
+			$this->_eventBoot = $this->boot( array_merge($this->_propsRole, $data) );
+		foreach ($this->_propsDescribe as $field ) 
+			if( array_key_exists($field, $data) ) 
+			{
+				if( !isset($data[$this->_primaryKey]) && $this->_primaryKey==$field ) 
+					continue;
+				if( EMPTY_CHAR===$data[$field] || is_null($data[$field]) ) 
+					$values[] = "NULL";
+				else 
+					$values[] = "'".$this->escape_string( $data[$field] )."'";
+				$fields[] = "`".$field."`";
+			}
+			else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
+			{
+				$values[] = $this->escape_string( $this->_eventBoot[$field] ); 
+				$fields[] = "`".$field."`";
+				$data[$field] = $this->_eventBoot[$field]; 
+			}
+		$fields = implode( comma, $fields );
+		$values = implode( ",", $values );
+		$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ({$values})"; 
+		$qr = $this->__query( $sql ); 
+		$this->clear(); 
+		if( $qr ) 
+		{
+			$data[$this->_primaryKey] = (string) $this->insert_id(); 
+			if( method_exists($this, 'onboot') ) 
+				$this->onboot( array_merge($this->_propsRole, $data) ); 
+			return $data;
+		} 
+		else 
+		{
+			$data = $this->__getError(); 
+		}
+		return $data; 
+	} 
 	
 	private function __totalPages( $args, $argsNum ) 
 	{
@@ -2196,11 +2307,10 @@ abstract class SQLQuery
 		$dispatcher = $this; 
 		if( $twoArg===$argsNum ) 
 		{
-			$argsNum = 3;
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			call_user_func_array( array($dispatcher, '__where'), array($args, $argsNum) ); 
+			call_user_func_array( array($dispatcher, '__where'), array($args, count($args)) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -2304,20 +2414,21 @@ abstract class SQLQuery
 		{
 			if( $argsNum )
 			{
+				$fourArg = 4;
 				$threeArg = 3;
 				$twoArg = 2;
 				$oneArg = 1; 
 				$dispatcher = $this; 
-				if( $argsNum===$twoArg ) 
+				if( $twoArg===$argsNum ) 
 				{ 
 					if( 'is not null' === strtolower($args[1]) ) 
-						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'is not', NULL], 3));
+						return call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'is not', NULL], 3));
 					elseif( 'not null' === strtolower($args[1]) )
-						call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'not', NULL], 3));
+						return call_user_func_array(array($dispatcher, '__where'), array([$args[0], 'not', NULL], 3));
 					else
-						call_user_func_array(array($dispatcher, '__where'), array([$args[0], '=', $args[1]], 3));
+						return call_user_func_array(array($dispatcher, '__where'), array([$args[0], '=', $args[1]], 3));
 				} 
-				else if( $threeArg===$argsNum ) 
+				if( $twoArg<$argsNum ) 
 				{
 					$allowOps = array(
 						'between'				=>'BETWEEN', 
@@ -2343,30 +2454,38 @@ abstract class SQLQuery
 						'!='					=>'!=', 
 						'not in'				=>'NOT IN', 
 						'not like'				=>'NOT LIKE', 
-					);
-					if( in_array($args[0], $this->_propsDescribe) && array_key_exists($args[1], $allowOps) ) 
+					); 
+					if( $threeArg===$argsNum ) 
 					{
-						$args[1] = $allowOps[strtolower($args[1])]; 
-						if( $embed ) 
-							return $args; 
-						$this->_propsCond[] = $args;
+						if( is_string($args[2]) ) 
+						{
+							if( 'is not null' === strtolower($args[2]) ) 
+								return call_user_func_array(array($dispatcher, '__where'), array([$args[0], $args[1], 'is not', NULL], 4));
+							elseif( 'not null' === strtolower($args[2]) )
+								return call_user_func_array(array($dispatcher, '__where'), array([$args[0], $args[1], 'not', NULL], 4));
+						}
+							
+						if( in_array($args[0], $this->_propsDescribe) && array_key_exists($args[1], $allowOps) ) 
+						{
+							$args[1] = $allowOps[strtolower($args[1])]; 
+							if( $embed ) 
+								return $args; 
+							$this->_propsCond[] = $args;
+						} 
+						else 
+						{
+							if( !in_array($args[0], $this->_propsDescribe)) 
+								throw new Exception( 'Cột <strong>'.$args[0].'</strong> không có trong bảng <strong>'.$this->_propTable.'</strong>.' ); 
+							if( !array_key_exists($args[1], $allowOps) )
+								throw new Exception( 'Không chấp nhận toán tử <strong>'.$args[1].'</strong>.' );
+						}
 					} 
-					else 
+					else if( $fourArg===$argsNum ) 
 					{
-						if( !in_array($args[0], $this->_propsDescribe)) 
-							throw new Exception( 'Cột <strong>'.$args[0].'</strong> không có trong bảng <strong>'.$this->_propTable.'</strong>.' ); 
-						if( !array_key_exists($args[1], $allowOps) )
-							throw new Exception( 'Không chấp nhận toán tử <strong>'.$args[1].'</strong>.' );
-					}
-				} 
-				else if( $argsNum>$threeArg ) 
-				{
-					$tmp = array();
-					$tmp[] = array_shift($args);
-					$tmp[] = array_shift($args);
-					$tmp[] = $args;
-					call_user_func_array(array($dispatcher, '__where'), array(array( $name, $ops, $args ), 3));
-				} 
+						$args[2] = $allowOps[strtolower($args[2])]; 
+						$this->_propsCondEx[$args[0]][] = array_slice($args, 1); 
+					} 
+				}
 				else 
 				{
 					$params = current($args); 
@@ -2806,6 +2925,7 @@ abstract class SQLQuery
 			} 
 			else 
 				throw new Exception( "Using <strong>Model::whereOr()</strong> has a syntax error." ); 
+			return $this;
 		} 
 		catch( Exception $e ) 
 		{ 
@@ -2818,7 +2938,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__between_on_operator'), array($args, $argsNum, 'between') );
+				return call_user_func_array( array($this, '__between_on_operator'), array($args, $argsNum, 'between') );
 			else 
 				throw new Exception( "Using <strong>Model::betweenOn()</strong> has a syntax error." ); 
 		}
@@ -2833,7 +2953,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '=', '_equalOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '=', '_equalOn') );
 			else 
 				throw new Exception( "Using <strong>Model::equalOn()</strong> has a syntax error." ); 
 		} 
@@ -2841,7 +2961,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __greaterThanOn( $args, $argsNum ) 
@@ -2849,7 +2968,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>', '_greaterThanOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>', '_greaterThanOn') );
 			else 
 				throw new Exception( "Using <strong>Model::greaterThanOn()</strong> has a syntax error." ); 
 		} 
@@ -2857,7 +2976,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __greaterThanOrEqualOn( $args, $argsNum ) 
@@ -2865,7 +2983,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>=', '_greaterThanOrEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>=', '_greaterThanOrEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::greaterThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -2873,7 +2991,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __inOn( $args, $argsNum ) 
@@ -2881,7 +2998,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'in', '_inOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'in', '_inOn') );
 			else 
 				throw new Exception( "Using <strong>Model::inOn()</strong> has a syntax error." ); 
 		} 
@@ -2889,7 +3006,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __isOn( $args, $argsNum ) 
@@ -2897,7 +3013,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is', '_isOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is', '_isOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isOn()</strong> has a syntax error." ); 
 		} 
@@ -2905,7 +3021,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __isNotOn( $args, $argsNum ) 
@@ -2913,7 +3028,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is not', '_isNotOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is not', '_isNotOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNotOn()</strong> has a syntax error." ); 
 		} 
@@ -2921,7 +3036,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __isNotNullOn( $args, $argsNum ) 
@@ -2929,7 +3043,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_isNotNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_isNotNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNotNullOn()</strong> has a syntax error." ); 
 		} 
@@ -2937,7 +3051,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __isNullOn( $args, $argsNum ) 
@@ -2945,7 +3058,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is', '_isNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is', '_isNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNullOn()</strong> has a syntax error." ); 
 		} 
@@ -2953,7 +3066,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __lessOn( $args, $argsNum ) 
@@ -2961,7 +3073,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessOn()</strong> has a syntax error." ); 
 		} 
@@ -2969,7 +3081,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __lessThanOn( $args, $argsNum ) 
@@ -2977,7 +3088,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessThanOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessThanOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThanOn()</strong> has a syntax error." ); 
 		} 
@@ -2985,7 +3096,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __lessThanOrEqualOn( $args, $argsNum ) 
@@ -2993,7 +3103,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<=', '_lessThanOrEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<=', '_lessThanOrEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -3001,7 +3111,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __likeOn( $args, $argsNum ) 
@@ -3009,7 +3118,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'like', '_likeOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'like', '_likeOn') );
 			else 
 				throw new Exception( "Using <strong>Model::likeOn()</strong> has a syntax error." ); 
 		} 
@@ -3017,7 +3126,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __notOn( $args, $argsNum ) 
@@ -3025,7 +3133,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not', '_notOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not', '_notOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notOn()</strong> has a syntax error." ); 
 		} 
@@ -3033,7 +3141,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __notBetweenOn( $args, $argsNum ) 
@@ -3041,7 +3148,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__between_on_operator'), array($args, $argsNum, 'not between') );
+				return call_user_func_array( array($this, '__between_on_operator'), array($args, $argsNum, 'not between') );
 			else 
 				throw new Exception( "Using <strong>Model::notBetweenOn()</strong> has a syntax error." ); 
 		}
@@ -3056,7 +3163,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '!=', '_notEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '!=', '_notEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -3064,7 +3171,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __notInOn( $args, $argsNum ) 
@@ -3072,7 +3178,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not in', '_notInOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not in', '_notInOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notInOn()</strong> has a syntax error." ); 
 		} 
@@ -3080,7 +3186,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __notLikeOn( $args, $argsNum ) 
@@ -3088,7 +3193,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not like', '_notLikeOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not like', '_notLikeOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notLikeOn()</strong> has a syntax error." ); 
 		} 
@@ -3096,7 +3201,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __notNullOn( $args, $argsNum ) 
@@ -3104,7 +3208,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_notNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_notNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notNullOn()</strong> has a syntax error." ); 
 		} 
@@ -3112,7 +3216,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __between_on_operator( $args, $argsNum, $sign ) 
@@ -3125,7 +3228,7 @@ abstract class SQLQuery
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
-			call_user_func_array(array($dispatcher, '_whereOn'), array($args, count($args)));
+			return call_user_func_array(array($dispatcher, '_whereOn'), array($args, count($args)));
 		}
 		else if($argsNum===$oneArg) 
 		{
@@ -3137,6 +3240,7 @@ abstract class SQLQuery
 				$tmp[] = current($param);
 				call_user_func_array(array($dispatcher, '_whereOn'), array($tmp, count($tmp)));
 			}
+			return $this;
 		}
 	}
 	
@@ -3151,7 +3255,7 @@ abstract class SQLQuery
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			call_user_func_array( array($dispatcher, '_whereOn'), array($args, $argsNum) ); 
+			return call_user_func_array( array($dispatcher, '_whereOn'), array($args, $argsNum) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -3159,7 +3263,7 @@ abstract class SQLQuery
 			$tmp[] = array_shift($args); 
 			$tmp[] = $sign;
 			$tmp[] = $args;
-			call_user_func_array( array($dispatcher, '_whereOn'), array($tmp, 3) ); 
+			return call_user_func_array( array($dispatcher, '_whereOn'), array($tmp, 3) ); 
 		}
 		else 
 		{
@@ -3167,6 +3271,7 @@ abstract class SQLQuery
 			if( is_array($params) ) 
 				foreach( $params as $args ) 
 					call_user_func_array( array($dispatcher, $method), array([key($args), current($args)], $twoArg) ); 
+			return $this; 
 		}
 	}
 	
@@ -3181,17 +3286,18 @@ abstract class SQLQuery
 			{
 				$args[] = $sign; 
 				$args[] = NULL;
-				call_user_func_array( array($dispatcher, '_whereOn'), array( $args, 3 ) );
+				return call_user_func_array( array($dispatcher, '_whereOn'), array( $args, 3 ) );
 			}
 			else 
 			{
 				$args = current($args);
 				foreach( $args as $arg ) 
-					call_user_func_array( array($dispatcher, $method), array((array)$arg, 1) );
+					call_user_func_array( array($dispatcher, $method), array((array)$arg, 1) ); 
 			}
 		} 
 		else if( $twoArg<= $argsNum ) 
 			call_user_func_array( array($dispatcher, $method), array(array ($args), $oneArg) );
+		return $this; 
 	}
 	
 	private function __where_on_operator( $args, $argsNum, $sign, $method ) 
@@ -3246,7 +3352,8 @@ abstract class SQLQuery
 					call_user_func_array( array($dispatcher, '_whereOn'), array($arg, count($arg)) ); 
 				}
 			}
-		}
+		} 
+		return $this;
 	}
 	
 	private function __whereOn( $args, $argsNum ) 
@@ -3291,6 +3398,7 @@ abstract class SQLQuery
 			} 
 			else 
 				throw new Exception( "Using <strong>Model::whereOn()</strong> has a syntax error." ); 
+			return $this; 
 		} 
 		catch( Exception $e ) 
 		{ 
@@ -3303,7 +3411,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_between_operator'), array($args, $argsNum, 'between') );
+				return call_user_func_array( array($this, '__or_between_operator'), array($args, $argsNum, 'between') );
 			else 
 				throw new Exception( "Using <strong>Model::orBetween()</strong> has a syntax error." ); 
 		}
@@ -3318,7 +3426,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '=', '_orEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '=', '_orEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orEqual()</strong> has a syntax error." ); 
 		} 
@@ -3326,7 +3434,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orGreater( $args, $argsNum ) 
@@ -3334,7 +3441,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreater') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreater') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreater()</strong> has a syntax error." ); 
 		} 
@@ -3342,7 +3449,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orGreaterThan( $args, $argsNum ) 
@@ -3350,7 +3456,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreaterThan') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreaterThan') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterThan()</strong> has a syntax error." ); 
 		} 
@@ -3358,7 +3464,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orGreaterThanOrEqual( $args, $argsNum ) 
@@ -3366,7 +3471,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>=', '_orGreaterThanOrEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>=', '_orGreaterThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -3374,7 +3479,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIn( $args, $argsNum ) 
@@ -3382,7 +3486,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'in', '_orIn') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'in', '_orIn') );
 			else 
 				throw new Exception( "Using <strong>Model::orIn()</strong> has a syntax error." ); 
 		} 
@@ -3390,7 +3494,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIs( $args, $argsNum ) 
@@ -3398,7 +3501,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is', '_orIs') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is', '_orIs') );
 			else 
 				throw new Exception( "Using <strong>Model::orIs()</strong> has a syntax error." ); 
 		} 
@@ -3406,7 +3509,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNot( $args, $argsNum ) 
@@ -3414,7 +3516,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is not', '_orIsNot') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is not', '_orIsNot') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNot()</strong> has a syntax error." ); 
 		} 
@@ -3422,7 +3524,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNotNull( $args, $argsNum ) 
@@ -3430,7 +3531,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orIsNotNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orIsNotNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNotNull()</strong> has a syntax error." ); 
 		} 
@@ -3438,7 +3539,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNull( $args, $argsNum ) 
@@ -3446,7 +3546,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is', '_orIsNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is', '_orIsNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNull()</strong> has a syntax error." ); 
 		} 
@@ -3454,7 +3554,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLess( $args, $argsNum ) 
@@ -3462,7 +3561,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLess') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLess') );
 			else 
 				throw new Exception( "Using <strong>Model::orLess()</strong> has a syntax error." ); 
 		} 
@@ -3470,7 +3569,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLessThan( $args, $argsNum ) 
@@ -3478,7 +3576,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLessThan') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLessThan') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThan()</strong> has a syntax error." ); 
 		} 
@@ -3486,7 +3584,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLessThanOrEqual( $args, $argsNum ) 
@@ -3494,7 +3591,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<=', '_orLessThanOrEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<=', '_orLessThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThanOrEqual()</strong> has a syntax error." ); 
 		} 
@@ -3502,7 +3599,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLike( $args, $argsNum ) 
@@ -3510,7 +3606,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'like', '_orLike') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'like', '_orLike') );
 			else 
 				throw new Exception( "Using <strong>Model::orLike()</strong> has a syntax error." ); 
 		} 
@@ -3518,7 +3614,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNot( $args, $argsNum ) 
@@ -3526,7 +3621,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not', '_orNot') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not', '_orNot') );
 			else 
 				throw new Exception( "Using <strong>Model::orNot()</strong> has a syntax error." ); 
 		} 
@@ -3534,7 +3629,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNotBetween( $args, $argsNum ) 
@@ -3542,7 +3636,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_between_operator'), array($args, $argsNum, 'not between') );
+				return call_user_func_array( array($this, '__or_between_operator'), array($args, $argsNum, 'not between') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotBetween()</strong> has a syntax error." ); 
 		}
@@ -3557,7 +3651,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '!=', '_orNotEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '!=', '_orNotEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotEqual()</strong> has a syntax error." ); 
 		} 
@@ -3565,7 +3659,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __orNotIn( $args, $argsNum ) 
@@ -3573,7 +3666,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not in', '_orNotIn') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not in', '_orNotIn') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotIn()</strong> has a syntax error." ); 
 		} 
@@ -3581,7 +3674,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __orNotLike( $args, $argsNum ) 
@@ -3589,7 +3681,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not like', '_orNotLike') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not like', '_orNotLike') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotLike()</strong> has a syntax error." ); 
 		} 
@@ -3597,7 +3689,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNotNull( $args, $argsNum ) 
@@ -3605,7 +3696,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orNotNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orNotNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotNull()</strong> has a syntax error." ); 
 		} 
@@ -3613,7 +3704,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __or_between_operator( $args, $argsNum, $sign ) 
@@ -3626,7 +3716,7 @@ abstract class SQLQuery
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
-			call_user_func_array(array($dispatcher, '_orWhere'), array($args, count($args)));
+			return call_user_func_array(array($dispatcher, '_orWhere'), array($args, count($args)));
 		}
 		else if($argsNum===$oneArg) 
 		{
@@ -3637,7 +3727,8 @@ abstract class SQLQuery
 				$tmp[] = $sign; 
 				$tmp[] = current($param);
 				call_user_func_array(array($dispatcher, '_orWhere'), array($tmp, count($tmp)));
-			}
+			} 
+			return $this;
 		}
 	}
 	
@@ -3652,7 +3743,7 @@ abstract class SQLQuery
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			call_user_func_array( array($dispatcher, '_orWhere'), array($args, $argsNum) ); 
+			return call_user_func_array( array($dispatcher, '_orWhere'), array($args, $argsNum) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -3660,7 +3751,7 @@ abstract class SQLQuery
 			$tmp[] = array_shift($args); 
 			$tmp[] = $sign;
 			$tmp[] = $args;
-			call_user_func_array( array($dispatcher, '_orWhere'), array($tmp, 3) ); 
+			return call_user_func_array( array($dispatcher, '_orWhere'), array($tmp, 3) ); 
 		}
 		else 
 		{
@@ -3668,6 +3759,7 @@ abstract class SQLQuery
 			if( is_array($params) ) 
 				foreach( $params as $args ) 
 					call_user_func_array( array($dispatcher, $method), array([key($args), current($args)], $twoArg) ); 
+			return $this; 
 		}
 	}
 	
@@ -3682,7 +3774,7 @@ abstract class SQLQuery
 			{
 				$args[] = $sign; 
 				$args[] = NULL;
-				call_user_func_array( array($dispatcher, '_orWhere'), array( $args, 3 ) );
+				return call_user_func_array( array($dispatcher, '_orWhere'), array( $args, 3 ) );
 			}
 			else 
 			{
@@ -3693,6 +3785,7 @@ abstract class SQLQuery
 		} 
 		else if( $twoArg<= $argsNum ) 
 			call_user_func_array( array($dispatcher, $method), array(array ($args), $oneArg) );
+		return $this; 
 	}
 	
 	private function __or_where_operator( $args, $argsNum, $sign, $method ) 
@@ -3747,7 +3840,8 @@ abstract class SQLQuery
 					call_user_func_array( array($dispatcher, '_orWhere'), array($arg, count($arg)) ); 
 				}
 			}
-		}
+		} 
+		return $this; 
 	}
 	
 	private function __orWhere( $args, $argsNum ) 
@@ -3792,6 +3886,7 @@ abstract class SQLQuery
 			} 
 			else 
 				throw new Exception( "Using <strong>Model::orWhere()</strong> has a syntax error." ); 
+			return $this;
 		} 
 		catch( Exception $e ) 
 		{ 
@@ -3804,7 +3899,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_between_and_operator'), array($args, $argsNum, 'between') );
+				return call_user_func_array( array($this, '__or_between_and_operator'), array($args, $argsNum, 'between') );
 			else 
 				throw new Exception( "Using <strong>Model::orBetweenAnd()</strong> has a syntax error." ); 
 		}
@@ -3819,7 +3914,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '=') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '=') );
 			else 
 				throw new Exception( "Using <strong>Model::orEqualAnd()</strong> has a syntax error." ); 
 		} 
@@ -3827,7 +3922,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orGreaterAnd( $args, $argsNum ) 
@@ -3835,7 +3929,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '>') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '>') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterAnd()</strong> has a syntax error." ); 
 		} 
@@ -3843,7 +3937,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orGreaterThanOrEqualAnd( $args, $argsNum ) 
@@ -3851,7 +3944,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '>=') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '>=') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterThanOrEqualAnd()</strong> has a syntax error." ); 
 		} 
@@ -3859,7 +3952,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orInAnd( $args, $argsNum ) 
@@ -3867,7 +3959,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'in') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'in') );
 			else 
 				throw new Exception( "Using <strong>Model::orInAnd()</strong> has a syntax error." ); 
 		} 
@@ -3875,7 +3967,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsAnd( $args, $argsNum ) 
@@ -3883,7 +3974,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'is') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'is') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsAnd()</strong> has a syntax error." ); 
 		} 
@@ -3891,7 +3982,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNotAnd( $args, $argsNum ) 
@@ -3899,7 +3989,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'is not') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'is not') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNotAnd()</strong> has a syntax error." ); 
 		} 
@@ -3907,7 +3997,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNotNullAnd( $args, $argsNum ) 
@@ -3915,7 +4004,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is not') );
+				return call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is not') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNotNullAnd()</strong> has a syntax error." ); 
 		} 
@@ -3923,7 +4012,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orIsNullAnd( $args, $argsNum ) 
@@ -3931,7 +4019,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is') );
+				return call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNullAnd()</strong> has a syntax error." ); 
 		} 
@@ -3939,7 +4027,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLessAnd( $args, $argsNum ) 
@@ -3947,7 +4034,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessAnd()</strong> has a syntax error." ); 
 		} 
@@ -3955,7 +4042,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLessThanAnd( $args, $argsNum ) 
@@ -3963,7 +4049,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThanAnd()</strong> has a syntax error." ); 
 		} 
@@ -3971,7 +4057,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLessThanOrEqualAnd( $args, $argsNum ) 
@@ -3979,7 +4064,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<=') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '<=') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThanOrEqualAnd()</strong> has a syntax error." ); 
 		} 
@@ -3987,7 +4072,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orLikeAnd( $args, $argsNum ) 
@@ -3995,7 +4079,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'like') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'like') );
 			else 
 				throw new Exception( "Using <strong>Model::orLikeAnd()</strong> has a syntax error." ); 
 		} 
@@ -4003,7 +4087,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNotAnd( $args, $argsNum ) 
@@ -4011,7 +4094,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotAnd()</strong> has a syntax error." ); 
 		} 
@@ -4019,7 +4102,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNotBetweenAnd( $args, $argsNum ) 
@@ -4027,7 +4109,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_between_and_operator'), array($args, $argsNum, 'not between') );
+				return call_user_func_array( array($this, '__or_between_and_operator'), array($args, $argsNum, 'not between') );
 			else 
 				throw new Exception( "Using <strong>Model::orBetweenAnd()</strong> has a syntax error." ); 
 		}
@@ -4042,7 +4124,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is not') );
+				return call_user_func_array( array($this, '__or_null_and_operator'), array($args, $argsNum, 'is not') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotNullAnd()</strong> has a syntax error." ); 
 		} 
@@ -4050,7 +4132,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __orNotEqualAnd( $args, $argsNum ) 
@@ -4058,7 +4139,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '!=') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, '!=') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotEqualAnd()</strong> has a syntax error." ); 
 		} 
@@ -4066,7 +4147,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __orNotInAnd( $args, $argsNum ) 
@@ -4074,7 +4154,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not in') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not in') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotInAnd()</strong> has a syntax error." ); 
 		} 
@@ -4082,7 +4162,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __orNotLikeAnd( $args, $argsNum ) 
@@ -4090,7 +4169,7 @@ abstract class SQLQuery
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not like') );
+				return call_user_func_array( array($this, '__or_where_and_operator'), array($args, $argsNum, 'not like') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotLikeAnd()</strong> has a syntax error." ); 
 		} 
@@ -4098,7 +4177,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	}
 	
 	private function __or_between_and_operator( $args, $argsNum, $sign ) 
@@ -4117,7 +4195,7 @@ abstract class SQLQuery
 			$param[] = current($arg);
 			$args [] = $param;
 		}
-		call_user_func_array( array($dispatcher, '_orWhereAnd'), array($args, count($args)) );
+		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($args, count($args)) );
 	}
 	
 	private function __or_null_and_operator( $args, $argsNum, $sign ) 
@@ -4138,7 +4216,7 @@ abstract class SQLQuery
 				$tmps[] = array($key, $sign, NULL); 
 			}
 		}
-		call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
+		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
 	private function __or_where_and_operator( $args, $argsNum, $sign ) 
@@ -4155,7 +4233,7 @@ abstract class SQLQuery
 			foreach( $args as $key => $value ) 
 				$tmps[] = array($key, $sign, $value); 
 		}
-		call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
+		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
 	private function __orWhereAnd( $args, $argsNum ) 
@@ -4220,6 +4298,7 @@ abstract class SQLQuery
 			} 
 			else 
 				throw new Exception( "Using <strong>Model::orWhereAnd()</strong> has a syntax error." ); 
+			return $this; 
 		} 
 		catch( Exception $e ) 
 		{ 
@@ -4237,6 +4316,7 @@ abstract class SQLQuery
 					$this->_propsGroupBy = $args; 
 				else 
 					$this->_propsGroupBy += $args;
+				return $this;
 			}
 			else 
 				throw new Exception( "Usage <strong>Model::groupBy()</strong> is incorrect." ); 
@@ -4245,7 +4325,18 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		}
-		return $this;
+	} 
+	
+	private function __orderDesc( $field ) 
+	{ 
+		$this->_propsOrder[] = array($field, "DESC"); 
+		return $this; 
+	} 
+	
+	private function __orderAsc( $field ) 
+	{ 
+		$this->_propsOrder[] = array($field, "ASC"); 
+		return $this; 
 	} 
 	
 	private function __orderBy( $args, $argsNum ) 
@@ -4265,6 +4356,7 @@ abstract class SQLQuery
 					{
 						$args[] = 'ASC';
 						$this->_propsOrder[] = $args; 
+						return $this; 
 					}
 				} 
 				else if( $twoArg===$argsNum ) 
@@ -4297,17 +4389,17 @@ abstract class SQLQuery
 				
 				ORDER_ARR:
 				foreach($args as $arg) 
-					call_user_func_array( array($dispatcher, '_orderBy'), array($arg, count($arg)) ); 
+					call_user_func_array( array($dispatcher, '__orderBy'), array($arg, count($arg)) ); 
 				ORDER_BREAK:
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::orderBy()</strong> is incorrect." );
+			return $this;
 		} 
 		catch( Exception $e ) 
 		{
 			abort( 500, $e->getMessage() ); 
 		}
-		return $this;
 	}
 	
 	private function __setLimit( $args, $argsNum ) 
@@ -4349,7 +4441,8 @@ abstract class SQLQuery
 					$tmp = $this->_propsHasOne[$args[head]];
 					unset($this->_propsHasOne[$args[head]]);
 					$this->_propsHasOne[$args[1]] = $tmp;
-				}
+				} 
+				return $this; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::renameHasOne()</strong> is incorrect." ); 
@@ -4395,12 +4488,12 @@ abstract class SQLQuery
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::hasOne()</strong> is incorrect." ); 
+			return $this;
 		} 
 		catch( Exception $e ) 
 		{
 			abort( 500, $e->getMessage() );
 		} 
-		return $this;
 	} 
 	
 	private function __showHasOne() { $this->_flagHasOne = true; return $this; } 
@@ -4418,7 +4511,8 @@ abstract class SQLQuery
 					$tmp = $this->_propsHasMany[$args[head]];
 					unset($this->_propsHasMany[$args[head]]);
 					$this->_propsHasMany[$args[1]] = $tmp;
-				}
+				} 
+				return $this; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::renameHasMany()</strong> is incorrect." ); 
@@ -4464,12 +4558,12 @@ abstract class SQLQuery
 			}
 			else 
 				throw new Exception( "Usage <strong>Model::hasMany()</strong> is incorrect." ); 
+			return $this;
 		}
 		catch( Exception $e ) 
 		{
 			abort( 500, $e->getMessage() ); 
 		} 
-		return $this;
 	} 
 	
 	private function __showHasMany() { $this->_flagHasMany = true; return $this; }
@@ -4488,10 +4582,10 @@ abstract class SQLQuery
 					unset($this->_propsHasMABTM[$args[head]]);
 					$this->_propsHasMABTM[$args[1]] = $tmp;
 				}
+				return $this; 
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::renameHasMABTM()</strong> is incorrect." ); 
-			
 		}
 		catch( Exception $e ) 
 		{
@@ -4575,7 +4669,6 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() ); 
 		}
-		return $this;
 	} 
 
 	private function __showHasManyAndBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
@@ -4686,6 +4779,7 @@ abstract class SQLQuery
 	private function errno() { return mysqli_errno( $this->_dbHandle ); } 
 	private function error() { return mysqli_error( $this->_dbHandle ); } 
 	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
+	private function num_rows( $rs ) { return mysqli_num_rows($rs); } 
 	private function fetch_assoc( $rs ) {return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
 	private function fetch_row( $rs ) { return ($rs)?mysqli_fetch_row( $rs ):$rs; } 
 	private function free_result( $rs ) { return ($rs)?mysqli_free_result( $rs ):$rs; } 

@@ -8,10 +8,7 @@
 		<name driver="configs">Zuuda\LocateService</name>
 		<bootcb></bootcb>
 	</locateservice>
-	<extensioninformationservice>
-		<name driver="driver" basename="about" extension="xml">Zuuda\ExtensionInformationService</name>
-		<bootcb></bootcb>
-	</extensioninformationservice>
+	
 	<btshipnelservice>
 		<name route="shipnel" class="info" ship="097370591949c9e67f2d54e4403fe1b7">Zuuda\BTShipnelService</name>
 		<bootcb></bootcb>

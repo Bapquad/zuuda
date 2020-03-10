@@ -20,6 +20,16 @@ class Application
 	final static public function GetUrl() { return self::__getUrl(); }
 	final static public function SetUrl( $value ) { return self::__setUrl( $value ); }
 	
+	public static function Instance() 
+	{
+		static $_instance;
+		if( is_null( $_instance ) ) 
+		{
+			$_instance = new application;
+		}
+		return $_instance;
+	}
+	
 	private static function __hasUrl() 
 	{
 		if( isset( self::$_data[ 'url' ] ) )
@@ -46,15 +56,14 @@ class Application
 
 	private function __routeURL( $url ) 
 	{
-		if( Config::has( 'COM' ) ) 
+		if( config::has( 'COM' ) ) 
 		{
 			if( self::__hasUrl() ) 
 			{
 				return self::__getUrl(); 
 			}
 		}
-		$url = Route::routing( $url );
-		return ( $url );
+		return Route::routing( $url ); 
 	}
 	
 	private function __bootService() 
@@ -163,7 +172,7 @@ class Application
 	
 	private function __release() 
 	{
-		flash::clear();
+		Flash::clear();
 	}
 
 	static function Booting() 
@@ -172,9 +181,9 @@ class Application
 		
 		if( NULL!==$_instance ) 
 			return $_instance;	// NEEDLE HANDLE.
-		Session::Start();
-		Cookie::Start();
-		$_instance = new Application();
+		Session::start();
+		Cookie::start();
+		$_instance = application::instance();
 		$_instance->__bootService();
 		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
 		if( Config::has( 'COM' ) ) 
@@ -193,7 +202,7 @@ class Application
 	static function Handling( Controller $dispatcher, String $action ) 
 	{
 		global $configs; 
-		$_instance = Application::Booting();
+		$_instance = Application::Instance();
 		call_user_func_array(array($dispatcher, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
 		call_user_func_array(array($dispatcher, "BeforeAction"), $configs["QUERY_STRING"]);
 		call_user_func_array(array($dispatcher, $action), $configs["QUERY_STRING"]);
@@ -205,7 +214,7 @@ class Application
 	
 	public function SetReporting() 
 	{
-		global $configs;
+		global $configs; 
 		if ( $configs[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
 		{
 			error_reporting(E_ALL);
@@ -223,12 +232,12 @@ class Application
 
 	public function SecureMagicQuotes() 
 	{
-		if ( get_magic_quotes_gpc() ) 
+		if( @get_magic_quotes_gpc() ) 
 		{
 			$_GET    = __stripSlashesDeep( $_GET );
 			$_POST   = __stripSlashesDeep( $_POST );
-			$_COOKIE = __stripSlashesDeep( $_COOKIE );
-		}
+			$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
+		} 
 		return $this;
 	}
 
@@ -265,7 +274,7 @@ class Application
 		{
 			$controller_class_name = $this->__extractController(); 
 			$controller_class_file = __currentControllerFile(); 
-			if(file_exists( $controller_class_file ) ) 
+			if( file_exists($controller_class_file) ) 
 			{
 				$ctrlRefl = new ReflectionClass($controller_class_name); 
 				$ttrInjts = $ctrlRefl->getConstructor()->getParameters(); 

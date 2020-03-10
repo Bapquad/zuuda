@@ -38,9 +38,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
-		
 		$handle = simplexml_load_file( $service );
-		
 		foreach( $handle as $key => $program ) 
 		{
 			$name = $program->name;

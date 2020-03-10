@@ -241,12 +241,26 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 				{
 					extract( $args );
 				} 
-				include( BLOCK_DIR . __correctPath( str_replace( '\Blocks', '', get_class( $this ) ) ) . DS . $this->_tpl_name );
+				
+				$basename = __correctPath(str_replace('\Blocks', '', get_class($this))).DS.$this->_tpl_name; 
+				$path = BLOCK_DIR.$basename; 
+				
+				if( isset($configs['COM']) ) 
+				{
+					if( isset($configs['CODE_OF']) ) 
+					{
+						$path = BLOCK_DIR.$configs['CODE_OF'].DS.$basename; 
+					} 
+				} 
+				
+				if( file_exists($path) ) 
+					include($path); 
+				else 
+					throw new Exception($path); 
 			}
 			catch(Exception $e) 
 			{
-				$block_name = get_class( $this );
-				echo "{ $block_name is missed }"; 
+				abort(500, "The file \"".$e->getMessage()."\" is missed"); 
 			}
 		}
 		
