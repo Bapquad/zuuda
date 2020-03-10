@@ -49,11 +49,15 @@ function asset( $filePath )
 function __assetPath( $file_path, $file = false, $build = false ) 
 {
 	global $configs;
-	$theme_path = EMPTY_CHAR;
+	$theme_path = EMPTY_CHAR; 
 	if( isset($configs['Theme']) && isset($configs['SHIP']) ) 
 	{
 		$theme_path = $configs['Theme'].$file_path;
 		$path = WEB_DIR.$theme_path;
+	if('media/Photos/images.gif'==$file_path) 
+	{
+		dump(($path));
+	} 
 		if( call(Zuuda\cFile::get(), $path)->exist() || $build ) 
 		{
 			if( $file ) 
@@ -185,7 +189,9 @@ function __dispatch_autoload_class_file( $class_name )
 		{
 			$class_path = COM . $class_file;
 			if( !file_exists( $class_path ) ) 
+			{
 				$class_path = CODE . ((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL) . $class_file; 
+			}
 		}
 		
 		if( !file_exists( $class_path ) ) 
@@ -651,6 +657,24 @@ function number_to_words($number)
     return $string;
 }
 
+function fetch_validated_errors($errors, $input) 
+{ 
+	$out = array(); 
+	foreach($input as $key => $value) 
+	{
+		if($errors->has($key)) 
+		{
+			$out += array($key=>$errors->first($key));
+		} 
+	} 
+	return $out; 
+} 
+
+function padnum($input, $length=5) 
+{ 
+	return str_pad($input, $length, '0', STR_PAD_LEFT); 
+} 
+
 function abort( $code=404, $msg=NULL ) 
 {
 	global $configs;
@@ -901,8 +925,6 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 	}
 }
 
-
-
 /**
  * Initialize the calling function.
  * This will call any a function.
@@ -925,8 +947,6 @@ if( Zuuda\GlobalModifier::func( 'call' ) )
 		return false;
 	}
 }
-
-
 
 /**
  * Initialize the calling function.

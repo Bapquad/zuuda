@@ -1397,9 +1397,14 @@ abstract class SQLQuery
 		$outSql = array(); 
 		foreach ( $this->_propsDescribe as $field ) 
 		{
-			if( $field==$this->_primaryKey && is_numeric($this->_primaryKey) ) 
-				continue;
+			if( $field==$this->_primaryKey && 
+				isset($data[$this->_primaryKey]) && 
+				is_numeric($data[$field]) ) 
+			{
+				continue; 
+			}
 			elseif( array_key_exists($field, $data) ) 
+			{
 				if( is_null($data[$field]) ) 
 				{
 					$outSql[] = "`{$field}` = NULL"; 
@@ -1408,21 +1413,26 @@ abstract class SQLQuery
 				{
 					$value = $this->escape_string( $data[$field] ); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
-				}
+				} 
+			}
 			elseif( is_array($this->_eventRide) ) 
+			{ 
 				if( array_key_exists($field, $this->_eventRide) ) 
 				{
 					$value = $this->escape_string( $this->_eventRide[$field] ); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
 					$data[$field] = $value;
 				} 
+			} 
 			elseif( isset($this->timestamp) && is_array($this->timestamp) ) 
+			{
 				if( in_array($field, $this->timestamp) ) 
 				{
 					$value = date('Y-m-d H:i:s'); 
 					$outSql[] = "`{$field}` = '{$value}'"; 
 					$data[$field] = $value;
 				} 
+			}
 		}
 		return implode( comma, $outSql ); 
 	}
@@ -1443,6 +1453,7 @@ abstract class SQLQuery
 						$condSql = $this->__buildSqlCondition( $this->_propTable ); 
 						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} {$condSql}"; 
 						$qr = $this->__query( $sql ); 
+						$this->clear(); 
 						if( !$qr ) 
 							$data = $this->__getError(); 
 						else
@@ -1472,6 +1483,7 @@ abstract class SQLQuery
 						$saveSql = $this->__parseFields($data);
 						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} WHERE {$condSql}"; 
 						$qr = $this->__query( $sql ); 
+						$this->clear(); 
 						if( !$qr ) 
 						{
 							$data = $this->__getError(); 
@@ -1518,7 +1530,7 @@ abstract class SQLQuery
 			{
 				if( !isset($data[$this->_primaryKey]) && $this->_primaryKey==$field ) 
 					continue;
-				if( EMPTY_CHAR===$data[$field] ) 
+				if( EMPTY_CHAR===$data[$field] || is_null($data[$field]) ) 
 					$values[] = "NULL";
 				else 
 					$values[] = "'".$this->escape_string( $data[$field] )."'";
@@ -1534,6 +1546,7 @@ abstract class SQLQuery
 		$values = implode( ",", $values );
 		$sql = "INSERT INTO `{$this->_propTable}` ({$fields}) VALUES ({$values})"; 
 		$qr = $this->__query( $sql ); 
+		$this->clear(); 
 		if( $qr ) 
 		{
 			$data[$this->_primaryKey] = (string) $this->insert_id(); 
@@ -4343,6 +4356,7 @@ abstract class SQLQuery
 					{
 						$args[] = 'ASC';
 						$this->_propsOrder[] = $args; 
+						return $this; 
 					}
 				} 
 				else if( $twoArg===$argsNum ) 
@@ -4375,7 +4389,7 @@ abstract class SQLQuery
 				
 				ORDER_ARR:
 				foreach($args as $arg) 
-					call_user_func_array( array($dispatcher, '_orderBy'), array($arg, count($arg)) ); 
+					call_user_func_array( array($dispatcher, '__orderBy'), array($arg, count($arg)) ); 
 				ORDER_BREAK:
 			} 
 			else 

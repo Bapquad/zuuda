@@ -214,7 +214,7 @@ class Application
 	
 	public function SetReporting() 
 	{
-		global $configs;
+		global $configs; 
 		if ( $configs[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
 		{
 			error_reporting(E_ALL);
@@ -274,7 +274,7 @@ class Application
 		{
 			$controller_class_name = $this->__extractController(); 
 			$controller_class_file = __currentControllerFile(); 
-			if(file_exists( $controller_class_file ) ) 
+			if( file_exists($controller_class_file) ) 
 			{
 				$ctrlRefl = new ReflectionClass($controller_class_name); 
 				$ttrInjts = $ctrlRefl->getConstructor()->getParameters(); 
