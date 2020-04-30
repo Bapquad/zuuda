@@ -76,8 +76,11 @@ abstract class SQLQuery
 	protected $_propLimit;
 	protected $_propOffset		= 0;
 	protected $_eventBoot;
+	protected $_eventOnBoot;
 	protected $_eventRide;
+	protected $_eventOnRide;
 	protected $_eventDown;
+	protected $_eventOnDown;
 	protected $_propForeignKey;
 	protected $_propAliasKey;
 	protected $_propAliasModel; 
@@ -1341,7 +1344,7 @@ abstract class SQLQuery
 			{
 				$data = current($args); 
 				if( method_exists($this, 'down') ) 
-					$this->down( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
+					$this->_eventDown = $this->down( array_merge($this->_propsRole, array($this->_primaryKey=>$data)) ); 
 				$condSql = $this->__buildSqlCondition(); 
 				if( is_string($data) ) 
 					$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` = '{$data}'"; 
@@ -1354,7 +1357,7 @@ abstract class SQLQuery
 			{
 				$data = $args; 
 				if( method_exists($this, 'down') ) 
-					$this->down( $data ); 
+					$this->_eventDown = $this->down( $data ); 
 				$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
 				$deleteCondSql = "AND `{$this->_propTable}`.`{$this->_primaryKey}` IN (".implode(comma, $data).")"; 
 				$rangeSql = $this->__buildSqlRange(); 
@@ -1364,7 +1367,7 @@ abstract class SQLQuery
 			else if( zero===$argsNum ) 
 			{ 
 				if( method_exists($this, 'down') ) 
-					$this->down( $args ); 
+					$this->_eventDown = $this->down( $args ); 
 				if( is_null($this->{$this->_primaryKey}) ) 
 					$condSql = str_replace("`{$this->_propModel}`.", "", $this->__buildSqlCondition()); 
 				else 
@@ -1378,7 +1381,7 @@ abstract class SQLQuery
 			{
 				$data = ( $oneArg===$argsNum || 1<$argsNum ) ? array_merge($this->_propsRole, array($this->_primaryKey=>$data)) : $data = $this->_propsRole; 
 				if( method_exists($this, 'ondown') ) 
-					$this->ondown( $data ); 
+					$this->_eventOnDown = $this->ondown( $data ); 
 				return $data; 
 			}
 			else 
@@ -1491,7 +1494,7 @@ abstract class SQLQuery
 						else if( method_exists($this, 'onride') ) 
 						{
 							$data = array_merge($this->_propsRole, $data); 
-							$this->onride( $data ); 
+							$this->_eventOnRide = $this->onride( $data ); 
 						}
 						return $data; 
 					} 
@@ -1551,7 +1554,7 @@ abstract class SQLQuery
 		{
 			$data[$this->_primaryKey] = (string) $this->insert_id(); 
 			if( method_exists($this, 'onboot') ) 
-				$this->onboot( array_merge($this->_propsRole, $data) ); 
+				$this->_eventOnBoot = $this->onboot( array_merge($this->_propsRole, $data) ); 
 			return $data;
 		} 
 		else 
