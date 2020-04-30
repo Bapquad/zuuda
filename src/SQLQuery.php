@@ -119,7 +119,11 @@ abstract class SQLQuery
 	final public function GetTableName() { return $this->__getTable(); }
 	final public function GetAliasName() { return $this->__getAlias(); }
 	final public function GetPrimaryKey() { return $this->_primaryKey; }
+	final public function Select() { return $this->__bound( func_get_args(), func_num_args() ); }
+	final public function Grab() { return $this->__bound( func_get_args(), func_num_args() ); }
 	final public function Bound() { return $this->__bound( func_get_args(), func_num_args() ); }
+	final public function Unselect() { return $this->__unbound( func_get_args(), func_num_args() ); }
+	final public function Ungrab() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Unbound() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Secure() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Unsecure() { return $this->__unsecure( func_get_args(), func_num_args() ); } 
@@ -1450,54 +1454,59 @@ abstract class SQLQuery
 			{
 				if( is_string(key($data)) ) 
 				{
-					if( !empty($this->_propsCond) ) 
+					$c = !empty($this->_propsCond); 
+					$p = array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey];
+					$update = true; 
+					if($c || $p) 
 					{
-						$saveSql = $this->__parseFields($data); 
-						$condSql = $this->__buildSqlCondition( $this->_propTable ); 
-						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} {$condSql}"; 
-						$qr = $this->__query( $sql ); 
-						$this->clear(); 
-						if( !$qr ) 
-							$data = $this->__getError(); 
-						else
-							$data = array_merge($this->_propsRole, $data); 
-						return $data; 
-					}
-					elseif( array_key_exists($this->_primaryKey, $data) && $data[$this->_primaryKey] ) 
-					{
-						if( is_string($data[$this->_primaryKey]) ) 
-						{
-							$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` = '{$data[$this->_primaryKey]}'"; 
-							$sql = "SELECT `{$this->_primaryKey}` FROM `{$this->_propTable}` WHERE " . $condSql ." LIMIT 1"; 
-							$qr = $this->__query( $sql ); 
-							if( zero===$this->num_rows($qr) ) 
-							{
-								return $this->__create($data); 
-							} 
-						}
-						elseif( is_numeric($data[$this->_primaryKey]) ) 
-						{
-							$condSql = "`{$this->_propTable}`.`{$this->_primaryKey}` =  {$data[$this->_primaryKey]} "; 
-						}
-
 						if(method_exists($this, 'ride')) 
 							$this->_eventRide = $this->ride( array_merge($this->_propsRole, $data) );
-
-						$saveSql = $this->__parseFields($data);
-						$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} WHERE {$condSql}"; 
-						$qr = $this->__query( $sql ); 
-						$this->clear(); 
-						if( !$qr ) 
+						$saveSql = $this->__parseFields($data); 
+						
+						if( $c ) 
 						{
-							$data = $this->__getError(); 
-						} 
-						else if( method_exists($this, 'onride') ) 
-						{
-							$data = array_merge($this->_propsRole, $data); 
-							$this->_eventOnRide = $this->onride( $data ); 
+							$condSql = $this->__buildSqlCondition( $this->_propTable ); 
 						}
+						elseif( $p ) 
+						{
+							if( is_string($data[$this->_primaryKey]) ) 
+							{
+								$condSql = "WHERE `{$this->_propTable}`.`{$this->_primaryKey}` = '{$data[$this->_primaryKey]}'"; 
+								$sql = "SELECT `{$this->_primaryKey}` FROM `{$this->_propTable}` " . $condSql ." LIMIT 1"; 
+								$qr = $this->__query( $sql ); 
+								if( $qr ) 
+								{
+									if( zero===$this->num_rows($qr) ) 
+										return $this->__create($data); 
+								}
+								else 
+								{ 
+									$data = $this->__getError(); 
+									$update = false;
+								} 
+							}
+							elseif( is_numeric($data[$this->_primaryKey]) ) 
+							{
+								$condSql = "WHERE `{$this->_propTable}`.`{$this->_primaryKey}` =  {$data[$this->_primaryKey]} "; 
+							}
+						} 
+						
+						if( $update ) 
+						{
+							$sql = "UPDATE `{$this->_propTable}` SET {$saveSql} {$condSql}"; 
+							$qr = $this->__query( $sql ); 
+							$this->clear(); 
+							if( !$qr ) 
+								$data = $this->__getError(); 
+							else 
+								$data = array_merge($this->_propsRole, $data); 
+						} 
+						
+						if( method_exists($this, 'onride') ) 
+							$this->_eventOnRide = $this->onride( $data ); 
+						
 						return $data; 
-					} 
+					}
 					else 
 					{
 						return $this->__create($data); 
