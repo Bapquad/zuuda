@@ -39,12 +39,15 @@ function __t($str_name)
 		return $configs['LOCATE']['TRANS'][$str_name];
 	else 
 		return $str_name;
-}
-
-function asset( $filePath ) 
-{
-	return str_replace(DS, PS, __assetPath($filePath)); 
 } 
+
+function media( $filePath ) { return asset(MEDIA_NAME_DIR.$filePath); } 
+function photo( $filePath ) { return asset(MEDIA_PHOTO_NAME_DIR.$filePath); } 
+function audio( $filePath ) { return asset(MEDIA_AUDIO_NAME_DIR.$filePath); } 
+function video( $filePath ) { return asset(MEDIA_VIDEO_NAME_DIR.$filePath); } 
+function document( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); } 
+function compressed( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); }
+function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
 
 function __assetPath( $file_path, $file = false, $build = false ) 
 {
@@ -54,10 +57,6 @@ function __assetPath( $file_path, $file = false, $build = false )
 	{
 		$theme_path = $configs['Theme'].$file_path;
 		$path = WEB_DIR.$theme_path;
-	if('media/Photos/images.gif'==$file_path) 
-	{
-		dump(($path));
-	} 
 		if( call(Zuuda\cFile::get(), $path)->exist() || $build ) 
 		{
 			if( $file ) 
@@ -81,7 +80,7 @@ function __assetPath( $file_path, $file = false, $build = false )
 			abort( 400, "<strong style=\"\">$file_path</strong> is not found.</p>" );
 	}
 	else 
-	{
+	{ 
 		return WEB_PATH.$file_path;
 	}
 }
@@ -165,10 +164,18 @@ function escape()
 function __escape() 
 {
 	global $configs;
-	if( isset($configs['DATASOURCE']['HANDLECN']) ) 
-		return mysqli_close( $configs['DATASOURCE']['HANDLECN'] ); 
-	else 
-		return true;
+	if( isset($configs['DATASOURCE']) ) 
+	{ 
+		$ds = $configs['DATASOURCE']; 
+		foreach($ds['server'] as $svr) 
+		{ 
+			if( is_array($svr) ) 
+			if( isset($svr['resource']) ) 
+			if( is_object($svr['resource']) ) 
+			mysqli_close( $svr['resource'] ); 
+		} 
+	}
+	return true;
 }
 
 function __dispatch_service_file( $service_namespace ) 
@@ -181,23 +188,41 @@ function __dispatch_service_file( $service_namespace )
 function __dispatch_autoload_class_file( $class_name ) 
 {
 	global $configs; 
-	$class_file = __correctPath( $class_name.$configs['EXT'] ); 
-	$class_path = str_replace( FW_NAME.DS, FW_NAME.DS.SRC_DIR, VENDOR_DIR.$class_file ); 
-	if( !file_exists( $class_path ) ) 
+	try
 	{
-		if( $configs['COM'] ) 
-		{
-			$class_path = COM . $class_file;
-			if( !file_exists( $class_path ) ) 
-			{
-				$class_path = CODE . ((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL) . $class_file; 
-			}
-		}
-		
+		$class_file = __correctPath( $class_name.$configs['EXT'] ); 
+		$class_path = str_replace( FW_NAME.DS, FW_NAME.DS.SRC_DIR, VENDOR_DIR.$class_file ); 
 		if( !file_exists( $class_path ) ) 
-			$class_path = MOD_DIR . $class_file;
+		{
+			if( $configs['COM'] ) 
+			{
+				$class_path = COM . $class_file;
+				if( !file_exists( $class_path ) && isset($configs['CODE_OF']) ) 
+				{
+					$class_path = CODE.$configs['CODE_OF'].DS.$class_file; 
+				}
+			}
+			
+			if( !file_exists( $class_path ) ) 
+				$class_path = MOD_DIR . $class_file;
+		} 
+		
+		if( file_exists($class_path) ) 
+		{
+			require_once( $class_path );
+		} 
+		else 
+		{ 
+			throw new Exception("<div><b>".$class_file . "</b> be missed.</div>"); 
+		} 
 	} 
-	require_once( $class_path );
+	catch( Exception $e ) 
+	{ 
+		if( $configs[AUTOLOAD_ERRORS_WARNING] ) 
+		{
+			echo $e->getMessage(); 
+		} 
+	}
 } 
 function dispatch( $class_name ) {__dispatch_autoload_class_file( $class_name );}
 
@@ -918,6 +943,10 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 					{
 						return Zuuda\ExtensionInformationService::getInstance()->info( 'about' );
 					}
+					else if( 'ExtensionServiceShortcut'===$const ) 
+					{ 
+						return Zuuda\ExtensionInformationService::getInstance()->info( 'shortcut' );
+					} 
 				else 
 					return NULL;
 				break;

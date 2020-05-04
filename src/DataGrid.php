@@ -46,7 +46,6 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	protected function __getData() { return $this->_data_grid; }
 	protected function __getPaging() { return $this->_paging; }
 	
-	protected function __setVars( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
 	protected function __setName( $value ) { $this->_name = $value; return $this; }
 	protected function __setTitle( $value ) { $this->_title = $value; return $this; }
 	protected function __setColumnData( $value ) { $this->_column_data = $value; return $this; }
@@ -77,56 +76,57 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	}
 	
 	/** Implements Interface iData */
-	public function SetModel( Model $model = NULL ) { return $this->__setModel( $model ); }
-	public function GetVars() { return $this->__getVars(); }
-	public function Assign( $name, $value ) { return $this->__assign( $name, $value ); }
-	public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function SetModel( Model $model = NULL ) { return $this->__setModel( $model ); }
+	final public function GetVars() { return $this->__getVars(); }
+	final public function Assign() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	final public function Set() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	final public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	
 	/** Implements Interface iDataGrid */
-	public function AddColumn( DataColumn $column ) { return $this->__addColumn( $column ); }
-	public function DeleteRow( $id ) { return $this->__deleteRow( $id ); }
-	public function Length() { return $this->__getLength(); }
-	public function SetLength( $value ) { return $this->__setLength( $value ); }
-	public function TotalPages() { return $this->__getTotalPages(); }
-	public function SetTotalPages( $value ) { return $this->__setTotalPages( $value ); }
-	public function SetCurrentPage( $value ) { return $this->__setCurrentPage( $value ); }
-	public function GetCurrentPage() { return $this->__getCurrentPage(); }
-	public function SetPagePrinter( $printer, $data=NULL ) { return $this->__setPagePrinter( $printer, $data ); }
-	public function GetPagePrinter() { return $this->__getPagePrinter(); }
-	public function EnablePagePrint() { return $this->__enablePagePrint(); }
-	public function DestroyPagePrint() { return $this->__destroyPagePrint(); }
-	public function EnableSectionOption( $data ) { return $this->__enableSectionOption( $data ); }
-	public function DestroySectionOption() { return $this->__destroySectionOption(); }
-	public function EnableOption() { return $this->__enableOption(); }
-	public function DestroyOption() { return $this->__destroyOption(); }
-	public function EnableScrumb() { return $this->__enableScrumb(); }
-	public function DestroyScrumb() { return $this->__destroyScrumb(); }
-	public function GetNumberRows() { return $this->__getNumberRows(); }
-	public function ChangeNumberRows( $value ) { return $this->__changeNumberRows( $value ); }
-	public function SetRowsNumberList( $list ) { return $this->__setRowsNumberList( $list ); }
-	public function DestroyRowsNumberList() { return $this->__destroyRowsNumberList(); }
-	public function DefaultRowsNumberList() { return $this->__defaultRowsNumberList(); }
-	public function SetDefaultNumOfRows( $value ) { return $this->__setDefaultNumOfRows( $value ); }
-	public function ResetOptionData() { return $this->__resetOptionData(); }
-	public function EnableKeyword( $field, $label, $opera ) { return $this->__enableKeyword( $field, $label, $opera ); }
-	public function DestroyKeyword() { return $this->__destroyKeyWord(); }
-	public function SetKeyword( $value ) { return $this->__setKeyword( $value ); }
-	public function GetPaging() { return $this->__getPaging(); }
-	public function SetPaging( $value = true ) { return $this->__setPaging( $value ); }
-	public function EnablePaging() { return $this->__setPaging( true ); }
+	final public function AddColumn( DataColumn $column ) { return $this->__addColumn( $column ); }
+	final public function DeleteRow( $id ) { return $this->__deleteRow( $id ); }
+	final public function Length() { return $this->__getLength(); }
+	final public function SetLength( $value ) { return $this->__setLength( $value ); }
+	final public function TotalPages() { return $this->__getTotalPages(); }
+	final public function SetTotalPages( $value ) { return $this->__setTotalPages( $value ); }
+	final public function SetCurrentPage( $value ) { return $this->__setCurrentPage( $value ); }
+	final public function GetCurrentPage() { return $this->__getCurrentPage(); }
+	final public function SetPagePrinter( $printer, $data=NULL ) { return $this->__setPagePrinter( $printer, $data ); }
+	final public function GetPagePrinter() { return $this->__getPagePrinter(); }
+	final public function EnablePagePrint() { return $this->__enablePagePrint(); }
+	final public function DestroyPagePrint() { return $this->__destroyPagePrint(); }
+	final public function EnableSectionOption( $data ) { return $this->__enableSectionOption( $data ); }
+	final public function DestroySectionOption() { return $this->__destroySectionOption(); }
+	final public function EnableOption() { return $this->__enableOption(); }
+	final public function DestroyOption() { return $this->__destroyOption(); }
+	final public function EnableScrumb() { return $this->__enableScrumb(); }
+	final public function DestroyScrumb() { return $this->__destroyScrumb(); }
+	final public function GetNumberRows() { return $this->__getNumberRows(); }
+	final public function ChangeNumberRows( $value ) { return $this->__changeNumberRows( $value ); }
+	final public function SetRowsNumberList( $list ) { return $this->__setRowsNumberList( $list ); }
+	final public function DestroyRowsNumberList() { return $this->__destroyRowsNumberList(); }
+	final public function DefaultRowsNumberList() { return $this->__defaultRowsNumberList(); }
+	final public function SetDefaultNumOfRows( $value ) { return $this->__setDefaultNumOfRows( $value ); }
+	final public function ResetOptionData() { return $this->__resetOptionData(); }
+	final public function EnableKeyword( $field, $label, $opera ) { return $this->__enableKeyword( $field, $label, $opera ); }
+	final public function DestroyKeyword() { return $this->__destroyKeyWord(); }
+	final public function SetKeyword( $value ) { return $this->__setKeyword( $value ); }
+	final public function GetPaging() { return $this->__getPaging(); }
+	final public function SetPaging( $value = true ) { return $this->__setPaging( $value ); }
+	final public function EnablePaging() { return $this->__setPaging( true ); }
 	
-	public function SetChangeNumberRowsApi( $value ) { return $this->__setChangeNumberRowsApi( $value ); }
-	public function SetScrumbEditApi( $value ) { return $this->__setScrumbEditApi( $value ); }
-	public function SetScrumbDeleteApi( $value ) { return $this->__setScrumbDeleteApi( $value ); }
-	public function SetResetOptionApi( $value ) { return $this->__setResetOptionApi( $value ); }
+	final public function SetChangeNumberRowsApi( $value ) { return $this->__setChangeNumberRowsApi( $value ); }
+	final public function SetScrumbEditApi( $value ) { return $this->__setScrumbEditApi( $value ); }
+	final public function SetScrumbDeleteApi( $value ) { return $this->__setScrumbDeleteApi( $value ); }
+	final public function SetResetOptionApi( $value ) { return $this->__setResetOptionApi( $value ); }
 	
 	/** Implements Interface iSection */
-	public function SetTitle( $value ) { return $this->__setTitle( $value ); } 
-	public function GetName() { return $this->__getName(); }
-	public function SetName( $name ) { return $this->__setName( $name ); }
-	public function SetTemplate( $template ) { return $this->__setTemplate( $template ); }
-	public function SetLayout( $template ) { return $this->__setLayout( $template ); }
-	public function Render( $template = NULL, $data = NULL ) { return $this->__render( $template, $data ); }
+	final public function SetTitle( $value ) { return $this->__setTitle( $value ); } 
+	final public function GetName() { return $this->__getName(); }
+	final public function SetName( $name ) { return $this->__setName( $name ); }
+	final public function SetTemplate( $template ) { return $this->__setTemplate( $template ); }
+	final public function SetLayout( $template ) { return $this->__setLayout( $template ); }
+	final public function Render( $template = NULL, $data = NULL ) { return $this->__render( $template, $data ); }
 	
 	public function rootName() { return __CLASS__; }
 	
@@ -161,9 +161,6 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$this->__enableOption();
 		$this->__destroySectionOption();
 	}
-	
-	protected function __setVar( $name, $value ) { return $this->__setVars( $name, $value ); }
-	protected function __assign( $name, $value ) { return $this->__setVars( $name, $value ); }
 	
 	protected function buildData() { return $this->__buildData(); }
 	
@@ -243,7 +240,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$push_state = str_replace( '{key}', $keyword, $push_state );
 			$push_state = str_replace( '{sort}', $sort, $push_state );
 			$push_state = str_replace( '{order}', $order, $push_state );
-			$this->__assign( 'push_state', $push_state );
+			$this->set( 'push_state', $push_state );
 			$this->__setCurrentPage( $current_page );
 		}
 		
@@ -254,7 +251,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			// $paging->setPath( '/?page={page}' );
 			$paging->setPath( $printer );
 			$paging->setRpp( $num_of_rows );
-			$this->__assign( 'paging', $paging );
+			$this->set( 'paging', $paging );
 			$this->__setPaging( $paging );
 		}
 
@@ -305,28 +302,28 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	
 	protected function __enablePagePrint() 
 	{
-		$this->__assign( 'use_pg_print', true );
+		$this->set( 'use_pg_print', true );
 		
 		return $this;
 	}
 	
 	protected function __destroyPagePrint() 
 	{
-		$this->__assign( 'use_pg_print', false );
+		$this->set( 'use_pg_print', false );
 		
 		return $this;
 	}
 	
 	protected function __enableSectionOption( $data ) 
 	{
-		$this->__assign( 'sod', $data );
+		$this->set( 'sod', $data );
 		
 		return $this;
 	}
 	
 	protected function __destroySectionOption() 
 	{
-		$this->__assign( 'sod', NULL );
+		$this->set( 'sod', NULL );
 		
 		return $this;
 	}
@@ -342,7 +339,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		// Update option data.
 		$this->__updateOptionData();
 		
-		$this->__assign( 'use_option', true );
+		$this->set( 'use_option', true );
 		
 		return $this;
 	}
@@ -356,7 +353,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$this->__destroyOptionData();
 		}
 		
-		return $this->__assign( 'use_option', false );
+		return $this->set( 'use_option', false );
 	}
 	
 	private function __destroyOptionData() 
@@ -389,10 +386,41 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		Session::set( 'grid', $option_data );
 		if( !is_null( $option_data ) ) 
 		{
-			$this->__assign( 'num_of_rows', $option_data[ 'num_of_rows' ] );
+			$this->set( 'num_of_rows', $option_data[ 'num_of_rows' ] );
 		}
 		
 		return $this;
+	} 
+	
+	final protected function __setVar( $args, $argsNum ) 
+	{ 
+		try 
+		{
+			if( 1==$argsNum ) 
+			{
+				dd($args);
+				$mixed = current($args); 
+				$mixed = each($mixed);
+				$name = $mixed['key']; 
+				$value = $mixed['value']; 
+			} 
+			else if( 1<$argsNum ) 
+			{ 
+				$name = $args[0]; 
+				$value = $args[1];
+			} 
+			else 
+			{ 
+				throw new \Exception( "The functions of <b>Datagrid::Assign(), Datagrid::Set(), and Datagrid::Share()</b> must be has least one parameter." ); 
+			}
+			
+			$this->_vars[ $name ] = $value; 
+			return $this; 
+		} 
+		catch( \Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage() );
+		} 
 	}
 	
 	protected function __setRowsNumberList( $list = NULL, $new = true ) 
@@ -411,7 +439,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		
 		if( is_array( $list ) || is_null( $list ) ) 
 		{
-			$this->__assign( 'number_row_list', $list );
+			$this->set( 'number_row_list', $list );
 			if( is_array( $list ) && $new ) 
 			{
 				$option_data = $this->__getOptionData();
@@ -435,7 +463,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	
 	protected function __destroyRowsNumberList() 
 	{
-		$this->__assign( 'num_of_rows', NULL );
+		$this->set( 'num_of_rows', NULL );
 		return $this->__setRowsNumberList();
 	}
 	
@@ -462,10 +490,10 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		return $this->__getDefaultNumOfRows();
 	}
 	
-	protected function __enableScrumb() { return $this->__assign( 'use_scrumb', true ); }
-	protected function __destroyScrumb() { return $this->__assign( 'use_scrumb', false ); }
-	protected function __enableSelectedEdit() { return $this->__assign( 'selected_edit', true ); }
-	protected function __destroySelectedEdit() { return $this->__assign( 'selected_edit', false ); }
+	protected function __enableScrumb() { return $this->set( 'use_scrumb', true ); }
+	protected function __destroyScrumb() { return $this->set( 'use_scrumb', false ); }
+	protected function __enableSelectedEdit() { return $this->set( 'selected_edit', true ); }
+	protected function __destroySelectedEdit() { return $this->set( 'selected_edit', false ); }
 	
 	protected function __enableKeyword( $field, $label, $opera ) 
 	{
@@ -485,34 +513,34 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$this->__setKeyword( $keyword );
 		}
 		
-		return $this->__assign( 'key_search', true );
+		return $this->set( 'key_search', true );
 	}
 	
 	protected function __destroyKeyword() 
 	{
 		$this->__setFilter( NULL );
 		
-		return $this->__assign( 'key_search', false ); 
+		return $this->set( 'key_search', false ); 
 	}
 	
 	protected function __setChangeNumberRowsApi( $value ) 
 	{
-		return $this->__assign( 'change_number_rows_api', $value );
+		return $this->set( 'change_number_rows_api', $value );
 	}
 	
 	protected function __setScrumbEditApi( $value ) 
 	{
-		return $this->__assign( 'scrumb_edit_api', $value );
+		return $this->set( 'scrumb_edit_api', $value );
 	}
 	
 	protected function __setScrumbDeleteApi( $value ) 
 	{
-		return $this->__assign( 'scrumb_delete_api', $value );
+		return $this->set( 'scrumb_delete_api', $value );
 	}
 	
 	protected function __setResetOptionApi( $value ) 
 	{
-		return $this->__assign( 'reset_option_api', $value );
+		return $this->set( 'reset_option_api', $value );
 	}
 	
 	protected function __setLayout( $template ) { return $this->__setTemplate( $template ); }
@@ -536,18 +564,18 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			$this->setTemplate( $template );
 		}
 		
-		$this->__assign( 'printer', $printer );				// Distributes page printer datas.
-		$this->__assign( 'length', $length );				// Distributes the length value.
-		$this->__assign( 'current_page', $current_page );	// Distributes the curr page value.
-		$this->__assign( 'total_pages', $total_pages );		// Distributes the total pages value.
-		$this->__assign( 'data', $data_grid );				// Distributes the data of grid.
-		$this->__assign( 'columns', $columns );				// Distributes the column which grid has.
-		$this->__assign( 'title', $title );					// Distributes the title.
-		$this->__assign( 'key_filter', $filter );			// Distributes the key search filter.
-		$this->__assign( 'keyword', $keyword );				// Distributes the keyword.
-		$this->__assign( 'name', $name );					// Distributes the name.
-		$this->__assign( 'sort', $sort );					// Distributes the sort, default null.
-		$this->__assign( 'order', $order );					// Distributes the order, default null, if any column has sort, and in current order request, it returns it's name value.
+		$this->set( 'printer', $printer );				// Distributes page printer datas.
+		$this->set( 'length', $length );				// Distributes the length value.
+		$this->set( 'current_page', $current_page );	// Distributes the curr page value.
+		$this->set( 'total_pages', $total_pages );		// Distributes the total pages value.
+		$this->set( 'data', $data_grid );				// Distributes the data of grid.
+		$this->set( 'columns', $columns );				// Distributes the column which grid has.
+		$this->set( 'title', $title );					// Distributes the title.
+		$this->set( 'key_filter', $filter );			// Distributes the key search filter.
+		$this->set( 'keyword', $keyword );				// Distributes the keyword.
+		$this->set( 'name', $name );					// Distributes the name.
+		$this->set( 'sort', $sort );					// Distributes the sort, default null.
+		$this->set( 'order', $order );					// Distributes the order, default null, if any column has sort, and in current order request, it returns it's name value.
 		return $this->__renderLayout( $data );
 	}
 	

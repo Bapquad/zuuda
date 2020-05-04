@@ -14,7 +14,7 @@ class ExtensionInformationService implements iComService
 	private function __info( $part=NULL ) { return (NULL!==$part)?(isset($this->_exts[ $part ]))?$this->_exts[ $part ]:array():$this->_exts; }
 	private static function __getInstance() 
 	{
-		static $_instance;
+		static $_instance; 
 		if( is_null( $_instance ) ) 
 		{
 			$_instance = new ExtensionInformationService; 
@@ -27,7 +27,7 @@ class ExtensionInformationService implements iComService
 		if( Config::has( 'COM' ) ) 
 		{
 			return array(
-				'basename'	=> array( 'about', 'live', 'menu' ),  
+				'basename'	=> array( 'live', 'about', 'menu', 'shortcut' ),  
 				'driver'	=> 'driver', 
 				'extension'	=> '.xml', 
 				'host'		=> CODE, 
@@ -41,13 +41,13 @@ class ExtensionInformationService implements iComService
 		$configs = self::__applyConfigs(); 
 		if( $configs ) 
 		{
-			return array(
-				$configs[ 'host' ] => array( 
-					array( $configs[ 'basename' ][ 0 ] => $configs[ 'driver' ] . DS . $configs[ 'basename' ][ 0 ] . $configs[ 'extension' ] ), 
-					array( $configs[ 'basename' ][ 1 ] => $configs[ 'driver' ] . DS . $configs[ 'basename' ][ 1 ] . $configs[ 'extension' ] ), 
-					array( $configs[ 'basename' ][ 2 ] => $configs[ 'driver' ] . DS . $configs[ 'basename' ][ 2 ] . $configs[ 'extension' ] ), 
-				)
-			);
+			$host = array();
+			foreach($configs['basename'] as $key => $name) 
+			{ 
+			
+				$host[$configs['basename'][$key]] = $configs['driver'].DS.$configs['basename'][$key].$configs['extension']; 
+			}
+			return array( $configs['host'] => $host );
 		} 
 		return false;
 	} 
@@ -58,14 +58,22 @@ class ExtensionInformationService implements iComService
 		{
 			$fp = simplexml_load_file( $file_path ); 
 			$module = $fp->live['module']->__toString();
-			return array( 
-				$module => array(
-					'codeof' => $fp->live->codeof->__toString(), 
-					'status' => (int) $fp->live->status, 
-				), 
-			);
+			$status = (int) $fp->live->status; 
+			if( $status ) 
+			{
+				return array( 
+					$module => array(
+						'codeof' => $fp->live->codeof->__toString(), 
+						'status' => (int) $fp->live->status, 
+					), 
+				);
+			} 
+			else 
+			{ 
+				return false;
+			} 
 		}
-		return NULL;
+		return false;
 	} 
 
 	private static function __read_about( $file_path ) 
@@ -87,33 +95,44 @@ class ExtensionInformationService implements iComService
 				)
 			);
 		} 
-		return NULL;
+		return false;
+	} 
+	
+	private static function __read_shortcut( $file_path, $codeof ) 
+	{ 
+		$instance = self::__getInstance();
+		if( call( cFile::get(), $file_path )->exist()) 
+		{ 
+			$fp = simplexml_load_file( $file_path );
+			$module = $fp->shortcut['module']->__toString();
+			
+			$blocks = array();
+			foreach($fp->shortcut->block as $block) 
+			{
+				$hidden = (int)$block['hidden']; 
+				if( $hidden ) 
+				{ 
+					continue; 
+				} 
+				$instance->__push( 'shortcut', array(
+					'class' => $module.BS."Blocks".BS.$block['name'], 
+					'extend' => $block['extend']->__toString(), 
+					'developer'=> $codeof, 
+				));
+			}
+			
+			return false;
+		} 
 	} 
 
-	private static function __read_menu( $file_path, $instance ) 
+	private static function __read_menu( $file_path ) 
 	{
-		// $basename = basename( $file_path );
-		// $live_path = str_replace( $basename, 'live.xml', $file_path );
-		// if( call( cFile::get(), $live_path )->exist() ) 
-		// {
-		// 	$live_xml = simplexml_load_file( $live_path );
-		// 	if( !((int) $live_xml->live->status) ) 
-		// 	{
-		// 		return NULL;
-		// 	}
-		// }
 		if( call( cFile::get(), $file_path )->exist() ) 
 		{
 			$fp = simplexml_load_file( $file_path );
 			$module = $fp->menu['module']->__toString(); 
 			$output = array( $module => array() );
 			$extend = strtolower( $module ); 
-
-			$live = $instance->info( 'live' );
-			if( !$live[ $module ][ 'status' ] ) 
-			{
-				return NULL;
-			}
 
 			$label = $fp->menu[ 'label' ];
 			if( NULL!==$label ) 
@@ -122,7 +141,6 @@ class ExtensionInformationService implements iComService
 					$output[ $module ][ $extend ] = array( 'actions' => array() );
 				$output[ $module ][ $extend ][ 'label' ] = $label->__toString(); 
 			}
-
 			$fa = $fp->menu[ 'fa' ]; 
 			if( NULL!==$fa ) 
 			{
@@ -159,40 +177,51 @@ class ExtensionInformationService implements iComService
 					'href'	=> $action->href->__toString()
 				));
 			} 
+			
 			return $output; 
 		} 
-		return NULL;
+		return false;
 	}
 
 	private function __push( $branch, $value=NULL ) 
 	{
-		if( FALSE===array_key_exists( $branch, $this->_exts ) ) 
+		if( !array_key_exists($branch, $this->_exts) ) 
 		{
-			$this->_exts[ $branch ] = array();
+			$this->_exts[$branch] = array();
 		} 
-		if( NULL!==$value )
-			$this->_exts[ $branch ] = array_merge( $this->_exts[ $branch ], (array) $value );
+		
+		if( NULL!==$value ) 
+		{
+			$this->_exts[$branch][] = $value; 
+		}
 	}
 
 	private static function __bootService( Application $app = NULL ) 
 	{
 		$instance = self::__getInstance();
 		$configs = $instance->__loadConfigs();
-
 		list( $code_area, $configs ) = each( $configs ); 
-
-		foreach( $configs as $config ) 
+		$live_paths = cFile::lookFile( $code_area, $configs['live'] ); 
+		unset($configs['live']);
+		foreach($live_paths as $live_path) 
 		{
-			list( $key, $filename ) = each( $config );
-			$list = cFile::lookFile( $code_area, $filename ); 
-			$command = '__read_'.$key; 
-
-			foreach( $list as $file_path ) 
+			$result = $instance->__read_live( $live_path ); 
+			if( $result ) 
 			{
-				$result = $instance->$command( $file_path, $instance ); 
-				if( NULL!==$result )
-					$instance->__push( $key, $result );
-			} 
+				$instance->__push( 'live', $result );
+				
+				list($module, $value) = each($result);
+				
+				foreach( $configs as $key => $config ) 
+				{
+					$command = '__read_'.$key; 
+					$result = $instance->$command($code_area.$value['codeof'].DS.$module.DS.$config, $value['codeof']); 
+					if( $result ) 
+					{
+						$instance->__push( $key, $result );
+					}
+				}
+			}
 		} 
 		return false;
 	}

@@ -1,6 +1,9 @@
 <?php
 namespace Zuuda;
 
+use Exception; 
+use ReflectionClass;
+
 abstract class Controller implements iController, iDeclare, iBlock 
 {
 	private $_module;
@@ -39,9 +42,25 @@ abstract class Controller implements iController, iDeclare, iBlock
 	
 	public function __get( $name ) 
 	{
-		if( $name == 'model' 
-		 || $name == 'view' )
-			return $this->{ '_' . $name };
+		if( $name == 'model' || 
+			$name == 'view' ) 
+		{
+			try 
+			{
+				if( $name == 'model' && NULL===$this->_model ) 
+					throw new Exception("Your model <b>" . $model_class_name . "</b> coundn't found.");
+				elseif( $name == 'view' && NULL===$this->_model ) 
+					throw new Exception("Your view <b>" . $view_class_name . "</b> coundn't found.");
+				else 
+					return $this->{ '_' . $name }; 
+			} 
+			catch( Exception $e ) 
+			{ 
+				if( isset($configs['CONTROLER_ERRORS_WARNING']) ) 
+					if( $configs['CONTROLER_ERRORS_WARNING'] ) 
+						abort( 500, $e->getMessage() ); 
+			} 
+		}
 	}
 	
 	/** Implements interface iDeclare */
@@ -56,10 +75,9 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function RequireJs( $value ) { return $this->__preloadJs( $value ); }
 	public function RequireJui( $value ) { return $this->__requireJui( $value ); }
 	public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
-	public function Share( $name, $value ) { return $this->__share( $name, $value ); }
-	public function Compact( $name, $value ) { return $this->__compact( $name, $value ); }
-	public function Assign( $name, $value ) { return $this->__assign( $name, $value ); }
-	public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
+	public function Assign() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	public function Set() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
 	public function Json( $args ) { return $this->__json( $args ); } 
 	public function Download( $loader, $name=NULL ) { return $this->__download( $loader, $name ); } 
@@ -93,25 +111,25 @@ abstract class Controller implements iController, iDeclare, iBlock
 		if( __useDB() ) 
 		{
 			$model_class_name = __currentModelClass();
-
 			if( __availbleClass( $model_class_name ) ) 
 			{
 				$this->__setVarModel( new $model_class_name );
-			}
-			else if( isset($configs['SHOW_MODEL_WARNING']) ) 
-			{
-				echo "<div style=\"background-color:#000;color:#fff;padding:1rem;\">Your model '<b style=\"font-weight:bold\">" . $model_class_name . "</b>' had not found</div>";
-			}
+			} 
 		} 
 		
 		$view_class_name = __currentViewClass(); 
 		if( __availbleClass( $view_class_name ) )
 		{
-			$this->__setVarView( new $view_class_name() );
-		}
-		else if( isset($configs['SHOW_VIEW_WARNING']) ) 
-		{
-			echo "<div style=\"background-color:#000;color:#fff;padding:1rem;\">Your view '<b style=\"font-weight:bold\">" . $view_class_name . "</b>' had not found</div>";
+			$ctrlRefl = new ReflectionClass($view_class_name); 
+			$ttrInjts = $ctrlRefl->getConstructor()->getParameters(); 
+			$args = array();
+			foreach( $ttrInjts as $key => $arg ) 
+			{
+				$propName = $arg->getClass()->name; 
+				$args[] = new $propName;
+			}
+			$dispatch = (empty($args))?new $view_class_name():$ctrlRefl->newInstanceArgs((array) $args);
+			$this->__setVarView( $dispatch );
 		}
 	}
 	
@@ -214,30 +232,39 @@ abstract class Controller implements iController, iDeclare, iBlock
 		} 
 		return $this;
 	}
-	
-	final protected function __share( $name, $value ) 
-	{
-		return $this->__setVar( $name, $value );
-	}
-	
-	final protected function __compact( $name, $value ) 
-	{
-		return $this->__setVar( $name, $value );
-	}
-	
-	final protected function __assign( $name, $value ) 
-	{
-		return $this->__setVar( $name, $value );
-	}
 
-	final protected function __setVar( $name, $value ) 
+	final protected function __setVar( $args, $argsNum ) 
 	{
-		$view = $this->__getView();
-		if( !is_null( $view ) && !$this->__addBlock( $value, $name ) ) 
+		try 
 		{
-			$view->set( $name, $value );
-		}
-		return $this;
+			if( 1==$argsNum ) 
+			{
+				$mixed = current($args); 
+				$mixed = each($mixed);
+				$name = $mixed['key']; 
+				$value = $mixed['value']; 
+			} 
+			else if( 1<$argsNum ) 
+			{ 
+				$name = $args[0]; 
+				$value = $args[1];
+			} 
+			else 
+			{ 
+				throw new \Exception( "The functions of <b>Controller::Assign(), Controller::Set(), and Controller::Share()</b> must be has least one parameter." ); 
+			}
+		
+			$view = $this->__getView();
+			if( !is_null( $view ) && !$this->__addBlock( $value, $name ) ) 
+			{
+				$view->set( $name, $value );
+			}
+			return $this;
+		} 
+		catch( \Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage() );
+		} 
 	}
 	
 	final protected function __render( $template = NULL, $args = NULL ) 

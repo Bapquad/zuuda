@@ -11,7 +11,8 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	private $_vars = array();
 	private $_widgets = array();
 	private $_name;
-	private $_tpl_name = 'template.tpl';
+	private $_tpl_name = 'template.tpl'; 
+	private $_codeof; 
 	
 	private $_head_assets = array( 
 		STYLE_ASSET => array(), 
@@ -31,6 +32,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	final protected function __getTemplate() { return $this->_tpl_name; }
 	final protected function __getHeadAssets() { return $this->_head_assets; }
 	final protected function __getContentAssets() { return $this->_content_assets; }
+	final protected function __codeof($developer) { $this->_codeof = $developer;return $this; }
 	
 	final protected function __setVars( $vars ) { $this->_vars = $vars; return $this; }
 	final protected function __addVar( $name, $value ) { $this->_vars[ $name ] = $value; return $this; }
@@ -41,21 +43,21 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	final protected function __setContentAssets( $value ) { $this->_content_assets = $value; return $this; }
 	
 	final public function GetVars() { return $this->__getVars(); }
-	final public function SetVar( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function SetVar() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	final public function AddVar( $name, $value ) { return $this->__addVar( $name, $value ); }
 	final public function __view__get_head_assets() { return $this->_head_assets; }
 	final public function __view__get_content_assets() { return $this->_content_assets; }
 	final public function __view__merge_vars( $vars ) { $this->_vars = array_merge( $vars, $this->_vars ); return $this; }
 
-	final public function Share( $name, $value ) { return $this->__share( $name, $value ); }
-	final public function Compact( $name, $value ) { return $this->__compact( $name, $value ); }
-	final public function Assign( $name, $value ) { return $this->__assign( $name, $value ); }
-	final public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	final public function Assign() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	final public function Set() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	final public function SetTitle( $value ) { return $this->__setTitle( $value ); }
 	final public function GetName() { return $this->__getName(); }
 	final public function SetName( $value ) { return $this->__setName( $value ); }
 	final public function SetTemplate( $tpl_path ) { return $this->__setTemplate( $tpl_path ); }
 	final public function SetLayout( $tpl_path ) { return $this->__setLayout( $tpl_path ); } 
+	final public function CodeOf($developer) { return $this->__codeof($developer); }
 	final public function AddWidget( $widget, $force_name = NULL ) { return $this->__addWidget( $widget, $force_name ); }
 	final public function GetWidget( $name ) { return $this->__getWidget( $name ); }
 	final public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); }
@@ -179,91 +181,100 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		{
 			echo 'ERROR (Zudda): ' . $e->getMessage(); 
 		}
-	}
-	
-	private function __setVar( $name, $value )
-	{
-		if( is_array( $name ) ) 
-		{
-			$vars  = $this->__getVars();
-			$this->__setVars( array_merge( $vars, $name ) );
-		} 
-		else 
-		{
-			$this->__addVar( $name, $value );
-		} 
-		return $this;
-	}
-	
-	private function __assign( $name, $value ) 
-	{
-		if( is_object( $value ) && $this->__addWidget( $value, $name ) != false ) 
-		{
-			return $this;
-		}
-		return $this->__setVar( $name, $value );
-	}
-	
-	private function __compact( $name, $value ) 
-	{
-		return  $this->__assign( $name, $value ); 
-	}
-	
-	private function __share( $name, $value ) 
-	{
-		return  $this->__assign( $name, $value ); 
-	}
+	} 
 	
 	private function __setTitle( $value ) 
-	{
-		return $this->__assign( 'title', $value );
-	}
+	{ 
+		return $this->set( 'title', $value ); 
+	} 
 	
 	private function __renderLayout( $args = NULL ) 
 	{
-		global $configs, $html, $file, $_get, $_post;
+		global $configs, $inflect, $html, $file, $_get, $_post, $_file, $_server; 
 		
 		if( !is_null( $this->_tpl_name ) ) 
 		{
 			try 
 			{
 				if( !is_null( $this->_vars ) )
-				{
 					extract( $this->_vars );
-				}
 				
 				if( !empty( $this->_widgets ) ) 
-				{
 					extract( $this->_widgets );
-				}
 				
 				if( !is_null( $args ) && is_array( $args ) ) 
-				{
 					extract( $args );
-				} 
 				
 				$basename = __correctPath(str_replace('\Blocks', '', get_class($this))).DS.$this->_tpl_name; 
 				$path = BLOCK_DIR.$basename; 
-				
 				if( isset($configs['COM']) ) 
 				{
+					if( NULL!==$this->_codeof ) 
+						$path = BLOCK_DIR.$this->_codeof.DS.$basename; 
 					if( isset($configs['CODE_OF']) ) 
-					{
 						$path = BLOCK_DIR.$configs['CODE_OF'].DS.$basename; 
-					} 
 				} 
 				
 				if( file_exists($path) ) 
+				{
 					include($path); 
+				}
 				else 
-					throw new Exception($path); 
+				{
+					throw new Exception("<b>Template of Block: </b>The file \"".$path."\" is missed"); 
+				}
 			}
 			catch(Exception $e) 
 			{
-				abort(500, "The file \"".$e->getMessage()."\" is missed"); 
+				abort(500, $e->getMessage()); 
 			}
 		}
 		
 		return $this;
+	} 
+	
+	final protected function __setVar( $args, $argsNum ) 
+	{
+		try 
+		{
+			if( 1==$argsNum ) 
+			{
+				$mixed = current($args);
+				$mixed = each($mixed);
+				$name = $mixed['key']; 
+				$value = $mixed['value']; 
+			} 
+			else if( 1<$argsNum ) 
+			{ 
+				$name = $args[0]; 
+				$value = $args[1];
+			} 
+			else 
+			{ 
+				throw new \Exception( "The functions of <b>Section::Assign(), Section::Set(), and Section::Share()</b> must be has least one parameter." ); 
+			} 
+			
+			if( is_object( $value ) && $this->__addWidget( $value, $name ) != false ) 
+			{
+				return $this;
+			} 
+			
+			if( is_array( $name ) ) 
+			{
+				$vars  = $this->__getVars();
+				$this->__setVars( array_merge( $vars, $name ) );
+			} 
+			else 
+			{
+				$this->__addVar( $name, $value );
+			} 
+			
+			return $this; 
+		}
+		catch( \Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage() );
+		} 
 	}
+	
 }

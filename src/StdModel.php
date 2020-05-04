@@ -95,15 +95,25 @@ class StdModel extends SQLQuery
 	protected function __initConn() 
 	{
 		global $configs;
-		if( !isset( $configs[ 'DATASOURCE' ][ 'HANDLECN' ] ) ) 
-			$this->connect( 
-				$configs['DATASOURCE']['HOSTNAME'], 
-				$configs['DATASOURCE']['USERNAME'], 
-				$configs['DATASOURCE']['PASSWORD'], 
-				$configs['DATASOURCE']['DATABASE'] 
-			); 
-		else 
-			$this->__setDBHandle($configs['DATASOURCE']['HANDLECN']); 
+		$src = $configs['DATASOURCE']['server']['default']; 
+		if( isset($configs['DATASOURCE'][$src]) ) 
+		{
+			if( isset($configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['source']) ) 
+			{
+				if( $configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['source']!=$src ) 
+				{
+					$this->__connect($src); 
+				} 
+				else 
+				{ 
+					$this->__handled($configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['resource'], $src, true);
+				} 
+			} 
+			else 
+			{
+				$this->__connect($src); 
+			}
+		} 
 	} 
 	
 	private function __setForeignKey( $key ) 

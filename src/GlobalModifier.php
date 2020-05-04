@@ -13,6 +13,7 @@ class GlobalModifier implements iGlobalModifier
 	public static function GetAll() { return self::__getAll(); }
 	public static function Func( $name ) { return self::__func( $name ); }
 	public static function LoadUrl() { return self::__loadUrl(); }
+	public static function Timezone() { return self::__timezone(); } 
 	
 	private function __construct() {}
 	private function __clone() {}
@@ -82,6 +83,21 @@ class GlobalModifier implements iGlobalModifier
 		}
 		$GLOBALS[ 'url' ] = $url; 
 		return $url; 
-	}
+	} 
+	
+	private static function __timezone() 
+	{ 
+		global $configs; 
+		if( isset($configs['LOCATE']['timezone']) ) 
+		{ 
+			$timezone = $configs['LOCATE']['timezone'];
+		} 
+		else 
+		{ 
+			$timezone = 'UTC'; 
+		} 
+		
+		return date_default_timezone_set($timezone); 
+	} 
 	
 }

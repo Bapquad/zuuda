@@ -112,8 +112,9 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function PreloadJui( $value ) { return $this->__preloadJui( $value ); }
 	final public function RequireJui( $value ) { return $this->__requireJui( $value ); }
 	
-	final public function Assign( $name, $value ) { return $this->__assign( $name, $value ); } 
-	final public function Set( $name, $value ) { return $this->__setVar( $name, $value ); }
+	final public function Assign() { return $this->__setVar( func_get_args(), func_num_args() ); } 
+	final public function Set() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	final public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	final public function Get( $name ) { return $this->__getVar( $name ); }
 	final public function AddBlock( $block, $force_name ) { return $this->__addBlock( $block, $force_name ); } 
 	
@@ -238,7 +239,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function __renderLayout( $args = NULL ) 
 	{
-		global $configs, $html, $file, $_get, $_post; 
+		global $configs, $inflect, $html, $file, $_get, $_post, $_file, $_server; 
 		$this->__packageVars( $args );
 		extract( $this->_vars );
 		extract( $this->_blocks );
@@ -311,21 +312,45 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		return false;
 	}
 	
-	private function __setVar( $name, $value ) 
+	private function __setVar( $args, $argsNum ) 
 	{
-		if( is_object( $value ) ) 
+		try 
 		{
-			if( method_exists( $value, 'rootName' ) ) 
+			if( 1==$argsNum ) 
 			{
-				$rootName = $value->rootName();
-				if( $rootName == ZUUDA_SECTION_SYMBOL ) 
+				$mixed = current($args); 
+				$mixed = each($mixed);
+				$name = $mixed['key']; 
+				$value = $mixed['value']; 
+			} 
+			else if( 1<$argsNum ) 
+			{ 
+				$name = $args[0]; 
+				$value = $args[1];
+			} 
+			else 
+			{ 
+				throw new \Exception( "The functions of <b>View::Assign(), View::Set(), and View::Share()</b> must be has least one parameter." ); 
+			} 
+			
+			if( is_object( $value ) ) 
+			{
+				if( method_exists( $value, 'rootName' ) ) 
 				{
-					return;
+					$rootName = $value->rootName();
+					if( $rootName == ZUUDA_SECTION_SYMBOL ) 
+					{
+						return;
+					}
 				}
 			}
-		}
-		$this->_vars[ $name ] = $value;
-		return $this;
+			$this->_vars[ $name ] = $value;
+			return $this; 
+		} 
+		catch( \Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage() );
+		} 
 	} 
 
 	private function __getVar( $name ) 
@@ -338,11 +363,6 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 			}
 		}
 		return NULL;
-	}
-	
-	private function __assign( $name, $value )
-	{
-		return $this->__setVar( $name, $value );
 	}
 	
 	private function __includeJs( $value ) 

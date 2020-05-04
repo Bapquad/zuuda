@@ -6,6 +6,9 @@ class Auth
 {
 	
 	private static $class = '\Zuuda\Auth';
+	final public function rootName() { return __CLASS__; }
+	private function __construct() {}
+	private function __clone() {} 
 	
 	public static function User($prop=NULL) { return self::__user($prop); } 
 	public static function Get($prop) { return self::__user($prop); } 
@@ -14,10 +17,6 @@ class Auth
 	public static function Body($prop) { return self::__user($prop); } 
 	public static function Role() { return call_user_func_array([self::$class, '__role'], array(func_get_args())); } 
 	public static function Apply() { return call_user_func_array([self::$class, '__role'], array(func_get_args())); } 
-	
-	final public function rootName() { return __CLASS__; }
-	private function __construct() {}
-	private function __clone() {} 
 	
 	public static function __callStatic( $name, $args ) 
 	{

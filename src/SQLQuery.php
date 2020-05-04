@@ -53,7 +53,7 @@ define( 'mhj', 						'join' );
 
 abstract class SQLQuery 
 {
-	protected $_dbHandle;
+	protected $_dbHandle; 
 	protected $_primaryKey		= 'id'; 
 	protected $_querySQL;
 	protected $_querySQLs 		= array(); 
@@ -97,13 +97,6 @@ abstract class SQLQuery
 	protected $_propsHasMABTM 	= array(); 
 	protected $_propsRole	 	= array(); 
 	
-	final protected function __setDBHandle( $handle ) { $this->_dbHandle=$handle; return $this; }
-	final protected function __setPrefix( $value ) { $this->_propPrefix = $value; return $this; }
-	final protected function __setModel( $value ) { return $this->__setModelName( $value ); }
-	final protected function __setAlias( $value ) { return $this->__setAliasName( $value ); }
-	final protected function __setTable( $value ) { return $this->__setTableName( $value ); } 
-	final protected function __new() { return $this->__clear( true ); } 
-	final protected function __reset() { return $this->__clear( true ); } 
 	final public function __getModel() { return $this->_propModel; } 
 	final public function __getTable() { return $this->_propTable; } 
 	final public function __getAlias() { return $this->_propAlias; } 
@@ -305,9 +298,11 @@ abstract class SQLQuery
 	final public function Length() { return call_user_func_array([$this, mcbm_length], array(func_get_args(), func_num_args())); } 
 	final public function DBList() { return call_user_func_array([$this, mcbm_db_list], array(func_get_args(), func_num_args())); }
 	final public function Row() { return call_user_func_array([$this, mcbm_row], array(func_get_args(), func_num_args())); } 
+	final public function Fetch() { return call_user_func_array([$this, mcbm_row], array(func_get_args(), func_num_args())); } 
 	final public function Role() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Data() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
-	final public function Connect( $address, $account, $pwd, $name ) { return $this->__connect( $address, $account, $pwd, $name ); }
+	final public function Connect( $name ) { return $this->__connect( $name ); }
+	final public function Close() { return $this->__close(); }
 	final public function GetError() { return $this->__getError(); } 
 	final public function GetQuery() { return $this->__getQuerySQL(); }
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
@@ -318,6 +313,13 @@ abstract class SQLQuery
 	final public function GenRandString( $len=10 ) { return $this->__genRandString($len); }
 	
 	abstract protected function __initConn();
+	final protected function __setPrefix( $value ) { $this->_propPrefix = $value; return $this; }
+	final protected function __setModel( $value ) { return $this->__setModelName( $value ); }
+	final protected function __setAlias( $value ) { return $this->__setAliasName( $value ); }
+	final protected function __setTable( $value ) { return $this->__setTableName( $value ); } 
+	final protected function __new() { return $this->__clear( true ); } 
+	final protected function __reset() { return $this->__clear( true ); } 
+	
 	final protected function __mergeTable() 
 	{ 
 		if( EMPTY_CHAR===$this->_propAlias && isset($this->_alias) )
@@ -338,7 +340,7 @@ abstract class SQLQuery
 	{
 		global $cache;
 		$describe = $cache->get('describe'.$tableName);
-		if (!$describe && $this->_dbHandle) 
+		if( empty($describe) && $this->_dbHandle ) 
 		{
 			$describe = array();
 			$sql = 'DESCRIBE '.$tableName;
@@ -346,7 +348,7 @@ abstract class SQLQuery
 			while ($row = $this->fetch_row($result)) 
 				array_push($describe,$row[0]); 
 			$this->free_result($result);
-			$cache->set('describe'.$tableName,$describe);
+			$cache->set('describe_'.$tableName,$describe);
 		}
 		return $describe; 
 	} 
@@ -361,6 +363,31 @@ abstract class SQLQuery
 			$this->__boundField( $fieldName ); 
 		} 
 		return $this->_propsUndescribe;
+	} 
+	
+	final protected function __handled( $dsl, $src, $less=false ) 
+	{
+		global $configs; 
+		if( is_object($dsl) ) 
+		{
+			$this->_dbHandle = $dsl; 
+			if( isset($configs['DATASOURCE'][$src]) ) 
+			{
+				$cfg = $configs['DATASOURCE'][$src];
+				$configs['DATASOURCE']['server'][$cfg['server']]['source'] = $src; 
+				if( isset($cfg['prefix']) ) 
+				{
+					$this->__setPrefix( $cfg['prefix'] ); 
+				} 
+				if( !$less ) 
+				{
+					$this->__mergeTable(); 
+					$this->__setupModel();
+				} 
+				return $this; 
+			} 
+		} 
+		return false;
 	} 
 	
 	private function __clear( $deep=false ) 
@@ -1758,7 +1785,7 @@ abstract class SQLQuery
 			if( !$argsNum ) 
 			{
 				global $configs;
-				$result = $this->query( 'SELECT table_name as `table_name` FROM information_schema.tables where table_schema="' . $configs['DATASOURCE']['DATABASE'] . '"' );
+				$result = $this->query( 'SELECT table_name as `table_name` FROM information_schema.tables where table_schema="' . $configs['DATASOURCE'][$configs['DATASOURCE']['server']['default']]['database'] . '"' );
 				$tables = array();
 				foreach( $result as $table ) 
 					$tables[] = $table['tables']['table_name'];
@@ -2486,9 +2513,9 @@ abstract class SQLQuery
 						} 
 						else 
 						{
-							if( !in_array($args[0], $this->_propsDescribe)) 
+							if( !in_array($args[0], $this->_propsDescribe) && config::get('DEVELOPMENT_ENVIRONMENT') ) 
 								throw new Exception( 'Cột <strong>'.$args[0].'</strong> không có trong bảng <strong>'.$this->_propTable.'</strong>.' ); 
-							if( !array_key_exists($args[1], $allowOps) )
+							if( !array_key_exists($args[1], $allowOps) && config::get('DEVELOPMENT_ENVIRONMENT') )
 								throw new Exception( 'Không chấp nhận toán tử <strong>'.$args[1].'</strong>.' );
 						}
 					} 
@@ -2512,7 +2539,7 @@ abstract class SQLQuery
 		}
 		catch( Exception $e ) 
 		{
-			abort( 500, $e->getMessage() );
+			abort( 500, $e->getMessage().BL.error::position($e) );
 		}
 		return $this;
 	} 
@@ -4815,20 +4842,53 @@ abstract class SQLQuery
 		$result = mysqli_query( $this->_dbHandle, $sql ); 
 		$this->__logsql( $sql ); 
 		return $result;
-	}
+	} 
 	
-	private function __connect( $address, $username, $password, $dbname ) 
+	final protected function __connect( $src ) 
 	{
-		global $configs;
-		$dbLink = mysqli_connect($address, $username, $password);
-		if ( $dbLink ) 
-			if ( mysqli_select_db($dbLink, $dbname) ) 
+		global $configs; 
+		try 
+		{
+			if( isset($configs['DATASOURCE'][$src]) ) 
 			{
-				mysqli_query( $dbLink, 'SET CHARSET utf8' );	
-				$this->__setDBHandle( $dbLink ); 
-				$configs[ 'DATASOURCE' ][ 'HANDLECN' ] = $dbLink; 
-				return 1;
-			}
-		return 0;
-	}
+				$server = $configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]; 
+				if( isset($server['resource']) ) 
+				{
+					$dsl = $server['resource']; 
+					if( mysqli_select_db($dsl, $configs['DATASOURCE'][$src]['database']) ) 
+					{ 
+						$this->__handled( $dsl, $src ); 
+					} 
+					else 
+					{
+						if( config::get(DEVELOPMENT_ENVIRONMENT) ) 
+						{
+							throw new Exception( "<b>MESSAGE:</b> The connected resource link is missed or Database <b>'".$configs['DATASOURCE'][$src]['database']."'</b> does not exist." ); 
+						}
+					}
+				} 
+				else 
+				{
+					$dsl = mysqli_connect($server['hostname'], $server['username'], $server['password']);
+					if( $dsl ) 
+					{
+						mysqli_query( $dsl, 'SET CHARSET utf8' ); 
+						$configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['resource'] = $dsl; 
+						return $this->__connect($src); 
+					} 
+				} 
+				return $server['resource'];
+			} 
+		}
+		catch( Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage().BL.error::position($e) ); 
+		} 
+		return;
+	} 
+	
+	final protected function __close() 
+	{ 
+		$this->__connect(config::get('DATASOURCE')['server']['default']); 
+	} 
 }

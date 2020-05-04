@@ -80,6 +80,7 @@ class Application
 		GlobalModifier::set( '_server', array() );
 		GlobalModifier::set( '_file', array() );
 		GlobalModifier::loadUrl();
+		GlobalModifier::timezone(); 
 	}
 	
 	private function __parseQuery( $query, $override = true ) 
@@ -190,8 +191,8 @@ class Application
 		{
 			$_instance->__bootServices( BTShipnelService::getInstance() );
 			$_instance->__bootServices( RouteService::getInstance(), $_instance );
-			$_instance->__bootServices( ThemeService::getInstance() );
 			$_instance->__bootServices( ComService::getInstance(), $_instance );
+			$_instance->__bootServices( ThemeService::getInstance() );
 			$_instance->__bootServices( CateService::getInstance(), $_instance );
 			$_instance->__bootServices( ExtensionInformationService::getInstance(), $_instance );
 		}

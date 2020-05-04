@@ -1,10 +1,7 @@
 <?php
 namespace Zuuda;
 
-use Exception;
-
-define( 'AUTH_DATA', 'authorization' );
-define( 'auth', AUTH_DATA );
+use Exception; 
 
 abstract class Authorization implements iAuthorization 
 {

@@ -5,8 +5,9 @@ interface iDeclare
 {
 	public function rootName();
 	
-	public function Assign( $name, $value );
-	public function Set( $name, $value );
+	public function Assign();
+	public function Set();
+	public function Share(); 
 	public function Render( $template, $args );
 	
 	public function IncludeMeta( $value );

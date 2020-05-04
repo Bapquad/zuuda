@@ -112,6 +112,7 @@ class ComService implements iComService
 			list( $realpath, $filename ) = @each( $configs );
 			
 			$list = cFile::lookFile( $realpath, $filename );
+			
 			foreach( $list as $file_path ) 
 			{
 				if($result = self::__routing( $app, $url, $file_path )) 
