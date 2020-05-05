@@ -80,6 +80,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
 	public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
 	public function Json( $args ) { return $this->__json( $args ); } 
+	public function Cors() { return $this->__cors(); } 
 	public function Download( $loader, $name=NULL ) { return $this->__download( $loader, $name ); } 
 	public function CustomRender( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
 	public function RenderBy( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
@@ -285,6 +286,21 @@ abstract class Controller implements iController, iDeclare, iBlock
 	} 
 	
 	final protected function __json( $args ) { $this->__getView()->jsonLayout( $args ); } 
+	
+	final protected function __cors() 
+	{
+		$view = $this->__getView(); 
+		if( NULL!== $view ) 
+		{
+			$view->makeapi(); 
+		} 
+		else 
+		{ 
+			response::setcors(); 
+			return $this; 
+		}
+	} 
+	
 	final protected function __download($fileLoader, $filename) 
 	{
 		$this->_downloader = $fileLoader->__download($filename);
