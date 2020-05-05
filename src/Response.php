@@ -10,6 +10,8 @@ class Response
 	
 	public static function Redirect( $uri ) { return __direct( $uri ); } 
 	public static function View( Controller $dispatcher ) { return self::__view($dispatcher); } 
+	public static function SetCors() { return self::__setCors(); }
+	public function Cors() { return self::__cors(); }
 	public function With() { return call_user_func_array([$this, '__with'], array(func_get_args(), func_num_args())); } 
 	public function Json( $data ) { return $this->__json($data); } 
 	
@@ -77,6 +79,35 @@ class Response
 	private function __setDispatcher( $dispatcher ) 
 	{
 		$this->_dispatcher = $dispatcher; 
+	} 
+	
+	private function __setCors() 
+	{ 
+	dd('di');
+		// Allow from any origin
+		if (isset($_SERVER['HTTP_ORIGIN'])) {
+			// Decide if the origin in $_SERVER['HTTP_ORIGIN'] is one
+			// you want to allow, and if so:
+			header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+			header('Access-Control-Allow-Credentials: true');
+			header('Access-Control-Max-Age: 86400');    // cache for 1 day
+		}
+
+		// Access-Control headers are received during OPTIONS requests
+		if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+
+			if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+				header("Access-Control-Allow-Methods: GET, POST, OPTIONS");         
+
+			if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+				header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+		} 
+		return true;
+	} 
+	
+	private function __cors() 
+	{
+		return $this->_dispatcher->cors( $data ); 
 	}
 	
 }
