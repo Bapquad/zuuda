@@ -313,19 +313,22 @@ class Application
 					} 
 					Application::Handling($dispatch, $action);
 				}
-				else if( $configs[DEVELOPER_WARNING] )
-					abort( 400, "Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>." ); 
-				else 
-					abort( 404 ); 
+				else
+					throw new Exception("Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>.");
 			}
-			else if( $configs[DEVELOPER_WARNING] ) 
-				abort( 400, "Ops! Your controller <strong>$controller_class_name</strong> is not found." ); 
 			else 
-				abort( 404 ); 
+				throw new Exception("Ops! Your controller <strong>$controller_class_name</strong> is not found."); 
 		}
 		catch(Exception $e) 
 		{
-			abort( 400 );
+			if( $configs[DEVELOPER_WARNING] ) 
+			{
+				abort( 400, $e->getMessage().BL.error::position($e) ); 
+			} 
+			else 
+			{ 
+				abort( 400 ); 
+			} 
 		}
 		$this->__release(); 
 		escape(); 
