@@ -14,6 +14,7 @@ class Response
 	public function Cors() { return self::__cors(); }
 	public function With() { return call_user_func_array([$this, '__with'], array(func_get_args(), func_num_args())); } 
 	public function Json( $data ) { return $this->__json($data); } 
+	public function Render( $tpl=NULL, $data=NULL ) { return $this->__render($tpl, $data); }
 	
 	final public function SetDispatcher( Controller $dispatcher ) { $this->_dispatcher = $dispatcher; } 
 	final public function rootName() { return __CLASS__; }
@@ -67,6 +68,11 @@ class Response
 	private function __json( $data ) 
 	{
 		return $this->_dispatcher->json( $data ); 
+	} 
+	
+	private function __render( $tpl, $data ) 
+	{ 
+		return $this->_dispatcher->render( $tpl, $data ); 
 	} 
 	
 	private static function __view( $dispatcher ) 

@@ -270,19 +270,30 @@ abstract class Controller implements iController, iDeclare, iBlock
 	
 	final protected function __render( $template = NULL, $args = NULL ) 
 	{
-		$view = $this->__getView();
-		
-		if( !is_null( $view ) ) 
+		try 
 		{
-			if( !is_null( $args ) ) 
+			$view = $this->__getView();
+			
+			if( !is_null( $view ) ) 
 			{
-				while (list($a, $b) = each($args)) 
+				if( !is_null( $args ) ) 
 				{
-					$view->set($a, $b);
-				}
+					while (list($a, $b) = each($args)) 
+					{
+						$view->set($a, $b);
+					}
+				} 
+				$this->_template = $template;
 			} 
-			$this->_template = $template;
-		}
+			else 
+			{ 
+				throw new Exception("Your View class does not exist."); 
+			} 
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage().BL.error::position($e) ); 
+		} 
 	} 
 	
 	final protected function __json( $args ) 
