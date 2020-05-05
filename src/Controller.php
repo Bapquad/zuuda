@@ -294,8 +294,8 @@ abstract class Controller implements iController, iDeclare, iBlock
 		} 
 		else 
 		{ 
-			dd();
-			escape();
+			RequestHeader::displayJson(); 
+			echo json_encode($args);
 		} 
 		return $this; 
 	} 
@@ -325,10 +325,13 @@ abstract class Controller implements iController, iDeclare, iBlock
 		if( isset($this->_downloader) ) 
 			return;
 		$view = $this->__getView(); 
-		if( $json = $view->isJson() ) 
-			$view->renderJson( $json ); 
-		else 
-			$view->render( $this->_template );
+		if( NULL!==$view ) 
+		{
+			if( $json = $view->isJson() ) 
+				$view->renderJson( $json ); 
+			else 
+				$view->render( $this->_template );
+		} 
 	}
 
 	private function __customRender( $render_name, $args = NULL ) 
