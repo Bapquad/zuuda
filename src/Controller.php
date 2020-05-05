@@ -285,20 +285,33 @@ abstract class Controller implements iController, iDeclare, iBlock
 		}
 	} 
 	
-	final protected function __json( $args ) { $this->__getView()->jsonLayout( $args ); } 
+	final protected function __json( $args ) 
+	{ 
+		$view = $this->__getView(); 
+		if( NULL!== $view ) 
+		{
+			$view->jsonLayout( $args ); 
+		} 
+		else 
+		{ 
+			RequestHeader::displayJson(); 
+			echo json_encode($args);
+		} 
+		return $this; 
+	} 
 	
 	final protected function __cors() 
 	{
 		$view = $this->__getView(); 
 		if( NULL!== $view ) 
 		{
-			$view->makeapi(); 
+			$view->cors(); 
 		} 
 		else 
 		{ 
 			response::setcors(); 
-			return $this; 
 		}
+		return $this; 
 	} 
 	
 	final protected function __download($fileLoader, $filename) 
@@ -312,10 +325,13 @@ abstract class Controller implements iController, iDeclare, iBlock
 		if( isset($this->_downloader) ) 
 			return;
 		$view = $this->__getView(); 
-		if( $json = $view->isJson() ) 
-			$view->renderJson( $json ); 
-		else 
-			$view->render( $this->_template );
+		if( NULL!==$view ) 
+		{
+			if( $json = $view->isJson() ) 
+				$view->renderJson( $json ); 
+			else 
+				$view->render( $this->_template );
+		} 
 	}
 
 	private function __customRender( $render_name, $args = NULL ) 

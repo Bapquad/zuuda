@@ -571,7 +571,7 @@ EOD;
 		return file_exists($this->_layout_footer_path);
 	} 
 	
-	protected function CORS() 
+	public function CORS() 
 	{ 
 		response::setcors();
 		return $this;
