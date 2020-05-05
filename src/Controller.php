@@ -285,20 +285,33 @@ abstract class Controller implements iController, iDeclare, iBlock
 		}
 	} 
 	
-	final protected function __json( $args ) { $this->__getView()->jsonLayout( $args ); } 
+	final protected function __json( $args ) 
+	{ 
+		$view = $this->__getView(); 
+		if( NULL!== $view ) 
+		{
+			$view->jsonLayout( $args ); 
+		} 
+		else 
+		{ 
+			dd();
+			escape();
+		} 
+		return $this; 
+	} 
 	
 	final protected function __cors() 
 	{
 		$view = $this->__getView(); 
 		if( NULL!== $view ) 
 		{
-			$view->makeapi(); 
+			$view->cors(); 
 		} 
 		else 
 		{ 
 			response::setcors(); 
-			return $this; 
 		}
+		return $this; 
 	} 
 	
 	final protected function __download($fileLoader, $filename) 
