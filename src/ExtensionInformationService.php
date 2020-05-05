@@ -54,7 +54,7 @@ class ExtensionInformationService implements iComService
 
 	private static function __read_live( $file_path ) 
 	{
-		if( call( cFile::get(), $file_path )->exist() ) 
+		if( call(cFile::get(), $file_path)->exist() ) 
 		{
 			$fp = simplexml_load_file( $file_path ); 
 			$module = $fp->live['module']->__toString();
@@ -78,7 +78,7 @@ class ExtensionInformationService implements iComService
 
 	private static function __read_about( $file_path ) 
 	{
-		if( call( cFile::get(), $file_path )->exist() ) 
+		if( call(cFile::get(), $file_path)->exist() ) 
 		{
 			$fp = simplexml_load_file( $file_path ); 
 			$module = $fp->about['module']->__toString(); 
@@ -101,7 +101,7 @@ class ExtensionInformationService implements iComService
 	private static function __read_shortcut( $file_path, $codeof ) 
 	{ 
 		$instance = self::__getInstance();
-		if( call( cFile::get(), $file_path )->exist()) 
+		if( call(cFile::get(), $file_path)->exist() ) 
 		{ 
 			$fp = simplexml_load_file( $file_path );
 			$module = $fp->shortcut['module']->__toString();

@@ -47,6 +47,8 @@ function audio( $filePath ) { return asset(MEDIA_AUDIO_NAME_DIR.$filePath); }
 function video( $filePath ) { return asset(MEDIA_VIDEO_NAME_DIR.$filePath); } 
 function document( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); } 
 function compressed( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); }
+function url( $path ) { return asset($path); } 
+function base( $path ) { return asset($path); } 
 function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
 
 function __assetPath( $file_path, $file = false, $build = false ) 
