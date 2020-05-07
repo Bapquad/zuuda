@@ -49,6 +49,7 @@ define( 'mcbm_set_page',			'__setPage' );
 define( 'mcbm_set_limit',			'__setLimit' );
 define( 'mcbm_bound',				'__bound' );
 define( 'mcbm_prefix',				'__prefix' );
+define( 'mcbm_affected',			'__affected' );
 define( 'mhd', 						'data' );
 define( 'mhj', 						'join' );
 
@@ -303,6 +304,7 @@ abstract class SQLQuery
 	final public function Role() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Data() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Prefix() { return call_user_func_array([$this, mcbm_prefix], array(func_get_args(), func_num_args())); } 
+	final public function Affected() { return call_user_func_array([$this, mcbm_affected], array(func_get_args(), func_num_args())); } 
 	final public function Connect( $name ) { return $this->__connect( $name ); }
 	final public function Close() { return $this->__close(); }
 	final public function GetError() { return $this->__getError(); } 
@@ -1905,6 +1907,23 @@ abstract class SQLQuery
 	{
 		if( !array_key_exists($fieldName, $this->_propsUndescribe) ) 
 			return $this->__boundField( $fieldName ); 
+	} 
+	
+	private function __affected( $args, $argsNum ) 
+	{ 
+		try 
+		{ 
+			if( 0<$argsNum ) 
+			{ 
+				throw new Exception( "Using the Model::prefix() with no parameter" ); 
+			} 
+			
+			return $this->affected_rows($this->_dbHandle); 
+		} 
+		catch( Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage().BL.error::position($e) ); 
+		} 
 	} 
 	
 	private function __prefix( $args, $argsNum ) 
@@ -4845,7 +4864,8 @@ abstract class SQLQuery
 	private function error() { return mysqli_error( $this->_dbHandle ); } 
 	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
 	private function num_rows( $rs ) { return mysqli_num_rows($rs); } 
-	private function fetch_assoc( $rs ) {return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
+	private function fetch_assoc( $rs ) { return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
+	private function affected_rows( $rs ) { return ($rs)?mysqli_affected_rows( $rs ):$rs; } 
 	private function fetch_row( $rs ) { return ($rs)?mysqli_fetch_row( $rs ):$rs; } 
 	private function free_result( $rs ) { return ($rs)?mysqli_free_result( $rs ):$rs; } 
 	private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
