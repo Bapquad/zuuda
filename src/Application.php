@@ -321,14 +321,14 @@ class Application
 		}
 		catch(Exception $e) 
 		{
-			if( $configs[DEVELOPER_WARNING] ) 
+			if( config::get(DEVELOPER_WARNING) && config::get(DEVELOPMENT_ENVIRONMENT) ) 
 			{
-				abort( 400, $e->getMessage().BL.error::position($e) ); 
+				abort( 404, $e->getMessage().BL.error::position($e) ); 
 			} 
 			else 
-			{ 
-				abort( 400 ); 
-			} 
+			{
+				abort( 404, "Ops! Your page hasn't found." ); 
+			}
 		}
 		$this->__release(); 
 		escape(); 
