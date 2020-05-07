@@ -702,31 +702,34 @@ function padnum($input, $length=5)
 	return str_pad($input, $length, '0', STR_PAD_LEFT); 
 } 
 
-function abort( $code=404, $msg=NULL ) 
+function abort( $code=404, $msg=NULL, $strict=true ) 
 {
 	global $configs;
+	Zuuda\Response::instance()->cors(!$strict); 
 	$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
 	if($code===500) 
 	{
-		header( "HTTP/1.1 500 Internal Server Error" ); 
+		if( $strict ) 
+			header( "HTTP/1.1 500 Internal Server Error" ); 
 		$page = WEB_DIR . "500.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
-			$msg = "Woops! You have a internal server error.";
+			$msg = "Woops! You have an internal server error.";
 		$title = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
 	}
 	else if($code===408) 
 	{
-		header( "HTTP/1.0 408 Request Timeout" ); 
+		if( $strict ) 
+			header( "HTTP/1.0 408 Request Timeout" ); 
 		$page = WEB_DIR . "408.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
 			$msg = "Woops! Looks like your request is timeout.";
@@ -734,12 +737,13 @@ function abort( $code=404, $msg=NULL )
 	} 
 	else if($code===404) 
 	{
-		header( "HTTP/1.1 404 Not Found" ); 
+		if( $strict ) 
+			header( "HTTP/1.1 404 Not Found" ); 
 		$page = WEB_DIR . "404.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
 			$msg = "Woops! Looks like your page couldn't found.";
@@ -747,12 +751,13 @@ function abort( $code=404, $msg=NULL )
 	} 
 	else if($code===403) 
 	{
-		header( "HTTP/1.0 403 Forbidden" ); 
+		if( $strict ) 
+			header( "HTTP/1.0 403 Forbidden" ); 
 		$page = WEB_DIR . "403.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
 			$msg = "Woops! Looks like you have deny from this request.";
@@ -761,12 +766,13 @@ function abort( $code=404, $msg=NULL )
 	} 
 	else if($code===401) 
 	{
-		header( "HTTP/1.0 401 Unauthorized" ); 
+		if( $strict ) 
+			header( "HTTP/1.0 401 Unauthorized" ); 
 		$page = WEB_DIR . "401.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
 			$msg = "Woops! Looks like you haven't authorized.";
@@ -775,12 +781,13 @@ function abort( $code=404, $msg=NULL )
 	} 
 	else if($code===400) 
 	{
-		header( "HTTP/1.0 400 Bad Request" ); 
+		if( $strict ) 
+			header( "HTTP/1.0 400 Bad Request" ); 
 		$page = WEB_DIR . "400.html";
 		if( file_exists($page) ) 
 		{
 			include_once( $page );
-			exit;
+			escape();
 		}
 		if(NULL===$msg) 
 			$msg = "Woops! Looks like your request is invalid.";
@@ -888,7 +895,7 @@ function abort( $code=404, $msg=NULL )
 </html>
 EOL;
 /*HTML*/
-	exit;
+	escape();
 }
 
 if( Zuuda\GlobalModifier::func( 'getSingleTon' ) ) 

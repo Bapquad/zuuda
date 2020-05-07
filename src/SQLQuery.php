@@ -48,6 +48,7 @@ define( 'mcbm_row',					'__row' );
 define( 'mcbm_set_page',			'__setPage' );
 define( 'mcbm_set_limit',			'__setLimit' );
 define( 'mcbm_bound',				'__bound' );
+define( 'mcbm_prefix',				'__prefix' );
 define( 'mhd', 						'data' );
 define( 'mhj', 						'join' );
 
@@ -301,6 +302,7 @@ abstract class SQLQuery
 	final public function Fetch() { return call_user_func_array([$this, mcbm_row], array(func_get_args(), func_num_args())); } 
 	final public function Role() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Data() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
+	final public function Prefix() { return call_user_func_array([$this, mcbm_prefix], array(func_get_args(), func_num_args())); } 
 	final public function Connect( $name ) { return $this->__connect( $name ); }
 	final public function Close() { return $this->__close(); }
 	final public function GetError() { return $this->__getError(); } 
@@ -375,7 +377,12 @@ abstract class SQLQuery
 			{
 				$cfg = $configs['DATASOURCE'][$src];
 				$configs['DATASOURCE']['server'][$cfg['server']]['source'] = $src; 
-				if( isset($cfg['prefix']) ) 
+				if( isset($this->_prefix) ) 
+				{
+					$this->__setPrefix( $this->_prefix ); 
+					unset($this->_prefix); 
+				} 
+				else if( EMPTY_CHAR===$this->_propPrefix && isset($cfg['prefix']) ) 
 				{
 					$this->__setPrefix( $cfg['prefix'] ); 
 				} 
@@ -1898,7 +1905,26 @@ abstract class SQLQuery
 	{
 		if( !array_key_exists($fieldName, $this->_propsUndescribe) ) 
 			return $this->__boundField( $fieldName ); 
-	}
+	} 
+	
+	private function __prefix( $args, $argsNum ) 
+	{ 
+		try 
+		{ 
+			if( 1!==$argsNum ) 
+			{ 
+				throw new Exception( "Using the Model::prefix() with required 1 parameter" ); 
+			} 
+		} 
+		catch( Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage().BL.error::position($e) ); 
+		} 
+		
+		$this->_propPrefix = current($args); 
+		
+		return $this; 
+	} 
 	
 	private function __bound( $args, $argsNum ) 
 	{

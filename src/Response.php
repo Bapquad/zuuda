@@ -11,7 +11,8 @@ class Response
 	public static function Redirect( $uri ) { return __direct( $uri ); } 
 	public static function View( Controller $dispatcher ) { return self::__view($dispatcher); } 
 	public static function SetCors() { return self::__setCors(); }
-	public function Cors() { return self::__cors(); }
+	public static function Instance() { return self::__getInstance(); } 
+	public function Cors() { return call_user_func_array([$this, '__cors'], array(func_get_args(), func_num_args())); }
 	public function With() { return call_user_func_array([$this, '__with'], array(func_get_args(), func_num_args())); } 
 	public function Json( $data ) { return $this->__json($data); } 
 	public function Render( $tpl=NULL, $data=NULL ) { return $this->__render($tpl, $data); }
@@ -110,9 +111,37 @@ class Response
 		return true;
 	} 
 	
-	private function __cors() 
+	private function __cors($args, $argsNum) 
 	{
-		return $this->_dispatcher->cors( $data ); 
+		try 
+		{ 
+			if( 1>$argsNum ) 
+			{ 
+				throw new Exception("You just use the Response::cors() with 1 or 0 paramerter only"); 
+			} 
+			else if( 0===$argsNum ) 
+			{ 
+				$_setCors = true; 
+			} 
+			else 
+			{ 
+				$_setCors = current($args); 
+			} 
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() );  
+		} 
+		
+		if( $_setCors ) 
+		{
+			if( NULL!==$this->_dispatcher ) 
+				return $this->_dispatcher->cors(); 
+			else 
+				response::setcors(); 
+		} 
+		
+		return $this; 
 	}
 	
 }
