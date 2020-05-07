@@ -114,7 +114,7 @@ define ( 'JS_DIR',			APP_DIR."js".DS );
 define ( 'JUI_DIR',			APP_DIR."jui".DS );
 
 define ( 'ORIGIN_DOMAIN', 			$configs['ORIGIN_DOMAIN'] );
-define ( 'WEB_PATH', 				ORIGIN_DOMAIN.((isset($configs['APP_PATH']))?$configs['APP_PATH'].DS:DS) );
+define ( 'WEB_PATH', 				ORIGIN_DOMAIN.((isset($configs['APP_PATH']))?PS.$configs['APP_PATH']:PS) );
 define ( 'TPL_PATH', 				WEB_PATH."templates".PS );
 define ( 'MEDIA_PATH', 				WEB_PATH.'media'.PS );
 define ( 'MEDIA_PHOTO_PATH', 		MEDIA_PATH.'Photos'.PS );

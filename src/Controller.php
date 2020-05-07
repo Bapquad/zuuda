@@ -390,17 +390,8 @@ abstract class Controller implements iController, iDeclare, iBlock
 	protected function __checkMass( $requestMethod )  
 	{
 		global $_server, $_get, $_post, $_put, $_delete, $_file, $configs;
-
-		if( isset($_SERVER['REQUEST_URI']) ) 
-		{
-			$url = $_SERVER['REQUEST_URI'];
-		} 
-		else 
-		{
-			$url = PS . $url;
-		} 
-
-		$thread_id = md5( $url );
+		$url_rediect = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:PS;
+		$thread_id = md5( $url_rediect );
 
 		if( !empty( $_FILES ) && isset( $configs['MEDIA'] ) ) 
 		{
@@ -453,7 +444,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 				$data[$key] = $value; 
 			}
 			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$data ) );
-			__direct( $url );
+			__direct( $url_rediect );
 		}
 		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );
 		$_mass_vertifier_data = Session::Get( "_mass_vertifier" . $thread_id );

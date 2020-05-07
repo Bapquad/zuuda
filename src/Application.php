@@ -132,7 +132,7 @@ class Application
 	{
 		global $configs;
 		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')) ); 
-		$this->__parseQuery($_SERVER[ "REQUEST_URI" ]);
+		$this->__parseQuery($GLOBALS['request_uri']);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
 	
