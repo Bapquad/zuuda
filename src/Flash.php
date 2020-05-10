@@ -27,10 +27,35 @@ class Flash implements iFlash
 		{
 			if( count($args) ) 
 			{
-				$flashs = session::get('flash'); 
+				$flash_exist = session::has('flashs'); 
+				if( $flash_exist ) 
+				{ 
+					$flashs = session::get('flash'); 
+				}  
+				else 
+				{ 
+					$flashs = array(); 
+				} 
+				
 				$flashs[] = $name; 
-				session::modify('flash', $flashs); 
-				session::modify($name, $args[0]); 
+				
+				if( $flash_exist ) 
+				{
+					session::modify('flash', $flashs); 
+				}
+				else
+				{
+					session::register('flash', $flashs); 
+				}
+				
+				if( session::has($name) ) 
+				{
+					session::modify($name, $args[0]); 
+				} 
+				else 
+				{ 
+					session::register($name, $args[0]); 
+				} 
 			} 
 			else 
 			{
