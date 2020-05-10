@@ -3,6 +3,7 @@
 namespace Zuuda;
 
 use Exception;
+use Zuuda\Error;
 
 define( 'mcbm_order_import_once',	'__orderImport' );
 define( 'mcbm_order_import_all', 	'__orderImportAll' );
@@ -4903,6 +4904,7 @@ abstract class SQLQuery
 					$dsl = $server['resource']; 
 					if( mysqli_select_db($dsl, $configs['DATASOURCE'][$src]['database']) ) 
 					{ 
+						mysqli_query( $dsl, 'SET CHARSET utf8' ); 
 						$this->__handled( $dsl, $src ); 
 					} 
 					else 
@@ -4918,7 +4920,6 @@ abstract class SQLQuery
 					$dsl = mysqli_connect($server['hostname'], $server['username'], $server['password']);
 					if( $dsl ) 
 					{
-						mysqli_query( $dsl, 'SET CHARSET utf8' ); 
 						$configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['resource'] = $dsl; 
 						return $this->__connect($src); 
 					} 
