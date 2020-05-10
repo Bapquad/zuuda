@@ -26,15 +26,15 @@ class ThemeClient implements iThemeClient
 	{
 		return array
 		(
-			'version' => $data->version, 
-			'datetime' => $data->datetime, 
-			'author' => $data->name[ 'author' ], 
-			'company' => $data->name[ 'company' ], 
-			'name' => $data->name, 
-			'description' => $data->description, 
-			'notes' => $data->notes, 
-			'install_dir' => $data['installdir'], 
-			'preview' => $data->preview, 
+			'version' => $data->version->__toString(), 
+			'datetime' => $data->datetime->__toString(), 
+			'author' => $data->name[ 'author' ]->__toString(), 
+			'company' => $data->name[ 'company' ]->__toString(), 
+			'name' => $data->name->__toString(), 
+			'description' => $data->description->__toString(), 
+			'notes' => $data->notes->__toString(), 
+			'install_dir' => $data['installdir']->__toString(), 
+			'preview' => $data->preview->__toString(), 
 		);
 	}
 	
@@ -57,7 +57,7 @@ class ThemeClient implements iThemeClient
 		{
 			return array
 			(
-				$configs[ 'hostpath' ] => $configs[ 'basename' ] . $configs[ 'extension' ] 
+				$configs['hostpath'] => $configs['basename'].$configs['extension'] 
 			);
 		}
 		return false;
@@ -93,7 +93,7 @@ class ThemeClient implements iThemeClient
 		if( $configs ) 
 		{
 			list( $realpath, $filename ) = each( $configs );
-			$themes = cFile::lookDir( $realpath, $filename );
+			$themes = cFile::lookFile( $realpath, $filename );
 			return self::__request( $themes );
 		}
 		return NULL;

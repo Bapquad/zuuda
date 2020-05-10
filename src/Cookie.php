@@ -32,7 +32,7 @@ class Cookie
 		static $_instance;
 		if( is_null( $_instance ) ) 
 		{
-			$_instance = new Session;
+			$_instance = new Cookie;
 		}
 		return $_instance;
 	} 

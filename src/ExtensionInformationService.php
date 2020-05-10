@@ -45,7 +45,7 @@ class ExtensionInformationService implements iComService
 			foreach($configs['basename'] as $key => $name) 
 			{ 
 			
-				$host[$configs['basename'][$key]] = $configs['driver'].DS.$configs['basename'][$key].$configs['extension']; 
+				$host[$configs['basename'][$key]] = $configs['basename'][$key].$configs['extension']; 
 			}
 			return array( $configs['host'] => $host );
 		} 
@@ -215,7 +215,7 @@ class ExtensionInformationService implements iComService
 				foreach( $configs as $key => $config ) 
 				{
 					$command = '__read_'.$key; 
-					$result = $instance->$command($code_area.$value['codeof'].DS.$module.DS.$config, $value['codeof']); 
+					$result = $instance->$command($code_area.$value['codeof'].DS.'Extensions'.DS.$module.DS.'driver'.DS.$config, $value['codeof']); 
 					if( $result ) 
 					{
 						$instance->__push( $key, $result );

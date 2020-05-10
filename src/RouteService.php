@@ -57,16 +57,22 @@ class RouteService implements iTaskService, iRouteService
 			if( $name == __CLASS__ ) 
 			{
 				$model = new ServiceModel();
-				$prefix = (string) $program->name[ 'prefix' ];
-				$model_name = (string) $program->name[ 'model' ];
-				$alias_name = preg_replace( '/[\-\_\s]/', '_', strtolower($program->name[ 'alias' ]) );
-				$table_name = explode( '_', $alias_name );
-				foreach( $table_name as $key => $value ) 
-					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value );
-				$table_name = implode( '_', $table_name ); 
+				$prefix = $program->name['prefix']->__toString();
+				$modelName = $program->name['model']->__toString();
+				$aliasName = $program->name['alias']->__toString();
+				$tableName = $program->name['table']->__toString();
 				if( Config::has('COM') && !$app::hasUrl() ) 
-					if( $path = self::__routing( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $prefix, $url ) ) 
+					if( $path = self::__routing($model
+						->setPrefix($prefix)
+						->setAliasName($aliasName)
+						->setModelName($modelName)
+						->setTableName($tableName)
+						->instance(), 
+						$prefix, 
+						$url) )  
+					{
 						$app->setUrl( $path ); 
+					}
 			}
 		}
 	}

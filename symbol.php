@@ -1,5 +1,4 @@
 <?php
-
 define ( 'DEVELOPMENT_ENVIRONMENT', 'DEVELOPMENT_ENVIRONMENT' );
 define ( 'DEVELOPER_WARNING', 'DEVELOPER_WARNING' );
 define ( 'AUTOLOAD_ERRORS_WARNING', 'AUTOLOAD_ERRORS_WARNING' );
@@ -10,7 +9,7 @@ define ( 'BS', 	"\\" );
 define ( 'PS', 	"/" );
 define ( 'NL', 	"\n" );
 define ( 'nl', 	NL );
-define ( 'TAB', '\t' );
+define ( 'TAB', "\t" );
 define ( 'tab', TAB );
 define ( 'BL', 	"<br/>" );
 define ( 'bl', 	BL );
@@ -47,10 +46,10 @@ define ( 'VIEW_DIR', 	VIEW_PRE.DS );
 define ( 'LAYOUT_MAIN', 'main.tpl' );
 
 define ( 'ROOT', 		$configs['ROOT'] ); 
-define ( 'ROOT_DIR', 	$configs['ROOT'] ); 
 define ( 'APP_ROOT', 	$configs['APP_DIR'] );
 define ( 'FW_NAME',		'Zuuda' );
-DEFINE ( 'VENDOR', 		ROOT.DS.'vendor' );
+define ( 'ROOT_DIR', 	ROOT.DS ); 
+DEFINE ( 'VENDOR', 		ROOT_DIR.'vendor' );
 DEFINE ( 'VENDOR_DIR', 	VENDOR.DS );
 DEFINE ( 'SRC_DIR',		'src'.DS );
 define ( 'WEB_ROOT', 	APP_ROOT );
@@ -133,3 +132,8 @@ define ( 'CSS_PATH', 				SKIN_PATH."css".PS );
 define ( 'IMG_PATH', 				SKIN_PATH."img".PS );
 define ( 'IMAGE_PATH', 				IMG_PATH );
 define ( 'THEME_PATH', 				WEB_PATH."themes".PS );
+
+if( $configs[DEVELOPER_WARNING] ) 
+{ 
+	ini_set( 'display_errors', 1 ); 
+} 

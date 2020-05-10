@@ -14,7 +14,11 @@ class App
 	public function Instance() { return $this->__instance( func_get_args() ); } 
 	public function rootName() { return __CLASS__; }
 	final private function __clone() {} 
-	final protected function __construct($n, $c) { $this->_codeof = $c; $this->_className = $n; } 
+	final protected function __construct($n=NULL, $c=NULL) 
+	{
+		$this->_codeof = $c; 
+		$this->_className = $n; 
+	} 
 	
 	private static function __use($n, $c) { return new App($n, $c); } 
 	protected function __instance($args) 
@@ -25,7 +29,6 @@ class App
 			getSingleton( 'Config' )->set( 'CODE_OF', $this->_codeof );
 			$this->_class = new \ReflectionClass($this->_className);
 			getSingleton( 'Config' )->die( 'CODE_OF' ); 
-			
 			if(!empty($args))
 				return $this->_class->newInstanceArgs($args); 
 			else 

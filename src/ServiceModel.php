@@ -10,7 +10,7 @@ class ServiceModel extends Model
 		// ...
 	}
 	
-	public function initialize() 
+	public function instance() 
 	{
 		parent::__construct();
 		return $this; 

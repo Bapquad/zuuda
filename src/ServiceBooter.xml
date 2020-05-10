@@ -14,15 +14,15 @@
 		<bootcb></bootcb>
 	</btshipnelservice>
 	<themeservice>
-		<name prefix="zuuka_" alias="theme" model="Theme">Zuuda\ThemeService</name>
+		<name prefix="zuuka_" alias="register" table="registers" model="Register">Zuuda\ThemeService</name>
 		<bootcb></bootcb>
 	</themeservice>
 	<cateservice>
-		<name prefix="zuuka_" alias="category" model="Category">Zuuda\CateService</name>
+		<name prefix="zuuka_" alias="category" table="categories" model="Category">Zuuda\CateService</name>
 		<bootcb></bootcb>
 	</cateservice>
 	<routeservice>
-		<name prefix="zuuka_" alias="com_route" model="com_route" layout="com_layout">Zuuda\RouteService</name>
+		<name prefix="zuuka_" alias="com_route" model="com_route" table="coms_routes" layout="com_layout">Zuuda\RouteService</name>
 		<bootcb></bootcb>
 	</routeservice>
 </servicebooter>

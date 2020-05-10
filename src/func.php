@@ -51,6 +51,17 @@ function url( $path ) { return asset($path); }
 function base( $path ) { return asset($path); } 
 function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
 
+function theme_installed($install_dir) 
+{ 
+	global $configs;
+	
+	if( isset($configs['Theme']) ) 
+	{	
+		return $install_dir===$configs['Theme']; 
+	} 
+	return false;
+} 
+
 function __assetPath( $file_path, $file = false, $build = false ) 
 {
 	global $configs;
@@ -93,8 +104,7 @@ function __currentControllerFile()
 	$controller = $configs['MODULE'].DS.CTRLER_DIR.$configs['CONTROLLER'].CONTROLLER.$configs['EXT']; 
 	if( $configs['COM'] && isset( $configs['SHIP'] ) ) 
 	{
-		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL).$controller;
-
+		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.'Extensions'.DS:NULL).$controller;
 		$com_path = COM.$controller;
 		if( call( Zuuda\cFile::get(), $code_path )->exist() ) 
 			return $code_path; 
@@ -126,7 +136,7 @@ function __availbleClass( $class_name )
 		$class_path = COM.$class_file;
 		if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
 		{
-			$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS:NULL).$class_file; 
+			$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.'Extensions'.DS:NULL).$class_file; 
 			if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
 				$class_path = MOD_DIR.$class_file; 
 		}
@@ -199,13 +209,16 @@ function __dispatch_autoload_class_file( $class_name )
 			if( $configs['COM'] ) 
 			{
 				$class_path = COM . $class_file;
-				if( !file_exists( $class_path ) && isset($configs['CODE_OF']) ) 
+				if( !file_exists($class_path) && isset($configs['CODE_OF']) ) 
 				{
-					$class_path = CODE.$configs['CODE_OF'].DS.$class_file; 
+					$class_path = CODE.$configs['CODE_OF'].DS.'Extensions'.DS.$class_file; 
+					if( !file_exists($class_path) ) 
+					{
+						$class_path = CODE.$configs['CODE_OF'].DS.'Widgets'.DS.$class_file; 
+					}
 				}
 			}
-			
-			if( !file_exists( $class_path ) ) 
+			if( !file_exists($class_path) ) 
 				$class_path = MOD_DIR . $class_file;
 		} 
 		

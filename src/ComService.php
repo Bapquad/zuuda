@@ -39,7 +39,7 @@ class ComService implements iComService
 		if( $configs ) 
 		{
 			return array(
-				$configs[ 'host' ] => $configs[ 'driver' ] . DS . $configs[ 'basename' ] . $configs[ 'extension' ] 
+				$configs['host'] => $configs['basename'].$configs['extension'] 
 			);
 		}
 		return false;

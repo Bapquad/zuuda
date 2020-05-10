@@ -36,7 +36,7 @@ class Error
 		static $_instance;
 		if( is_null( $_instance ) ) 
 		{
-			$_instance = new Auth;
+			$_instance = new Error;
 		}
 		return $_instance;
 	}

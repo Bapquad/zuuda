@@ -6,7 +6,7 @@ class Zipz
 {
 	static private $_file;
 	
-	private static $class = '\Zuuda\Auth';
+	private static $class = '\Zuuda\Zipzer';
 	final public function rootName() { return __CLASS__; }
 	private function __clone() {} 
 	private function __construct() {}

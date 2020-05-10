@@ -1,8 +1,7 @@
 <?php
 namespace Zuuda; 
 
-define( 'THEME_ACTIVE', 'active' );
-define( 'THEME_INACTIVE', 'inactive' );
+use Zuuda\Auth;
 
 class ThemeService implements iTaskService, iThemeService 
 {
@@ -45,9 +44,14 @@ class ThemeService implements iTaskService, iThemeService
 	{
 		if( Config::has( 'COM' ) ) 
 		{
-			$data = $model->where('status', 1)->last(); 
-			if( $data[$modelName]['status'] != THEME_INACTIVE ) 
-				Config::Set( 'Theme', $data[$modelName]['install_dir'] );
+			$data = $model->where( 'key', 'theme_install_dir' )->item(':first'); 
+			if( !empty($data) ) 
+			{
+				if( NULL!==$data['value'] || EMPTY_CHAR!==$data['value'] ) 
+				{
+					Config::Set( 'Theme', $data['value'] ); 
+				}
+			}
 			return true;
 		}
 		return false;
@@ -67,14 +71,17 @@ class ThemeService implements iTaskService, iThemeService
 			if( $name == __CLASS__ ) 
 			{
 				$model = new ServiceModel(); 
-				$prefix = $program->name[ 'prefix' ];
-				$model_name = (string) $program->name[ 'model' ];
-				$alias_name = preg_replace( '/[\-\_\s]/', '_', $program->name[ 'alias' ] ); 
-				$table_name = explode( '_', $alias_name );
-				foreach( $table_name as $key => $value ) 
-					$table_name[ $key ] = getSingleton( 'Inflect' )->pluralize( $value ); 
-				$table_name = implode( '_', $table_name ); 
-				self::__task( $model->setPrefix($prefix)->setAliasName($alias_name)->setModelName($model_name)->setTableName($table_name)->initialize(), $model_name );
+				$prefix = $program->name['prefix']->__toString();
+				$modelName = $program->name['model']->__toString();
+				$aliasName = $program->name['alias']->__toString(); 
+				$tableName = $program->name['table']->__toString(); 
+				self::__task( $model
+					->setPrefix($prefix)
+					->setAliasName($aliasName)
+					->setModelName($modelName)
+					->setTableName($tableName)
+					->instance(), 
+					$modelName );
 				break;
 			}
 		}
@@ -84,30 +91,29 @@ class ThemeService implements iTaskService, iThemeService
 	
 	private static function __install( Model $model, $theme_dir ) 
 	{
-		$lt = $model->getLastedData();
-		list( $a, $data ) = each( $lt );
-		if( $data[ $model->getModel() ][ 'install_dir' ] == $theme_dir ) 
-		{
-			if( $data[ $model->getModel() ][ 'status' ] == 'inactive' ) 
-				$model->setId( (int) $data[ $model->getModel() ][ 'id' ] )->setData( 'status', 'active' )->save();
-			return true;
-		}
+		$model->equal( 'key', 'theme_install_dir' )->save(array(
+			'value' => $theme_dir
+		)); 
 		
-		$themes = ThemeClient::load();
-		foreach( $themes as $key => $theme ) 
-		{
-			foreach( $theme as $i => $data ) 
-				if( $data[ 'install_dir' ] == $theme_dir ) 
-					break;
-		}
-		$model->setData( $data )->setData( 'status', 'active' )->save();
+		if( !$model->affected() ) 
+		{ 
+			$model->save(array(
+				'user_id' => 1, 
+				'key' => 'theme_install_dir', 
+				'value' => $theme_dir, 
+			)); 
+		} 
 		return true;
 	}
 	
 	private static function __reset( Model $model ) 
 	{
-		if( $id = $model->getMaxId('id') ) 
-			$model->setId( $id )->setData( 'status', 'inactive' )->save();
+		$data = $model->equal( 'key', 'theme_install_dir' )->item(':first'); 
+		
+		if( !empty($data) ) 
+		{
+			$model->equal( 'key', 'theme_install_dir' )->delete();
+		}
 		return true;
 	}
 	

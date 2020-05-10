@@ -9,6 +9,8 @@ class Response
 	private $_dispatcher;
 	
 	public static function Redirect( $uri ) { return __direct( $uri ); } 
+	public static function Location( $uri ) { return __direct( $uri ); } 
+	public static function Goto( $uri ) { return __direct( $uri ); } 
 	public static function View( Controller $dispatcher ) { return self::__view($dispatcher); } 
 	public static function SetCors() { return self::__setCors(); }
 	public static function Instance() { return self::__getInstance(); } 

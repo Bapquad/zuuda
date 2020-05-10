@@ -12,6 +12,7 @@ class Session
 	public static function Modify( $name, $value ) { return self::__modify( $name, $value ); }
 	public static function Register( $name, $value = NULL ) { return self::__register( $name, $value ); }
 	public static function Unregister( $name ) { return self::__unregister( $name ); }
+	public static function Remove( $name ) { return self::__unregister( $name ); }
 	public static function GetData() { return self::__getData(); } 
 	public static function GetAll() { return self::__getData(); }
 	public static function Get( $name = NULL ) { return self::__getVar( $name ); }
@@ -40,8 +41,13 @@ class Session
 	
 	private static function __modify( $name, $value ) 
 	{
-		$_SESSION[$name] = $value;
-		self::$data[$name] = $value;
+		if( array_key_exists( $name, self::$data ) ) 
+		{
+			$_SESSION[$name] = $value;
+			self::$data[$name] = $value;
+			return true;
+		}
+		return false;
 	}
 
 	private static function __register( $name, $value ) 
@@ -61,17 +67,14 @@ class Session
 		{
 			unset( $_SESSION[$name] );
 			unset( self::$data[$name] );
+			return true;
 		}
+		return false;
 	}
 
 	private static function __setVar( $name, $value ) 
 	{
-		if( array_key_exists( $name, self::$data ) ) 
-		{
-			self::__modify( $name, $value );
-			return true;
-		}
-		return false;
+		return self::__modify( $name, $value );
 	} 
 
 	private static function __getVar( $name = NULL ) 
