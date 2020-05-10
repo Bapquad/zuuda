@@ -2,7 +2,7 @@
 
 namespace Zuuda;
 
-class Fn 
+class Fx 
 {
 	
 	private static $class = '\Zuuda\Fn';
