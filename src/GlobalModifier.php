@@ -64,6 +64,7 @@ class GlobalModifier implements iGlobalModifier
 		global $router, $request_uri;
 		if( isset($_GET['url']) ) 
 		{
+			$request_uri = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:$url;
 			$url = $_GET['url'];
 		}
 		else  
