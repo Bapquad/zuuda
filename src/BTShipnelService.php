@@ -15,7 +15,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 			return array
 			(
 				VENDOR_DIR, 
-				'bapquad\zuuda\ServiceBooter', 
+				'Zuuda\ServiceBooter', 
 				'.xml', 
 			);
 		}

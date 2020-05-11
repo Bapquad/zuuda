@@ -192,7 +192,8 @@ function __escape()
 function __dispatch_service_file( $service_namespace ) 
 {
 	$service_path = __correctPath(implode(EMPTY_CHAR, $service_namespace)); 
-	$output_path = str_replace(FW_NAME.DS, FW_NAME.DS.SRC_DIR ,$service_path); 
+	$replacement = strtolower(FW_NAME).DS.SRC_DIR;
+	$output_path = str_replace(FW_NAME.DS, $replacement ,$service_path); 
 	return $output_path;
 }
 
