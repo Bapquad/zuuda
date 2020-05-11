@@ -215,6 +215,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 						$path = BLOCK_DIR.$configs['CODE_OF'].DS.$basename; 
 				} 
 				
+				$path = getSingleton('File')->assetPath($path);
 				if( file_exists($path) ) 
 				{
 					include($path); 
