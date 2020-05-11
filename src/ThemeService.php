@@ -116,7 +116,8 @@ class ThemeService implements iTaskService, iThemeService
 		
 		if( !empty($data) ) 
 		{
-			$model->equal( 'key', 'theme_install_dir' )->delete();
+			$model->equal( 'key', 'theme_install_dir' )->delete(); 
+			Cache::clear('template');
 		}
 		return true;
 	}
