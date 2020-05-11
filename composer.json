@@ -1,7 +1,8 @@
 {
     "name": "bapquad/zuuda",
     "description": "A PHP library",
-    "type": "library",
+    "type": "library", 
+	"version": "1.1", 
     "authors": [
         {
             "name": "Vu Huy Cuong",
