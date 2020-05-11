@@ -2,6 +2,8 @@
 namespace Zuuda; 
 
 use Zuuda\Auth;
+use Zuuda\cFile;
+use Zuuda\Cache;
 
 class ThemeService implements iTaskService, iThemeService 
 {
@@ -103,6 +105,8 @@ class ThemeService implements iTaskService, iThemeService
 				'value' => $theme_dir, 
 			)); 
 		} 
+		
+		Cache::clear('template');
 		return true;
 	}
 	
