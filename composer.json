@@ -9,5 +9,11 @@
             "email": "vuhuycuong291987@gmail.com"
         }
     ],
-    "require": {}
+    "require": {}, 
+	"autoload": {
+        "psr-4": {
+            "Zuuda\\": "src/"
+        }
+    },
+    "license": "LGPL-2.1-only"
 }
