@@ -1,15 +1,13 @@
 {
     "name": "bapquad/zuuda",
-    "description": "A PHP library",
-    "type": "library", 
-	"version": "1.1", 
+    "description": "A Zuuda Framework Source package", 
+    "type": "package",
     "authors": [
         {
             "name": "Vu Huy Cuong",
             "email": "vuhuycuong291987@gmail.com"
         }
     ],
-    "require": {}, 
 	"autoload": {
         "psr-4": {
             "Zuuda\\": "src/"
