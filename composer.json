@@ -3,6 +3,7 @@
     "description": "A PHP Framework for web development",
     "type": "library",
     "require": {
+		"php": "^7.2",
         "larapack/dd": "dev-master"
     },
     "license": "MIT",
