@@ -1,16 +1,16 @@
 {
     "name": "bapquad/zuuda",
     "description": "A PHP Framework for web development",
-    "type": "library",
-    "require": {
-        "larapack/dd": "dev-master"
-    },
+    "type": "package",
+	"version": "1.0.0", 
     "license": "MIT",
     "authors": [
         {
             "name": "Vu Huy Cuong",
             "email": "vuhuycuong291987@gmail.com"
         }
-    ],
-    "minimum-stability": "dev"
+    ], 
+    "require": {
+        "larapack/dd": "dev-master"
+    }
 }
