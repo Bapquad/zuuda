@@ -12,6 +12,8 @@ class cFile implements iFile
 	public static function CloseDir( $path ) { return self::__closeDir( $path ); }
 	public static function ListAsset( $path ) { return self::__listAsset( $path ); }
 	public static function ListFile( $path, $base=0 ) { return self::__listFile( $path, $base ); }
+	public static function BaseList( $path ) { return self::__listFile($path, 1); }
+	public static function FileList( $path ) { return self::__listFile($path, 1); }
 	public static function LookFile( $path, $file ) { return self::__lookFile( $path, $file ); }
 	public static function LookDir( $path, $file = NULL ) { return self::__lookDir( $path, $file ); } 
 	public static function MakeDir( $path ) { return self::__make_dir($path); } 
