@@ -87,10 +87,9 @@ function __assetPath( $file_path, $file = false, $build = false )
 		$theme_path = __correctPath($theme_path); 
 		if(false!==stripos($file_path, CACHE_TPL_NAME_DIR)) 
 			return WEB_DIR.$file_path; 
-		if( EMPTY_CHAR!==$file_path ) 
-			abort( 400, "<strong style=\"\">$file_path</strong> is not found.<br/><strong style=\"\">$theme_path</strong> is not found also.</p>" );
-		else 
-			abort( 400, "<strong style=\"\">$file_path</strong> is not found.</p>" );
+		
+		/** Note: Return the Virtual path for updating.*/
+		return $file_path;
 	}
 	else 
 	{ 

@@ -10,6 +10,7 @@ const MAIN_LAYOUT 	= 'main';
 
 use ReflectionClass;
 use Exception;
+use Zuuda\Error;
 
 class Application 
 {
@@ -161,6 +162,12 @@ class Application
 				$controller = 'Index';
 			}
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
+			$controller = explode('-', $controller);
+			foreach($controller as $k =>  $c) 
+			{ 
+				$controller[$k] = ucfirst($c);
+			} 
+			$controller = implode( EMPTY_CHAR, $controller ); 
 			$configs["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
 			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
 

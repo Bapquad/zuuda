@@ -10,7 +10,10 @@ class cFile implements iFile
 	public static function OpenDir( $path ) { return self::__openDir( $path ); }
 	public static function ReadDir( $path ) { return self::__readDir( $path ); }
 	public static function CloseDir( $path ) { return self::__closeDir( $path ); }
-	public static function ListFile( $path ) { return self::__listFile( $path ); }
+	public static function ListAsset( $path ) { return self::__listAsset( $path ); }
+	public static function ListFile( $path, $base=0 ) { return self::__listFile( $path, $base ); }
+	public static function BaseList( $path ) { return self::__listFile($path, 1); }
+	public static function FileList( $path ) { return self::__listFile($path, 1); }
 	public static function LookFile( $path, $file ) { return self::__lookFile( $path, $file ); }
 	public static function LookDir( $path, $file = NULL ) { return self::__lookDir( $path, $file ); } 
 	public static function MakeDir( $path ) { return self::__make_dir($path); } 
@@ -51,22 +54,29 @@ class cFile implements iFile
 	private static function __closeDir( $hl ) 
 	{
 		return closedir( $hl );
-	}
+	} 
 	
-	private static function __readFileRecursive( $path, &$output ) 
+	private static function __readFileRecursive( $path, &$output, $base ) 
 	{ 
 		$hl = self::__openDir($path);
 		$ig = array('.','..','.DS_Store','empty','.htaccess');
-		while( $dirName = self::__readDir($hl) ) 
+		while( $rsName = self::__readDir($hl) ) 
 		{ 
-			if( in_array($dirName, $ig) ) continue; 
-			if( !self::__isDir($path.$dirName) ) 
+			if( in_array($rsName, $ig) ) continue; 
+			if( !self::__isDir($path.$rsName) ) 
 			{
-				$fileName = $path.$dirName;
-				$output[] = $fileName;
+				if( $base ) 
+				{ 
+					$output[] = $rsName;
+				} 
+				else 
+				{
+					$fileName = $path.$rsName;
+					$output[] = $fileName;
+				}
 				continue;
 			}
-			self::__readDirRecursive($dirName, $output); 
+			self::__readDirRecursive($rsName, $output); 
 		} 
 		self::__closeDir($hl); 
 	} 
@@ -75,23 +85,23 @@ class cFile implements iFile
 	{ 
 		$hl = self::__openDir($path);
 		$ig = array('.','..','.DS_Store','empty','.htaccess');
-		while( $dirName = self::__readDir($hl) ) 
+		while( $rsName = self::__readDir($hl) ) 
 		{ 
-			if( !self::__isDir($path.$dirName) ) continue;
-			if( in_array($dirName, $ig) ) continue; 
-			$dirName = $path.$dirName.DS;
-			$output[] = $dirName;
-			self::__readDirRecursive($dirName, $output); 
+			if( !self::__isDir($path.$rsName) ) continue;
+			if( in_array($rsName, $ig) ) continue; 
+			$rsName = $path.$rsName.DS;
+			$output[] = $rsName;
+			self::__readDirRecursive($rsName, $output); 
 		} 
 		self::__closeDir($hl); 
 	} 
 	
-	private static function __listFile( $path ) 
+	private static function __listFile( $path, $base=0 ) 
 	{ 
 		$result = [];
 		if(self::__isDir($path)) 
 		{ 
-			self::__readFileRecursive( $path, $result );
+			self::__readFileRecursive( $path, $result, $base );
 		} 
 		return $result;
 	} 
