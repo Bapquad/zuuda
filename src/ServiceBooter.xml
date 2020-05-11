@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<servicebooter>
+	<comservice>
+		<name driver="driver" basename="route" extension="xml">Zuuda\ComService</name>
+		<bootcb></bootcb>
+	</comservice>
+	<locateservice>
+		<name driver="configs">Zuuda\LocateService</name>
+		<bootcb></bootcb>
+	</locateservice>
+	
+	<btshipnelservice>
+		<name route="shipnel" class="info" ship="097370591949c9e67f2d54e4403fe1b7">Zuuda\BTShipnelService</name>
+		<bootcb></bootcb>
+	</btshipnelservice>
+	<themeservice>
+		<name prefix="zuuka_" alias="register" table="registers" model="Register">Zuuda\ThemeService</name>
+		<bootcb></bootcb>
+	</themeservice>
+	<cateservice>
+		<name prefix="zuuka_" alias="category" table="categories" model="Category">Zuuda\CateService</name>
+		<bootcb></bootcb>
+	</cateservice>
+	<routeservice>
+		<name prefix="zuuka_" alias="com_route" model="com_route" table="coms_routes" layout="com_layout">Zuuda\RouteService</name>
+		<bootcb></bootcb>
+	</routeservice>
+</servicebooter>
