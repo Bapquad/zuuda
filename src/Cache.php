@@ -29,6 +29,9 @@ class Cache
 	
 	function clear($type) 
 	{ 
+		// Get the file-system modifier.
+		$modifier = cFile::getInstance();
+		
 		switch( $type ) 
 		{
 			case 'template': 
