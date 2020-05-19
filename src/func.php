@@ -563,6 +563,17 @@ function move( $old, $target )
 	__move( $old, $target );
 }
 
+function report( $body ) 
+{
+	$reporter = new \Zuuda\FileLoader(TMP_DIR."logs".DS."report.txt", true); 
+	$reporter->open('a');
+	$reporter->append(nl."=====================================".nl);
+	$reporter->append(date("Y-m-d H:i:s", time()));
+	$reporter->append(nl."=====================================".nl);
+	$reporter->append($body);
+	$reporter->close();
+} 
+
 function encrypt($string) 
 {
     $encryptedString = '';

@@ -9,6 +9,7 @@ use Zuuda\Cache;
 use Zuuda\Auth;
 use Zuuda\Fx;
 use Zuuda\Response;
+use Zuuda\Text;
 
 abstract class Controller implements iController, iDeclare, iBlock 
 {
@@ -453,18 +454,30 @@ abstract class Controller implements iController, iDeclare, iBlock
 				}
 			} 
 			Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES, 'file'=>cache::$upload_file, 'size'=>cache::$upload_size, 'type' => cache::$upload_type ) );
-		}
+		} 
+		
 		if( $request_method==='post' ) 
 		{
-			$data = array();
-			foreach($_POST as $key => $value) 
+			$headers = getallheaders(); 
+			if( isset($headers["Content-Type"]) )
 			{
-				if( !is_array($value) && !strlen($value) ) 
-					$value = NULL;
-				$data[$key] = $value; 
+				if( "application/json"===$headers["Content-Type"] ) 
+				{ 
+					$_post = text::instance(file_get_contents("php://input"))->jsondecode(); 
+				} 
+				else if( false!==stripos($headers["Content-Type"], "application/x-www-form-urlencoded") || false!==stripos($headers["Content-Type"], "multipart/form-data") )
+				{
+					$data = array();
+					foreach($_POST as $key => $value) 
+					{
+						if( !is_array($value) && !strlen($value) ) 
+							$value = NULL;
+						$data[$key] = $value; 
+					} 
+					Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$data ) );
+					__direct( $url_rediect );
+				} 
 			}
-			Session::Register( "_mass_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$data ) );
-			__direct( $url_rediect );
 		}
 		$_file_vertifier_data = Session::Get( "_file_vertifier" . $thread_id );
 		$_mass_vertifier_data = Session::Get( "_mass_vertifier" . $thread_id );
@@ -503,14 +516,33 @@ abstract class Controller implements iController, iDeclare, iBlock
 		} 
 		else if( 'put'===$requestMethod ) 
 		{
-			$requestHeaders = getallheaders(); 
-			$requestBody = file_get_contents("php://input");
-			$_put = json_decode( $requestBody ); 
+			$headers = getallheaders(); 
+			if( isset($headers["Content-Type"]) )
+				if( "application/json"===$headers["Content-Type"] ) 
+					$_put = text::instance(file_get_contents("php://input"))->jsondecode(); 
+			$requestMethod = 'put';
 		} 
 		else if( 'delete'===$requestMethod ) 
-			$_delete = $_get; 
+		{
+			$headers = getallheaders(); 
+			if( isset($headers["Content-Type"]) )
+			{
+				if( "application/json"===$headers["Content-Type"] ) 
+					$_delete = text::instance(file_get_contents("php://input"))->jsondecode(); 
+			} 
+			else 
+			{
+				$_delete = $_get; 
+			}
+			$requestMethod = 'delete';
+		}
 		else 
-			$requestMethod = 'get'; 
+		{
+			if( isset($headers["Content-Type"]) )
+				if( "application/json"===$headers["Content-Type"] ) 
+					$_get = text::instance(file_get_contents("php://input"))->jsondecode(); 
+			$requestMethod = 'get';
+		}
 		
 		$_server['request_method'] = strtoupper($requestMethod); 
 		$_server['REQUEST_METHOD'] = $_server['request_method'];

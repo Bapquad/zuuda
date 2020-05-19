@@ -237,12 +237,9 @@ class Application
 
 	public function SecureMagicQuotes() 
 	{
-		if( @get_magic_quotes_gpc() ) 
-		{
-			$_GET    = __stripSlashesDeep( $_GET );
-			$_POST   = __stripSlashesDeep( $_POST );
-			$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
-		} 
+		$_GET    = __stripSlashesDeep( $_GET );
+		$_POST   = __stripSlashesDeep( $_POST );
+		$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
 		return $this;
 	}
 
