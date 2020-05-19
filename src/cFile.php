@@ -4,9 +4,11 @@ namespace Zuuda;
 
 class cFile implements iFile 
 {
+	private static $this = '\Zuuda\cFile';
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Get() { return self::__getInstance(); }
 	public static function IsDir( $path ) { return self::__isDir( $path ); }
+	public static function IsEmptyDir( $path ) { return self::__isEmptyDir( $path ); }
 	public static function OpenDir( $path ) { return self::__openDir( $path ); }
 	public static function ReadDir( $path ) { return self::__readDir( $path ); }
 	public static function CloseDir( $path ) { return self::__closeDir( $path ); }
@@ -39,7 +41,17 @@ class cFile implements iFile
 	private static function __isDir( $path ) 
 	{
 		return is_dir( $path );
-	}
+	} 
+	
+	private static function __isEmptyDir( $path ) 
+	{ 
+		if( !is_readable($path) ) 
+			return NULL; 
+		if( !is_dir($path) ) 
+			return true; 
+		if( count(scandir($path)) == 2 ) 
+			return true; 
+	} 
 	
 	private static function __openDir( $path ) 
 	{
@@ -135,19 +147,47 @@ class cFile implements iFile
 		return $result;
 	} 
 	
-	private static function __make_dir( $path ) 
+	private static function __make_dir( $path, &$force=NULL ) 
 	{
-		return mkdir($path); 
+		if( !is_dir($path) ) 
+		{
+			$parent_path = dirname($path); 
+			if( is_dir($parent_path) ) 
+			{
+				return mkdir($path); 
+			} 
+			else 
+			{ 
+				if( is_array($force) ) 
+				{
+					$force[] = $parent_path;
+					self::__make_dir($parent_path, $force); 
+				} 
+				else 
+				{ 
+					self::__make_dir($parent_path); 
+				} 
+				return mkdir($path); 
+			} 
+		}
+		return false;
 	}
 	
 	private static function __remove_dir( $path ) 
 	{
-		return rmdir($path); 
+		if( is_dir($path) && is_readable($path) ) 
+			if( count(scandir($path)) == 2 ) 
+				return rmdir($path); 
+		return;
 	}
 	
 	private static function __remove( $path ) 
 	{ 
-		return unlink($path); 
+		if( file_exists($path) ) 
+		{
+			return unlink($path); 
+		} 
+		return; 
 	} 
 	
 }

@@ -1,30 +1,33 @@
 <?php 
 namespace Zuuda;
-use Exception;
 
-class Response
+use Exception;
+use Zuuda\ResponseHeader; 
+
+class Response extends ResponseHeader
 {
 	
 	private $_data; 
 	private $_dispatcher;
-	
+	private static $this = '\Zuuda\Response';
 	public static function Redirect( $uri ) { return __direct( $uri ); } 
 	public static function Location( $uri ) { return __direct( $uri ); } 
 	public static function Goto( $uri ) { return __direct( $uri ); } 
+	public static function Back() { return __back(); } 
+	
 	public static function View( Controller $dispatcher ) { return self::__view($dispatcher); } 
 	public static function SetCors() { return self::__setCors(); }
-	public static function Instance() { return self::__getInstance(); } 
+	public static function Instance() { return call_user_func_array(array(self::$this, '__getInstance'), array()); } 
 	public function Cors() { return call_user_func_array([$this, '__cors'], array(func_get_args(), func_num_args())); }
 	public function With() { return call_user_func_array([$this, '__with'], array(func_get_args(), func_num_args())); } 
 	public function Json( $data ) { return $this->__json($data); } 
 	public function Render( $tpl=NULL, $data=NULL ) { return $this->__render($tpl, $data); }
 	
 	final public function SetDispatcher( Controller $dispatcher ) { $this->_dispatcher = $dispatcher; } 
-	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
-	private function __clone() {}
+	private function __clone() {} 
 	
-	private static function __getInstance() 
+	protected static function __getInstance( $inst_of=NULL ) 
 	{
 		static $_instance;
 		if( is_null($_instance) ) 
@@ -88,6 +91,11 @@ class Response
 	private function __setDispatcher( $dispatcher ) 
 	{
 		$this->_dispatcher = $dispatcher; 
+	} 
+	
+	private static function __deny( $msg=NULL ) 
+	{ 
+		abort( 403, $msg );
 	} 
 	
 	private static function __setCors() 

@@ -1,6 +1,13 @@
 <?php
 namespace Zuuda;
 
+use Zuuda\Html; 
+use Zuuda\Query;
+use Zuuda\Request;
+use Zuuda\Session;
+use Zuuda\Cookie;
+use Zuuda\Comsite;
+
 abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock 
 {
 	private $_vars = array();
@@ -31,6 +38,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	private $_layout_header = false;
 	private $_layout_footer = false;
 	private $_layout_engine_vars;
+	
+	protected $html;
+	protected $query;
+	protected $request;
+	protected $session;
+	protected $cookie;
+	protected $comsite;
 	
 	final protected function __getVars() { return $this->_vars; }
 	final protected function __getBlocks() { return $this->_blocks; }
@@ -67,12 +81,18 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final protected function __setLayoutEngineVars( $value ) { $this->_layout_engine_vars = $value; return $this; }
 	
 	final public function GetVars() { return $this->__getVars(); }
-
 	final public function rootName() { return __CLASS__; }
-	
 	public function __construct() 
 	{
 		global $configs;
+		
+		$this->html = html::instance();
+		$this->query = query::instance();
+		$this->request = request::instance();
+		$this->session = session::instance();
+		$this->cookie = cookie::instance();
+		$this->comsite = comsite::instance();
+		
 		$this->__setModule( $configs[ 'MODULE' ] );
 		$this->__setController( $configs[ 'CONTROLLER' ] );
 		$this->__setAction( [ 'ACTION' ] );
@@ -163,31 +183,31 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 
 	private function __displayAsCss() 
 	{
-		RequestHeader::DisplayCSS(); 
+		ResponseHeader::DisplayCSS(); 
 		return $this;
 	} 
 
 	private function __displayAsJs() 
 	{
-		RequestHeader::DisplayJS();
+		ResponseHeader::DisplayJS();
 		return $this;
 	} 
 
 	private function __displayAsJson() 
 	{
-		RequestHeader::DisplayJSON();
+		ResponseHeader::DisplayJSON();
 		return $this;
 	} 
 
 	private function __displayAsText() 
 	{
-		RequestHeader::DisplayText(); 
+		ResponseHeader::DisplayText(); 
 		return $this;
 	} 
 
 	private function __displayAsStream( $name ) 
 	{
-		RequestHeader::Stream( $name );
+		ResponseHeader::Stream( $name );
 		return $this;
 	}
 	
@@ -239,7 +259,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function __renderLayout( $args = NULL ) 
 	{
-		global $configs, $inflect, $html, $file, $_get, $_post, $_file, $_server; 
+		global $_configs, $_inflect, $_get, $_post, $_file, $_server; 
 		$this->__packageVars( $args );
 		extract( $this->_vars );
 		extract( $this->_blocks );
@@ -319,9 +339,8 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 			if( 1==$argsNum ) 
 			{
 				$mixed = current($args); 
-				$mixed = each($mixed);
-				$name = $mixed['key']; 
-				$value = $mixed['value']; 
+				$name = key($mixed); 
+				$value = current($mixed); 
 			} 
 			else if( 1<$argsNum ) 
 			{ 
@@ -589,7 +608,7 @@ EOD;
 	
 	private function __renderJson() 
 	{
-		RequestHeader::DisplayJSON(); 
+		ResponseHeader::DisplayJSON(); 
 		print( $this->_layout_json );
 	}
 	

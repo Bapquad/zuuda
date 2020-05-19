@@ -1,7 +1,7 @@
 <?php 
 namespace Zuuda;
 
-class ExtensionInformationService implements iComService 
+class WidgetInformationService implements iComService 
 {
 	private $_exts = array();
 
@@ -17,7 +17,7 @@ class ExtensionInformationService implements iComService
 		static $_instance; 
 		if( is_null( $_instance ) ) 
 		{
-			$_instance = new ExtensionInformationService; 
+			$_instance = new WidgetInformationService; 
 		} 
 		return $_instance;
 	} 
@@ -27,7 +27,7 @@ class ExtensionInformationService implements iComService
 		if( Config::has( 'COM' ) ) 
 		{
 			return array(
-				'basename'	=> array( 'live', 'about', 'menu', 'shortcut' ),  
+				'basename'	=> array( 'wlive', 'widget' ),  
 				'driver'	=> 'driver', 
 				'extension'	=> '.xml', 
 				'host'		=> CODE, 
@@ -76,7 +76,7 @@ class ExtensionInformationService implements iComService
 		return false;
 	} 
 
-	private static function __read_about( $file_path ) 
+	private static function __read_widget( $file_path ) 
 	{
 		if( call(cFile::get(), $file_path)->exist() ) 
 		{
@@ -98,91 +98,6 @@ class ExtensionInformationService implements iComService
 		return false;
 	} 
 	
-	private static function __read_shortcut( $file_path, $codeof ) 
-	{ 
-		$instance = self::__getInstance();
-		if( call(cFile::get(), $file_path)->exist() ) 
-		{ 
-			$fp = simplexml_load_file( $file_path );
-			$module = $fp->shortcut['module']->__toString();
-			
-			$blocks = array();
-			foreach($fp->shortcut->block as $block) 
-			{
-				$hidden = (int)$block['hidden']; 
-				if( $hidden ) 
-				{ 
-					continue; 
-				} 
-				$instance->__push( 'shortcut', array(
-					'class' => $module.BS."Blocks".BS.$block['name'], 
-					'extend' => $block['extend']->__toString(), 
-					'developer'=> $codeof, 
-				));
-			}
-			
-			return false;
-		} 
-	} 
-
-	private static function __read_menu( $file_path ) 
-	{
-		if( call( cFile::get(), $file_path )->exist() ) 
-		{
-			$fp = simplexml_load_file( $file_path );
-			$module = $fp->menu['module']->__toString(); 
-			$output = array( $module => array() );
-			$extend = strtolower( $module ); 
-
-			$label = $fp->menu[ 'label' ];
-			if( NULL!==$label ) 
-			{
-				if( !isset( $output[ $module ][ $extend ] ) )
-					$output[ $module ][ $extend ] = array( 'actions' => array() );
-				$output[ $module ][ $extend ][ 'label' ] = $label->__toString(); 
-			}
-			$fa = $fp->menu[ 'fa' ]; 
-			if( NULL!==$fa ) 
-			{
-				if( !isset( $output[ $module ][ $extend ] ) )
-					$output[ $module ][ $extend ] = array( 'actions' => array() );
-				$output[ $module ][ $extend ][ 'fa' ] = $fa->__toString();
-			}
-
-			$href = $fp->menu[ 'href' ]; 
-			if( NULL!==$href ) 
-			{
-				if( !isset( $output[ $module ][ $extend ] ) )
-					$output[ $module ][ $extend ] = array( 'actions' => array() );
-				$output[ $module ][ $extend ][ 'href' ] = $href->__toString();
-			}
-
-			foreach( $fp->menu->action as $action ) 
-			{
-				if( NULL!==$action[ 'extend' ] ) 
-				{
-					$extend = $action[ 'extend' ]->__toString();
-				} 
-
-				if( !isset( $output[ $module ] ) )
-					$output[ $module ] = array();
-
-				if( !isset( $output[ $module ][ $extend ] ) )
-					$output[ $module ][ $extend ] = array( 'actions' => array() );
-
-				array_push( $output[ $module ][ $extend ][ 'actions' ], array(
-					'label' => $action->label->__toString(), 
-					'fa'	=> $action->fa->__toString(), 
-					'bind'	=> $action->bind->__toString(), 
-					'href'	=> $action->href->__toString()
-				));
-			} 
-			
-			return $output; 
-		} 
-		return false;
-	}
-
 	private function __push( $branch, $value=NULL ) 
 	{
 		if( !array_key_exists($branch, $this->_exts) ) 
@@ -202,8 +117,8 @@ class ExtensionInformationService implements iComService
 		$configs = $instance->__loadConfigs();
 		$code_area = key($configs); 
 		$configs = current($configs);
-		$live_paths = cFile::lookFile( $code_area, $configs['live'] ); 
-		unset($configs['live']);
+		$live_paths = cFile::lookFile( $code_area, $configs['wlive'] ); 
+		unset($configs['wlive']);
 		foreach($live_paths as $live_path) 
 		{
 			$result = $instance->__read_live( $live_path ); 
@@ -216,7 +131,7 @@ class ExtensionInformationService implements iComService
 				foreach( $configs as $key => $config ) 
 				{
 					$command = '__read_'.$key; 
-					$result = $instance->$command($code_area.$value['codeof'].DS.EXTENSIONS.DS.$module.DS.'driver'.DS.$config, $value['codeof']); 
+					$result = $instance->$command($code_area.$value['codeof'].DS.WIDGETS.DS.$module.DS.'driver'.DS.$config, $value['codeof']); 
 					if( $result ) 
 					{
 						$instance->__push( $key, $result );
@@ -226,5 +141,4 @@ class ExtensionInformationService implements iComService
 		} 
 		return false;
 	}
-
 }

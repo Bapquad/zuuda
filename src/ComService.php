@@ -109,7 +109,8 @@ class ComService implements iComService
 		{
 			$url = getSingleton( 'Global' )->get( 'url' ); 
 			$configs = self::__loadConfigs();
-			list( $realpath, $filename ) = @each( $configs );
+			$realpath = key( $configs ); 
+			$filename = current( $configs );
 			
 			$list = cFile::lookFile( $realpath, $filename );
 			

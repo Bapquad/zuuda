@@ -3,6 +3,12 @@ namespace Zuuda;
 
 use Exception; 
 use ReflectionClass;
+use Zuuda\FileUploader;
+use Zuuda\Config;
+use Zuuda\Cache;
+use Zuuda\Auth;
+use Zuuda\Fx;
+use Zuuda\Response;
 
 abstract class Controller implements iController, iDeclare, iBlock 
 {
@@ -94,14 +100,19 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function AfterAction( $query = NULL ) { /**....*/ } 
 	public function BeforeRender( $query = NULL ) { /**...*/ }
 	public function CheckMass( $method ) { return $this->__checkMass( $method ); } 
-	public function Resting( $seconds=2 ) { $this->__resting( $seconds ); } 
+	
+	/** Unitily Interface */
+	final public function Resting( $seconds=2 ) { $this->__resting( $seconds ); } 
+	final public function Escape() { escape(); } 
+	final public function Response() { escape(); } 
+	final public function Back() { response::back(); } 
 	
 	final public function rootName() { return __CLASS__; }
 	final public function FinalRender( $query = NULL ) { $this->__finalRender( $this->_template ); }
 
 	public function __construct() 
 	{
-		global $inflect;
+		global $_inflect;
 		global $configs;
 		global $url;
 
@@ -241,9 +252,8 @@ abstract class Controller implements iController, iDeclare, iBlock
 			if( 1==$argsNum ) 
 			{
 				$mixed = current($args); 
-				$mixed = each($mixed);
-				$name = $mixed['key']; 
-				$value = $mixed['value']; 
+				$name = key($mixed); 
+				$value = current($mixed); 
 			} 
 			else if( 1<$argsNum ) 
 			{ 
@@ -278,10 +288,10 @@ abstract class Controller implements iController, iDeclare, iBlock
 			{
 				if( !is_null( $args ) ) 
 				{
-					while (list($a, $b) = each($args)) 
-					{
+					foreach( $args as $a => $b ) 
+					{ 
 						$view->set($a, $b);
-					}
+					} 
 				} 
 				$this->_template = $template;
 			} 
@@ -305,7 +315,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		} 
 		else 
 		{ 
-			RequestHeader::displayJson(); 
+			ResponseHeader::displayJson(); 
 			echo json_encode($args);
 		} 
 		return $this; 
@@ -353,7 +363,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 		{
 			if( !is_null( $args ) ) 
 			{
-				while (list($a, $b) = each($args)) 
+				while (list($a, $b) = item($args)) 
 				{
 					$view->set($a, $b);
 				}
@@ -387,54 +397,64 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return false;
 	}
 	
+	private function __fileRecrs(&$set, $ftyp, $fnam) 
+	{ 
+		foreach( $set as $key => $item ) 
+		{ 
+			if(is_array($item)) 
+			{
+				$this->__fileRecrs($set[$key], $ftyp[$key], $fnam[$key]);
+			} 
+			else 
+			{
+				if( file_exists($item) && array_key_exists($ftyp[$key], config::get('MEDIA')) ) 
+				{
+					$tmp_file_name = basename($item);
+					$set[$key] = fileuploader::backup($item, $tmp_file_name, $fnam[$key]);
+					cache::$upload_type[] = $ftyp[$key];
+				}
+			}
+		} 
+	}
+	
 	protected function __checkMass( $requestMethod )  
 	{
-		global $_server, $_get, $_post, $_put, $_delete, $_file, $configs;
+		global $_server, $_get, $_post, $_put, $_delete, $_file, $configs;;
+		$request_method = strtolower($_server['REQUEST_METHOD']);
 		$url_rediect = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:PS;
 		$thread_id = md5( $url_rediect );
 
-		if( !empty( $_FILES ) && isset( $configs['MEDIA'] ) ) 
+		if( !empty($_FILES) && isset($configs['MEDIA']) ) 
 		{
+			cache::$upload_thread = "_file_vertifier".$thread_id;
 			$n = 'name';
 			$t = 'type';
 			$s = 'size';
 			$e = 'error';
 			$p = 'tmp_name';
-			$md = 'media';
-			foreach ($_FILES as $key => $value) 
-			{
+			$md = 'media'; 			
+			foreach ($_FILES as $key => $value) {
 				if( is_array($_FILES[$key][$n]) ) 
 				{
-					foreach( $_FILES[$key][$n] as $akey => $file ) 
-					{
-						$tn = $_FILES[$key][$p][$akey];
-						$fn = $_FILES[$key][$n][$akey];
-						$tp = $_FILES[$key][$t][$akey];
-						if( file_exists($tn) && array_key_exists($tp, $configs['MEDIA']) ) 
-						{
-							$tp = TMP_DIR . $md . DS . $fn;
-							move_uploaded_file( $tn, $tp );
-							$_FILES[$key][$p][$akey] = $tp;
-						}
-					}
+					$this->__fileRecrs($_FILES[$key][$p], $_FILES[$key][$t], $_FILES[$key][$n]); 
 				} 
 				else 
 				{
 					$tn = $_FILES[$key][$p];
 					$fn = $_FILES[$key][$n];
 					$tp = $_FILES[$key][$t];
+					$fs = $_FILES[$key][$s];
 					if( file_exists($tn) && array_key_exists($tp, $configs['MEDIA']) ) 
 					{
-						$tp = TMP_DIR . $md . DS . $fn;
-						move_uploaded_file( $tn, $tp );
-						$_FILES[$key][$p] = $tp;
-					}
+						$tmp_file_name = basename($tn);
+						$_FILES[$key][$p] = fileuploader::backup( $tn, $tmp_file_name, $fn );
+						cache::$upload_type[] = $tp;
+					} 
 				}
-			}
-			Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES ) );
+			} 
+			Session::Register( "_file_vertifier" . $thread_id, array( 'fixed'=>false, 'data'=>$_FILES, 'file'=>cache::$upload_file, 'size'=>cache::$upload_size, 'type' => cache::$upload_type ) );
 		}
-		
-		if( !empty($_POST) ) 
+		if( $request_method==='post' ) 
 		{
 			$data = array();
 			foreach($_POST as $key => $value) 
@@ -451,7 +471,10 @@ abstract class Controller implements iController, iDeclare, iBlock
 		
 		if( !is_null($_file_vertifier_data) ) 
 		{
-			$_file = $_file_vertifier_data[ "data" ]; 
+			$_file = $_file_vertifier_data["data"]; 
+			cache::$upload_file = $_file_vertifier_data["file"];
+			cache::$upload_size = $_file_vertifier_data["size"]; 
+			cache::$upload_type = $_file_vertifier_data["type"]; 
 			Session::Unregister( "_file_vertifier" . $thread_id );
 		}
 		

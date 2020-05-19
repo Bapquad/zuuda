@@ -3,7 +3,7 @@ namespace Zuuda;
 
 class GlobalModifier implements iGlobalModifier  
 {
-	
+	private static $this = '\Zuuda\GlobalModifier';
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Get( $name ) { return self::__getVar( $name ); }
 	public static function Destroy( $name ) { return self::__destroy( $name ); }
@@ -70,7 +70,7 @@ class GlobalModifier implements iGlobalModifier
 		else  
 		{
 			$request_uri = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:'/';
-			if(config::has('APP_PATH')) 
+			if(config::get('APP_PATH')!==PS) 
 			{ 
 				$request_uri = str_replace( config::get('APP_PATH'), '', $request_uri );
 			} 

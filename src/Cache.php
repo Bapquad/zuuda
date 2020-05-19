@@ -2,11 +2,19 @@
 
 namespace Zuuda;
 
+use Zuuda\FileUploader;
+
 class Cache 
 {
 	
-	private static $class = '\Zuuda\Auth';
+	private static $this = '\Zuuda\Cache';
+	static $describeDir = "tmp/cache/";
+	static $templateDir = "tmp/cache/templates/layout/";
 	final public function rootName() { return __CLASS__; }
+	static $upload_file = [];
+	static $upload_type = [];
+	static $upload_size = 0;
+	static $upload_thread = "";
 
 	function get($fileName) {
 		$fileName = ROOT.DS.'tmp'.DS.'cache'.DS.$fileName;
@@ -27,26 +35,15 @@ class Cache
 		fclose($handle);
 	} 
 	
-	function clear($type) 
+	final static public function clear($type) 
 	{ 
 		// Get the file-system modifier.
 		$modifier = cFile::getInstance();
 		
 		switch( $type ) 
 		{
-			case 'template': 
-				$dir_name = ROOT_DIR.'/tmp/cache/templates/layout/'; 
-				$files = $modifier->listFile( $dir_name ); 
-				foreach( $files as $file ) 
-				{ 
-				echo $file.NL;
-					$modifier->remove($file); 
-				} 
-				break; 
-				
 			case 'database': 
-			default: 
-				$dir_name = ROOT_DIR.'/tmp/cache/';
+				$dir_name = ROOT_DIR.self::$describeDir;
 				$files = $modifier->listFile( $dir_name );
 				foreach( $files as $file ) 
 				{ 
@@ -55,8 +52,39 @@ class Cache
 						$modifier->remove($file); 
 					} 
 				} 
+				return;
+			case 'template': 
+				$dir_name = ROOT_DIR.self::$templateDir; 
+				$files = $modifier->listFile( $dir_name ); 
+				break; 
+			case 'upload-temp': 
+				$dir_name = ROOT_DIR.FileUploader::$uploadDir;
+				$files = $modifier->listFile( $dir_name ); 
+				break; 
+			default: 
 				break; 
 		} 
+
+		foreach( $files as $file ) 
+		{ 
+			$modifier->remove($file); 
+		} 
 	} 
+	
+	final static public function clearUploadTemp() 
+	{
+		if( !strlen(self::$upload_thread)&&count(self::$upload_file) ) 
+		{ 
+			$tmps = \Zuuda\Cache::$upload_file; 
+			foreach( $tmps as $tmp ) 
+			{ 
+				global $_server;
+				if( \Zuuda\Fx::file_exists($tmp['tmp_name']) ) 
+				{ 
+					\Zuuda\Fx::unlink($tmp['tmp_name']);
+				} 
+			} 
+		}
+	}
 
 }

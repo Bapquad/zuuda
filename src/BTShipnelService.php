@@ -64,7 +64,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 		
 		if( self::__withUrl( $program->name[ 'route' ].DOT.$program->name[ 'class' ], $url ) )
 		{
-			RequestHeader::Download( 'shipnel.info' );
+			\Zuuda\ResponseHeader::Download( 'shipnel.info' );
 			echo 'info: "BTShipnelService"' . NL;
 			echo 'ship code: "' . SHIPNEL . '"' . NL;
 			echo 'orgin: "'. ORIGIN_DOMAIN . '"' . NL;

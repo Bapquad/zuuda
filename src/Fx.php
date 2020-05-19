@@ -2,10 +2,12 @@
 
 namespace Zuuda;
 
+use Zuuda\Config;
+
 class Fx 
 {
 	
-	private static $class = '\Zuuda\Fn';
+	private static $this = '\Zuuda\Fx';
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
 	private function __clone() {} 
@@ -35,11 +37,21 @@ class Fx
 		return __correctPath($path);
 	} 
 	
+	final static public function mysql_query( $l, $q ) 
+	{ 
+		return mysqli_query( $l, $q ); 
+	} 
+	
 	final static public function remove($path) 
 	{ 
 		if(!self::file_exists($path)) return false;
 		return unlink($path); 
 	} 
+	
+	final static public function hash( $string ) 
+	{
+		return hash(config::get('ENCRYPT')['request'], $string); 
+	}
 	
 	final static public function __callStatic( $name, $args ) 
 	{ 

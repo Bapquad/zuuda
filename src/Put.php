@@ -4,6 +4,7 @@ namespace Zuuda;
 
 class Put 
 {
+	private static $this = '\Zuuda\Put';
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Get( $name ) { return self::__getValue( $name ); }
 	

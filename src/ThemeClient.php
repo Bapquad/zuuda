@@ -24,8 +24,7 @@ class ThemeClient implements iThemeClient
 	
 	private static function __fetch( $data )
 	{
-		return array
-		(
+		return array (
 			'version' => $data->version->__toString(), 
 			'datetime' => $data->datetime->__toString(), 
 			'author' => $data->name[ 'author' ]->__toString(), 
@@ -33,7 +32,8 @@ class ThemeClient implements iThemeClient
 			'name' => $data->name->__toString(), 
 			'description' => $data->description->__toString(), 
 			'notes' => $data->notes->__toString(), 
-			'install_dir' => $data['installdir']->__toString(), 
+			'install_dir' => $data['installDir']->__toString(), 
+			'unique_id' => $data['uniqueId']->__toString(), 
 			'preview' => $data->preview->__toString(), 
 		);
 	}
@@ -70,7 +70,7 @@ class ThemeClient implements iThemeClient
 		for( $i = 0; $i < $len; $i++ ) 
 		{
 			$data = $handle->theme[ $i ];
-			array_push( $outs, self::__fetch( $data ) );
+			array_push( $outs, self::__fetch($data) );
 		}
 		return $outs;
 	}
@@ -92,7 +92,7 @@ class ThemeClient implements iThemeClient
 		
 		if( $configs ) 
 		{
-			list( $realpath, $filename ) = each( $configs );
+			list( $realpath, $filename ) = item( $configs );
 			$themes = cFile::lookFile( $realpath, $filename );
 			return self::__request( $themes );
 		}

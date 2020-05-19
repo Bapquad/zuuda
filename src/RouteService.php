@@ -1,6 +1,8 @@
 <?php
 namespace Zuuda;
 
+use Zuuda\ServiceModel; 
+
 class RouteService implements iTaskService, iRouteService 
 {
 	
@@ -46,6 +48,7 @@ class RouteService implements iTaskService, iRouteService
 	
 	private static function __load( Application $app, $service ) 
 	{
+		global $configs;
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
 		
@@ -56,18 +59,17 @@ class RouteService implements iTaskService, iRouteService
 			$name = $program->name;
 			if( $name == __CLASS__ ) 
 			{
-				$model = new ServiceModel();
-				$prefix = $program->name['prefix']->__toString();
+				$prefix = $configs['DATASOURCE'][$configs['DATASOURCE']['server']['default']]['prefix'];;
 				$modelName = $program->name['model']->__toString();
 				$aliasName = $program->name['alias']->__toString();
 				$tableName = $program->name['table']->__toString();
 				if( Config::has('COM') && !$app::hasUrl() ) 
-					if( $path = self::__routing($model
+					if( $path = self::__routing( servicemodel::instance()
 						->setPrefix($prefix)
 						->setAliasName($aliasName)
 						->setModelName($modelName)
 						->setTableName($tableName)
-						->instance(), 
+						->start(), 
 						$prefix, 
 						$url) )  
 					{

@@ -7,6 +7,7 @@ class Flash implements iFlash
 	public static function GetInstance() { return self::__getInstance(); } 
 	public static function Clear() { return self::__clear(); }
 	
+	private static $this = '\Zuuda\Flash';
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
 	private function __clone() {}

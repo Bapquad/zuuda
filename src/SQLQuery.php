@@ -29,6 +29,7 @@ define( 'mcbm_first',				'__first' );
 define( 'mcbm_last',				'__last' );
 define( 'mcbm_entity',				'__entity' );
 define( 'mcbm_role',				'__role' );
+define( 'mcbm_unit',				'__unit' );
 define( 'mcbm_item',				'__item' );
 define( 'mcbm_paginate',			'__paginate' );
 define( 'mcbm_insert',				'__insert' );
@@ -51,11 +52,13 @@ define( 'mcbm_set_limit',			'__setLimit' );
 define( 'mcbm_bound',				'__bound' );
 define( 'mcbm_prefix',				'__prefix' );
 define( 'mcbm_affected',			'__affected' );
+define( 'mcbm_close',				'__close' );
 define( 'mhd', 						'data' );
 define( 'mhj', 						'join' );
 
 abstract class SQLQuery 
 {
+	private static $this = '\Zuuda\SQLQuery';
 	protected $_dbHandle; 
 	protected $_primaryKey		= 'id'; 
 	protected $_querySQL;
@@ -65,6 +68,8 @@ abstract class SQLQuery
 	protected $_propModel		= EMPTY_CHAR;
 	protected $_propAlias		= EMPTY_CHAR; 
 	protected $_propTable		= EMPTY_CHAR;
+	protected $_propUnits		= 0;
+	protected $_propUnitOrigin;
 	protected $_propsDescribe 	= array(); 
 	protected $_propsUndescribe = array(); 
 	protected $_propsCond 		= array(); 
@@ -100,9 +105,12 @@ abstract class SQLQuery
 	protected $_propsHasMABTM 	= array(); 
 	protected $_propsRole	 	= array(); 
 	
-	final public function __getModel() { return $this->_propModel; } 
-	final public function __getTable() { return $this->_propTable; } 
-	final public function __getAlias() { return $this->_propAlias; } 
+	final public function GetPrefix() { return $this->_propPrefix; }
+	final public function GetPrimaryKey() { return $this->_primaryKey; }
+	final public function GetModel() { return $this->_propModel; } 
+	final public function GetTable() { return $this->_propTable; } 
+	final public function GetAlias() { return $this->_propAlias; } 
+	final public function GetUnits() { return $this->_propUnits; }
 	final public function Set() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
 	final public function Assign() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
 	final public function Require( $model ) { return $this->__require( $model ); } 
@@ -110,11 +118,11 @@ abstract class SQLQuery
 	final public function SetModelName( $value ) { return $this->__setModelName( $value ); }
 	final public function SetAliasName( $value ) { return $this->__setAliasName( $value ); }
 	final public function SetTableName( $value ) { return $this->__setTableName( $value ); }
-	final public function GetPrefix() { return $this->__getPrefix(); }
-	final public function GetModelName() { return $this->__getModel(); }
-	final public function GetTableName() { return $this->__getTable(); }
-	final public function GetAliasName() { return $this->__getAlias(); }
-	final public function GetPrimaryKey() { return $this->_primaryKey; }
+	final public function SetUnitsSize( $value ) { return $this->__setUnitsSize( $value ); }
+	final public function GetModelName() { return $this->GetModel(); }
+	final public function GetTableName() { return $this->GetTable(); }
+	final public function GetAliasName() { return $this->GetAlias(); }
+	final public function GetUnitsSize() { return $this->GetUnits(); }
 	final public function Select() { return $this->__bound( func_get_args(), func_num_args() ); }
 	final public function Grab() { return $this->__bound( func_get_args(), func_num_args() ); }
 	final public function Bound() { return $this->__bound( func_get_args(), func_num_args() ); }
@@ -139,6 +147,7 @@ abstract class SQLQuery
 	final public function Like() { return $this->__like( func_get_args(), func_num_args() ); }
 	final public function Not() { return $this->__not( func_get_args(), func_num_args() ); }
 	final public function NotBetween() { return $this->__notBetween( func_get_args(), func_num_args() ); }
+	final public function Diff() { return $this->__notEqual( func_get_args(), func_num_args() ); }
 	final public function NotEqual() { return $this->__notEqual( func_get_args(), func_num_args() ); }
 	final public function NotIn() { return $this->__notIn( func_get_args(), func_num_args() ); }
 	final public function NotLike() { return $this->__notLike( func_get_args(), func_num_args() ); }
@@ -304,10 +313,11 @@ abstract class SQLQuery
 	final public function Fetch() { return call_user_func_array([$this, mcbm_row], array(func_get_args(), func_num_args())); } 
 	final public function Role() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
 	final public function Data() { return call_user_func_array([$this, mcbm_role], array(func_get_args(), func_num_args())); } 
+	final public function Unit() { return call_user_func_array([$this, mcbm_unit], array(func_get_args(), func_num_args())); }
 	final public function Prefix() { return call_user_func_array([$this, mcbm_prefix], array(func_get_args(), func_num_args())); } 
 	final public function Affected() { return call_user_func_array([$this, mcbm_affected], array(func_get_args(), func_num_args())); } 
+	final public function Close() { return call_user_func_array([self::$this, mcbm_close],array()); }
 	final public function Connect( $name ) { return $this->__connect( $name ); }
-	final public function Close() { return $this->__close(); }
 	final public function GetError() { return $this->__getError(); } 
 	final public function GetQuery() { return $this->__getQuerySQL(); }
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
@@ -322,6 +332,7 @@ abstract class SQLQuery
 	final protected function __setModel( $value ) { return $this->__setModelName( $value ); }
 	final protected function __setAlias( $value ) { return $this->__setAliasName( $value ); }
 	final protected function __setTable( $value ) { return $this->__setTableName( $value ); } 
+	final protected function __setUnits( $value ) { return $this->__setUnitsSize( $value ); } 
 	final protected function __new() { return $this->__clear( true ); } 
 	final protected function __reset() { return $this->__clear( true ); } 
 	
@@ -331,8 +342,13 @@ abstract class SQLQuery
 			$this->_propAlias = $this->_alias; 
 		if( EMPTY_CHAR===$this->_propTable && isset($this->_table) )
 			$this->_propTable = $this->_propPrefix.$this->_table; 
-		if( EMPTY_CHAR===$this->_propModel && isset($this->_model))
+		if( EMPTY_CHAR===$this->_propModel && isset($this->_model) )
 			$this->_propModel = $this->_model; 
+		if( zero===$this->_propUnits && isset($this->_units) ) 
+		{
+			$this->_propUnits = $this->_units; 
+			$this->_propUnitOrigin = $this->_propTable;
+		}
 		return $this;
 	} 
 	
@@ -343,8 +359,8 @@ abstract class SQLQuery
 	
 	final protected function __parseDescribe( $tableName ) 
 	{
-		global $cache;
-		$describe = $cache->get('describe'.$tableName);
+		global $_cache;
+		$describe = $_cache->get('describe'.$tableName);
 		if( empty($describe) && $this->_dbHandle ) 
 		{
 			$describe = array();
@@ -353,7 +369,7 @@ abstract class SQLQuery
 			while ($row = $this->fetch_row($result)) 
 				array_push($describe,$row[0]); 
 			$this->free_result($result);
-			$cache->set('describe_'.$tableName,$describe);
+			$_cache->set('describe_'.$tableName,$describe);
 		}
 		return $describe; 
 	} 
@@ -446,7 +462,6 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				global $inflect; 
 				$sql = current( $args );
 				$sql = str_replace( ':table', $this->_propTable, $sql ); 
 				$sql = str_replace( ':model', $this->_propModel, $sql ); 
@@ -1196,6 +1211,40 @@ abstract class SQLQuery
 		}
 	} 
 	
+	private function __unit( $args, $argsNum ) 
+	{ 
+		try 
+		{
+			if( $this->_propUnits ) 
+			{
+				if( 1!==$argsNum ) 
+				{ 
+					throw new Exception("The Model::Unit() need 1 parameter in Number type only."); 
+				} 
+				
+				$unitCurr = current($args); 
+				$rstUnit = $unitCurr%$this->_propUnits; 
+				if( $rstUnit ) 
+				{ 
+					$this->_propTable = $this->_propUnitOrigin.underscore.$rstUnit; 
+				} 
+				else 
+				{ 
+					$this->_propTable = $this->_propUnitOrigin; 
+				} 
+			}
+			else 			
+			{
+				throw new Exception("Can't use <b>Model::Unit()</b> function on a model have no extra units."); 
+			}
+		} 
+		catch( Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage().BL.\Zuuda\Error::Position($e) );
+		} 
+		return $this; 
+	} 
+	
 	private function __item( $args, $argsNum ) 
 	{
 		if( zero===$argsNum ) 
@@ -1207,7 +1256,12 @@ abstract class SQLQuery
 		switch( $mod ) 
 		{
 			case ':id': 
+			case 'id:': 
 				$data = call_user_func_array( [$this,mcbm_findid], array([$args[1]], 1) );
+				break;
+			case ':pk':
+			case 'pk:':
+				$data = $this->clear()->equal($this->_primaryKey, $args[1])->limit(1)->search();
 				break;
 			case ':last':
 				$data = call_user_func_array( [$this,mcbm_last], array([], 0) );
@@ -1880,9 +1934,22 @@ abstract class SQLQuery
 	protected function __setTableName( $value ) 
 	{
 		if( __useDB() ) 
+		{
 			$this->_propTable = $this->_propPrefix.$value; 
+			if( isset($this->_units) ) 
+			{
+				$this->_propUnitOrigin = $this->_propTable;
+			}
+		}
 		return $this;
-	}
+	} 
+	
+	protected function __setUnitsSize( $value ) 
+	{ 
+		if( __useDB() ) 
+			$this->_propUnits = $value; 
+		return $this;
+	} 
 
 	private function __boundField( $fieldName, $fieldLabel=NULL ) 
 	{
@@ -4541,7 +4608,6 @@ abstract class SQLQuery
 	
 	private function __orderHasOne( $args, $argsNum ) 
 	{
-		global $inflect; 
 		try 
 		{
 			if( $argsNum ) 
@@ -4611,7 +4677,6 @@ abstract class SQLQuery
 	
 	private function __orderHasMany( $args, $argsNum ) 
 	{ 
-		global $inflect; 
 		try 
 		{
 			if( $argsNum ) 
@@ -4680,7 +4745,7 @@ abstract class SQLQuery
 	
 	private function __orderHasMABTM( $args, $argsNum ) 
 	{
-		global $inflect; 
+		global $_inflect; 
 		try 
 		{
 			if( $argsNum ) 
@@ -4709,7 +4774,7 @@ abstract class SQLQuery
 					$alias = array_merge($dataAlias, $mainAlias); 
 					sort($alias); 
 					foreach( $alias as $key => $word ) 
-						$alias[$key] = $inflect->singularize(strtolower($word)); 
+						$alias[$key] = $_inflect->singularize(strtolower($word)); 
 					$joinModel = array(
 						'md_name' => implode(EMPTY_CHAR, $alias), 
 						'as_name' => implode(mad, $alias), 
@@ -4731,7 +4796,7 @@ abstract class SQLQuery
 					$alias = explode(mad, $args[3]); 
 					sort($alias); 
 					foreach( $alias as $key => $word ) 
-						$alias[$key] = $inflect->singularize(strtolower($word)); 
+						$alias[$key] = $_inflect->singularize(strtolower($word)); 
 					$joinModel = array(
 						'md_name' => implode(EMPTY_CHAR, $alias), 
 						'as_name' => implode(mad, $alias), 
@@ -4923,19 +4988,47 @@ abstract class SQLQuery
 						$configs['DATASOURCE']['server'][$configs['DATASOURCE'][$src]['server']]['resource'] = $dsl; 
 						return $this->__connect($src); 
 					} 
+					else 
+					{
+						$p = "<p>Could not connect to database server:</p>";
+						$p.= "<ul>";
+						$p.= "<li>Host: {$server['hostname']}</li>";
+						$p.= "<li>User: {$server['username']}</li>";
+						$p.= "<li>Password: ***</li>";
+						$p.= "</ul>";
+						throw new Exception($p); 
+					}
 				} 
 				return $server['resource'];
 			} 
 		}
 		catch( Exception $e ) 
 		{ 
-			abort( 500, $e->getMessage().BL.error::position($e) ); 
-		} 
+			if( $configs[DEVELOPMENT_ENVIRONMENT] && $configs[DEVELOPER_WARNING] ) 
+			{
+				abort( 500, $e->getMessage().BL.error::position($e) ); 
+			} 
+			else 
+			{ 
+				abort( 500, $e->getMessage() );
+			} 
+		}
 		return;
 	} 
 	
-	final protected function __close() 
+	final static private function __close() 
 	{ 
-		$this->__connect(config::get('DATASOURCE')['server']['default']); 
+		global $configs;
+		if( isset($configs['DATASOURCE']) ) 
+		{ 
+			$ds = $configs['DATASOURCE']; 
+			foreach($ds['server'] as $svr) 
+			{ 
+				if( is_array($svr) ) 
+				if( isset($svr['resource']) ) 
+				if( is_object($svr['resource']) ) 
+				mysqli_close( $svr['resource'] ); 
+			} 
+		}
 	} 
 }

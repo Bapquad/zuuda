@@ -7,7 +7,7 @@ use Exception;
 class Block extends App 
 {
 	
-	private static $class = '\Zuuda\Block';
+	private static $this = '\Zuuda\Block';
 	private static function __use($n, $c) { return new Block($n, $c); } 
 	public static function Use($class_name, $codeof=NULL) { return self::__use( $class_name, $codeof ); }
 	final public function Instance() { return $this->__instance( func_get_args() ); } 

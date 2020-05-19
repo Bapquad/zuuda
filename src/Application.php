@@ -11,6 +11,7 @@ const MAIN_LAYOUT 	= 'main';
 use ReflectionClass;
 use Exception;
 use Zuuda\Error;
+use Zuuda\Fx;
 
 class Application 
 {
@@ -69,11 +70,9 @@ class Application
 	
 	private function __bootService() 
 	{
-		GlobalModifier::set( 'cache', new Cache() );
-		GlobalModifier::set( 'irregularWords', array() );
-		GlobalModifier::set( 'inflect', new Inflection() );
-		GlobalModifier::set( 'html', Html::getInstance() );
-		GlobalModifier::set( 'file', cFile::getInstance() );
+		GlobalModifier::set( '_cache', new Cache() );
+		GlobalModifier::set( '_irregularWords', array() );
+		GlobalModifier::set( '_inflect', new Inflection() );
 		GlobalModifier::set( '_post', array() );
 		GlobalModifier::set( '_put', array() );
 		GlobalModifier::set( '_delete', array() );
@@ -132,18 +131,14 @@ class Application
 	private function __bootParams() 
 	{
 		global $configs;
-		$configs['QUERY_STRING'] = array_map( 'ucfirst' , explode( PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')) ); 
+		$configs['QUERY_STRING'] = explode(PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')); 
 		$this->__parseQuery($GLOBALS['request_uri']);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
 	
 	private function __bootServices( $serviceInst, $appInst = NULL ) 
 	{
-		if( Config::has( 'COM' ) ) 
-		{
-			return $serviceInst->bootService( $appInst );
-		}
-		return false;
+		return $serviceInst->bootService( $appInst );
 	}
 
 	private function __extractController() 
@@ -155,12 +150,13 @@ class Application
 		{
 			$module = $configs['QUERY_STRING'][0];
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
-			$configs["MODULE"] = $module;
+			$configs["MODULE"] = ucfirst($module); 
 			$controller = (isset($configs['QUERY_STRING']) && isset($configs['QUERY_STRING'][0])) ? $configs['QUERY_STRING'][0] : NULL;
 			if( NULL === $controller || empty_char === $controller ) 
 			{
-				$controller = 'Index';
-			}
+				$controller = 'index';
+			} 
+			$controller = ucfirst($controller); 
 			array_push($_extract, array_shift($configs['QUERY_STRING']));
 			$controller = explode('-', $controller);
 			foreach($controller as $k =>  $c) 
@@ -171,8 +167,7 @@ class Application
 			$configs["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
 			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
 
-			$_extract = $module.BS.CTRLER_PRE.BS.$configs["CONTROLLER"].CONTROLLER;
-
+			$_extract = $configs["MODULE"].BS.CTRLER_PRE.BS.$configs["CONTROLLER"].CONTROLLER;
 			return $_extract;
 		}
 		return $router['default']['controller'];
@@ -186,22 +181,24 @@ class Application
 	static function Booting() 
 	{
 		static $_instance;
-		
 		if( NULL!==$_instance ) 
 			return $_instance;	// NEEDLE HANDLE.
 		Session::start();
 		Cookie::start();
+		Error::handle();
 		$_instance = application::instance();
 		$_instance->__bootService();
 		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
-		if( Config::has( 'COM' ) ) 
+		if( Config::has('COM') ) 
 		{
+			$_instance->__bootServices( Comsite::getInstance(), $_instance ); 
 			$_instance->__bootServices( BTShipnelService::getInstance() );
 			$_instance->__bootServices( RouteService::getInstance(), $_instance );
 			$_instance->__bootServices( ComService::getInstance(), $_instance );
 			$_instance->__bootServices( ThemeService::getInstance() );
 			$_instance->__bootServices( CateService::getInstance(), $_instance );
 			$_instance->__bootServices( ExtensionInformationService::getInstance(), $_instance );
+			$_instance->__bootServices( WidgetInformationService::getInstance(), $_instance );
 		}
 		$_instance->__bootParams(); 
 		return $_instance;
@@ -310,14 +307,6 @@ class Application
 				if($action === 'Action') $action = 'IndexAction';
 				if((int)method_exists($dispatch, $action)) 
 				{
-					if( isset( $configs["QUERY_STRING"] ) ) 
-					{
-						$lim = count( $configs["QUERY_STRING"] );
-						for( $i = 0; $i < $lim; $i++ ) 
-						{
-							$configs["QUERY_STRING"][ $i ] = strtolower( $configs["QUERY_STRING"][ $i ] );
-						}
-					} 
 					Application::Handling($dispatch, $action);
 				}
 				else

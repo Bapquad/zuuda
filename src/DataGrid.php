@@ -2,9 +2,12 @@
 namespace Zuuda;
 
 use Exception;
-use Zuuda\Session;
-use Zuuda\RequestHeader;
 use Zuuda\Pagination;
+use Zuuda\Html; 
+use Zuuda\Query;
+use Zuuda\Request;
+use Zuuda\Session;
+use Zuuda\Cookie;
 
 abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTemplate 
 {
@@ -26,6 +29,11 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	private $_order;					// Holds the current field order.
 	private $_data_grid;
 	private $_paging;
+	protected $html;
+	protected $query;
+	protected $request;
+	protected $session;
+	protected $cookie;
 	
 	protected function __getVars() { return $this->_vars; }
 	protected function __getName() { return $this->_name; }
@@ -131,7 +139,13 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 	public function rootName() { return __CLASS__; }
 	
 	public function __construct( Model $model = NULL ) 
-	{		
+	{
+		$this->html = html::instance();
+		$this->query = query::instance();
+		$this->request = request::instance();
+		$this->session = session::instance();
+		$this->cookie = cookie::instance();
+		
 		// Iniializing the option data.
 		$option_data = Session::get( 'grid' );
 		$curr_area = get_class( $this );
@@ -398,11 +412,9 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			if( 1==$argsNum ) 
 			{
-				dd($args);
 				$mixed = current($args); 
-				$mixed = each($mixed);
-				$name = $mixed['key']; 
-				$value = $mixed['value']; 
+				$name = key($mixed); 
+				$value = current($mixed); 
 			} 
 			else if( 1<$argsNum ) 
 			{ 
@@ -414,7 +426,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 				throw new \Exception( "The functions of <b>Datagrid::Assign(), Datagrid::Set(), and Datagrid::Share()</b> must be has least one parameter." ); 
 			}
 			
-			$this->_vars[ $name ] = $value; 
+			$this->_vars[$name] = $value; 
 			return $this; 
 		} 
 		catch( \Exception $e ) 
@@ -576,17 +588,15 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		$this->set( 'name', $name );					// Distributes the name.
 		$this->set( 'sort', $sort );					// Distributes the sort, default null.
 		$this->set( 'order', $order );					// Distributes the order, default null, if any column has sort, and in current order request, it returns it's name value.
-		return $this->__renderLayout( $data );
+		
+		return $this->__renderLayout();
 	}
 	
 	protected function __renderLayout( $args = NULL ) 
 	{
-		global $configs;
-		global $html, $file;
-		
+		global $_configs, $_inflect, $_get, $_post, $_file, $_server; 
 		$vars = $this->__getVars();
 		$template = $this->__getTemplate();
-		
 		if( !is_null( $vars ) ) 
 		{
 			extract( $vars );
@@ -605,9 +615,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			$path = WIDGET_DIR . $template;
 		}
-		
 		include( $path );
-		
 		return $this;
 	}
 }

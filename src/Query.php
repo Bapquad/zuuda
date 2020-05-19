@@ -6,7 +6,7 @@ class Query
 {
 	
 	private $_data; 
-	private static $class = '\Zuuda\Query';
+	private static $this = '\Zuuda\Query';
 	
 	public static function All() { return self::__params(); } 
 	public static function Has($name) { return self::__has($name); }
@@ -17,15 +17,22 @@ class Query
 	public static function Get($name=NULL) { return self::__param($name); } 
 	public static function Param($name=NULL) { return self::__param($name); } 
 	public static function Input($name=NULL) { return self::__param($name); } 
-	public static function Except() { return call_user_func_array([self::$class, '__except'], array(func_get_args(), func_num_args())); } 
-	public static function Length() { return call_user_func_array([self::$class, '__length'], array(func_get_args(), func_num_args())); } 
-	public static function Empty() { return call_user_func_array([self::$class, '__empty'], array(func_get_args(), func_num_args())); } 
-	public static function Encrypt() { return call_user_func_array([self::$class, '__encrypt'], array(func_get_args(), func_num_args())); } 
-	public static function Hash() { return call_user_func_array([self::$class, '__encrypt'], array(func_get_args(), func_num_args())); } 
-	public static function Merge() { return call_user_func_array([self::$class, '__merge'], array(func_get_args(), func_num_args())); } 
+	public static function Instance() { return call_user_func_array([self::$this, '__instance'], array()); }
+	public static function Except() { return call_user_func_array([self::$this, '__except'], array(func_get_args(), func_num_args())); } 
+	public static function Length() { return call_user_func_array([self::$this, '__length'], array(func_get_args(), func_num_args())); } 
+	public static function Empty() { return call_user_func_array([self::$this, '__empty'], array(func_get_args(), func_num_args())); } 
+	public static function Encrypt() { return call_user_func_array([self::$this, '__encrypt'], array(func_get_args(), func_num_args())); } 
+	public static function Hash() { return call_user_func_array([self::$this, '__encrypt'], array(func_get_args(), func_num_args())); } 
+	public static function Merge() { return call_user_func_array([self::$this, '__merge'], array(func_get_args(), func_num_args())); } 
 	final public function rootName() { return __CLASS__; } 
 	private function __construct() {} 
 	private function __clone() {} 
+	
+	private static function __instance() 
+	{ 
+		static $_inst; 
+		return $_inst ?: $_inst = new Query;
+	} 
 	
 	private static function __merge( $args, $argsNum ) 
 	{ 
@@ -52,14 +59,8 @@ class Query
 		$name = current($args); 
 		if( isset($_get[$name]) ) 
 		{
-			if( !isset($configs['ENCRYPT']) || $configs['ENCRYPT']['query']==="MD5" ) 
-				$out = md5($_get[$name]); 
-			else if( $configs['ENCRYPT']['query']==="SHA-2" ) 
-				$out = hash( "sha256", $_get[$name] ); 
-			else if( $configs['ENCRYPT']['query']==="SHA-1" ) 
-				$out = sha1( $_get[$name] );
-			$_get[$name] = $out; 
-			return $out;
+			$_get[$name] = hash( $configs['ENCRYPT']['query'], $_get[$name] );  
+			return $_get[$name];
 		} 
 		return NULL;
 	}

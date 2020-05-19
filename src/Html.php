@@ -6,6 +6,7 @@ use Zuuda\cFile;
 
 class Html implements iHTML 
 {
+	private static $this = '\Zuuda\Html';
 	private static function __fetchTinyUrl($url) 
 	{ 
 		$ch = curl_init(); 
@@ -27,6 +28,7 @@ class Html implements iHTML
 		return mysql_real_escape_string($data);
 	}
 
+	public static function Instance() { return self::__getInstance(); }
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Link( $text, $path, $prompt = null, $confirm_msg = "Are you sure?") { return self::__link( $text, $path, $prompt, $confirm_msg ); }
 	public static function AssetPath( $file_path ) { return self::__assetPath( $file_path ); } 

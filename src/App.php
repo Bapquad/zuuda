@@ -5,7 +5,7 @@ namespace Zuuda;
 class App 
 {
 	
-	private static $class = '\Zuuda\App';
+	private static $this = '\Zuuda\App';
 	protected $_codeof;
 	protected $_className;
 	protected $_class;

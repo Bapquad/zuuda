@@ -11,6 +11,11 @@ function __correctPath( $class_path )
 	return str_replace( BS, PS, $class_path ); 
 } 
 
+function correct_path( $path ) 
+{ 
+	return __correctPath($path);
+} 
+
 function __buildPath( $file_path, $file = false ) 
 {
 	return __assetPath( $file_path, $file, true );
@@ -103,7 +108,7 @@ function __currentControllerFile()
 	$controller = $configs['MODULE'].DS.CTRLER_DIR.$configs['CONTROLLER'].CONTROLLER.$configs['EXT']; 
 	if( $configs['COM'] && isset( $configs['SHIP'] ) ) 
 	{
-		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.'Extensions'.DS:NULL).$controller;
+		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$controller;
 		$com_path = COM.$controller;
 		if( call( Zuuda\cFile::get(), $code_path )->exist() ) 
 			return $code_path; 
@@ -135,7 +140,7 @@ function __availbleClass( $class_name )
 		$class_path = COM.$class_file;
 		if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
 		{
-			$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.'Extensions'.DS:NULL).$class_file; 
+			$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$class_file; 
 			if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
 				$class_path = MOD_DIR.$class_file; 
 		}
@@ -174,18 +179,8 @@ function escape()
 
 function __escape() 
 {
-	global $configs;
-	if( isset($configs['DATASOURCE']) ) 
-	{ 
-		$ds = $configs['DATASOURCE']; 
-		foreach($ds['server'] as $svr) 
-		{ 
-			if( is_array($svr) ) 
-			if( isset($svr['resource']) ) 
-			if( is_object($svr['resource']) ) 
-			mysqli_close( $svr['resource'] ); 
-		} 
-	}
+	\Zuuda\FreeModel::instance()->close();
+	\Zuuda\Cache::clearUploadTemp(); 
 	return true;
 }
 
@@ -211,10 +206,10 @@ function __dispatch_autoload_class_file( $class_name )
 				$class_path = COM . $class_file;
 				if( !file_exists($class_path) && isset($configs['CODE_OF']) ) 
 				{
-					$class_path = CODE.$configs['CODE_OF'].DS.'Extensions'.DS.$class_file; 
+					$class_path = CODE.$configs['CODE_OF'].DS.EXTENSIONS.DS.$class_file; 
 					if( !file_exists($class_path) ) 
 					{
-						$class_path = CODE.$configs['CODE_OF'].DS.'Widgets'.DS.$class_file; 
+						$class_path = CODE.$configs['CODE_OF'].DS.WIDGETS.DS.$class_file; 
 					}
 				}
 			}
@@ -241,10 +236,55 @@ function __dispatch_autoload_class_file( $class_name )
 } 
 function dispatch( $class_name ) {__dispatch_autoload_class_file( $class_name );}
 
+function back() 
+{ 
+	return __back(); 
+} 
+
+function __back() 
+{ 
+	if( isset($_SERVER['HTTP_REFERER']) ) 
+	{
+		return __direct($_SERVER['HTTP_REFERER']); 
+	} 
+	return false;
+} 
+
+function compact_item( $key, $value ) 
+{ 
+	return array($key => $value); 
+} 
+
+function __each( $arg ) // ['key_name'=>'value_name']
+{
+	return array(key($arg), current($arg));
+} 
+
+function make_item( $item, $pref=EMPTY_CHAR, $postf=EMPTY_CHAR ) 
+{ 
+	return array($pref.key($item).$postf, current($item)); 
+} 
+
+function extract_item( $arg ) 
+{ 
+	return __each($arg);
+}  
+
+function item( $arg ) 
+{ 
+	return __each($arg);
+} 
+
+function direct( $uri ) 
+{ 
+	return __direct($uri); 
+} 
+
 function __direct( $url ) 
 {
-	__escape();
-	header( "location: $url" );
+	__escape(); 
+	// if( !headers_sent() ) 
+		header( "location: $url" );
 	exit;
 }
 function redirect( $url ) 
@@ -298,7 +338,7 @@ function watch()
 	{
 		if( 0===func_num_args() ) 
 			throw new Exception("Sử dụng hàm <strong>watch</strong> không đúng cú pháp."); 
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='watch') 
 		{
@@ -324,7 +364,7 @@ function write()
 	{
 		if( 0===func_num_args() ) 
 			throw new Exception("Sử dụng hàm <strong>write</strong> không đúng cú pháp."); 
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='write') 
 		{
@@ -350,7 +390,7 @@ function check()
 	{
 		if( 0===func_num_args() ) 
 			throw new Exception("Sử dụng hàm <strong>check</strong> không đúng cú pháp."); 
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='check') 
 		{
@@ -377,7 +417,7 @@ function debug()
 	{
 		if( 0===func_num_args() ) 
 			throw new Exception("Sử dụng hàm <strong>debug</strong> không đúng cú pháp."); 
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='debug') 
 		{
@@ -402,7 +442,7 @@ function leave()
 		return; 
 	if( func_num_args() ) 
 	{
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='leave') 
 		{
@@ -416,7 +456,7 @@ function leave()
 		}
 	}
 	
-	Zuuda\RequestHeader::DisplayCode();
+	\Zuuda\ResponseHeader::DisplayCode();
 	$back_trace = debug_backtrace()[0];
 	echo nl.'<pre>'.nl;
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [leave]'.nl;
@@ -431,7 +471,7 @@ function quit()
 		return; 
 	if( func_num_args() ) 
 	{
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='quit') 
 		{
@@ -445,7 +485,7 @@ function quit()
 		}
 	}
 	
-	Zuuda\RequestHeader::DisplayCode();
+	\Zuuda\ResponseHeader::DisplayCode();
 	$back_trace = debug_backtrace()[0]; 
 	echo nl.'<pre>'.nl;
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [quit]'.nl;
@@ -460,7 +500,7 @@ function stop()
 		return; 
 	if( func_num_args() ) 
 	{
-		Zuuda\RequestHeader::DisplayCode();
+		\Zuuda\ResponseHeader::DisplayCode();
 		$back_trace = debug_backtrace()[0];
 		if($back_trace['function']==='stop') 
 		{
@@ -474,7 +514,7 @@ function stop()
 		}
 	}
 	
-	Zuuda\RequestHeader::DisplayCode();
+	\Zuuda\ResponseHeader::DisplayCode();
 	$back_trace = debug_backtrace()[0]; 
 	echo nl.'<pre>'.nl;
 	echo basename($back_trace['file']).':'.$back_trace['line'].' [stop]'.nl;
@@ -497,7 +537,7 @@ function __trace( Exception $e )
 
 function __trace_once( Exception $e ) 
 {
-	Zuuda\RequestHeader::DisplayCode();
+	\Zuuda\ResponseHeader::DisplayCode();
 	__trace( $e );
 	exit;
 } 
@@ -715,100 +755,148 @@ function padnum($input, $length=5)
 	return str_pad($input, $length, '0', STR_PAD_LEFT); 
 } 
 
+function __exc_handler( $e ) 
+{ 
+	$errortype = array (
+		E_ERROR              => '<i>[ERROR]</i>',
+		E_WARNING            => '<i>[WARNING]</i>',
+		E_PARSE              => '<i>[PARSING ERROR]</i>',
+		E_NOTICE             => '<i>[NOTICE]</i>',
+		E_CORE_ERROR         => '<i>[CORE ERROR]</i>',
+		E_CORE_WARNING       => '<i>[CORE WARNING]</i>',
+		E_COMPILE_ERROR      => '<i>[COMPILE ERROR]</i>',
+		E_COMPILE_WARNING    => '<i>[COMPILE WARNING]</i>',
+		E_USER_ERROR         => '<i>[USER ERROR]</i>',
+		E_USER_WARNING       => '<i>[USER WARNING]</i>',
+		E_USER_NOTICE        => '<i>[USER NOTICE]</i>',
+		E_STRICT             => '<i>[RUNTIME NOTICE]</i>',
+		E_RECOVERABLE_ERROR  => '<i>[CATCHABLE FALTA ERROR]</i>', 
+		8192				 => '<i>[DEPRECATED WARNING]</i>', 
+		0					 => '<i>[SYNTAX ERROR]</i>', 
+	);
+	$errno = $e->getCode();
+	abort( 500, "<b>{$errortype[$errno]}:</b> ".$e->getMessage().\Zuuda\Error::Exchandle($e) ); 
+}
+
+function __err_handler( $errno, $errmsg, $filename, $linenum, $vars )
+{
+	$errortype = array (
+		E_ERROR              => '<i>[ERROR]</i>',
+		E_WARNING            => '<i>[WARNING]</i>',
+		E_PARSE              => '<i>[PARSING ERROR]</i>',
+		E_NOTICE             => '<i>[NOTICE]</i>',
+		E_CORE_ERROR         => '<i>[CORE ERROR]</i>',
+		E_CORE_WARNING       => '<i>[CORE WARNING]</i>',
+		E_COMPILE_ERROR      => '<i>[COMPILE ERROR]</i>',
+		E_COMPILE_WARNING    => '<i>[COMPILE WARNING]</i>',
+		E_USER_ERROR         => '<i>[USER ERROR]</i>',
+		E_USER_WARNING       => '<i>[USER WARNING]</i>',
+		E_USER_NOTICE        => '<i>[USER NOTICE]</i>',
+		E_STRICT             => '<i>[RUNTIME NOTICE]</i>',
+		E_RECOVERABLE_ERROR  => '<i>[CATCHABLE FALTA ERROR]</i>', 
+		8192				 => '<i>[DEPRECATED WARNING]</i>', 
+		8192				 => '<i>[DEPRECATED WARNING]<i>', 
+	);
+	abort( 500, "<b>{$errortype[$errno]}:</b> ".$errmsg.BL.\Zuuda\Error::Errhandle(debug_backtrace()));
+}
+
 function abort( $code=404, $msg=NULL, $strict=true ) 
 {
-	global $configs;
-	Zuuda\Response::instance()->cors(!$strict); 
-	$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
-	if($code===500) 
+	if( !headers_sent() ) 
 	{
-		if( $strict ) 
-			header( "HTTP/1.1 500 Internal Server Error" ); 
-		$page = WEB_DIR . "500.html";
-		if( file_exists($page) ) 
+		global $configs;
+		Zuuda\Response::instance()->cors(!$strict); 
+		$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
+		if($code===500) 
 		{
-			include_once( $page );
-			escape();
+			if( $strict ) 
+				header( "HTTP/1.1 500 Internal Server Error" ); 
+			$page = WEB_DIR . "500.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			if(NULL===$msg) 
+				$msg = "Woops! You have an internal server error.";
+			$title = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
 		}
-		if(NULL===$msg) 
-			$msg = "Woops! You have an internal server error.";
-		$title = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
-	}
-	else if($code===408) 
-	{
-		if( $strict ) 
-			header( "HTTP/1.0 408 Request Timeout" ); 
-		$page = WEB_DIR . "408.html";
-		if( file_exists($page) ) 
+		else if($code===408) 
 		{
-			include_once( $page );
-			escape();
-		}
-		if(NULL===$msg) 
-			$msg = "Woops! Looks like your request is timeout.";
-		$title = "Request Timeout";
-	} 
-	else if($code===404) 
-	{
-		if( $strict ) 
-			header( "HTTP/1.1 404 Not Found" ); 
-		$page = WEB_DIR . "404.html";
-		if( file_exists($page) ) 
+			if( $strict ) 
+				header( "HTTP/1.0 408 Request Timeout" ); 
+			$page = WEB_DIR . "408.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			// if(NULL===$msg) 
+				$msg = "Woops! Looks like your request is timeout.";
+			$title = "Request Timeout";
+		} 
+		else if($code===404) 
 		{
-			include_once( $page );
-			escape();
-		}
-		if(NULL===$msg) 
-			$msg = "Woops! Looks like your page couldn't found.";
-		$title = "Not Found";
-	} 
-	else if($code===403) 
-	{
-		if( $strict ) 
-			header( "HTTP/1.0 403 Forbidden" ); 
-		$page = WEB_DIR . "403.html";
-		if( file_exists($page) ) 
+			if( $strict ) 
+				header( "HTTP/1.1 404 Not Found" ); 
+			$page = WEB_DIR . "404.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			// if(NULL===$msg) 
+				$msg = "Woops! Looks like your page couldn't found.";
+			$title = "Not Found";
+		} 
+		else if($code===403) 
 		{
-			include_once( $page );
-			escape();
-		}
-		if(NULL===$msg) 
-			$msg = "Woops! Looks like you have deny from this request.";
-		$title = "Forbidden";
-		$try_again_link = NULL;
-	} 
-	else if($code===401) 
-	{
-		if( $strict ) 
-			header( "HTTP/1.0 401 Unauthorized" ); 
-		$page = WEB_DIR . "401.html";
-		if( file_exists($page) ) 
+			if( $strict ) 
+				header( "HTTP/1.0 403 Forbidden" ); 
+			$page = WEB_DIR . "403.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			// if(NULL===$msg) 
+				$msg = "Woops! Looks like you have deny from this request.";
+			$title = "Forbidden";
+			$try_again_link = NULL;
+		} 
+		else if($code===401) 
 		{
-			include_once( $page );
-			escape();
-		}
-		if(NULL===$msg) 
-			$msg = "Woops! Looks like you haven't authorized.";
-		$title = "Unauthorized";
-		$try_again_link = NULL;
-	} 
-	else if($code===400) 
-	{
-		if( $strict ) 
-			header( "HTTP/1.0 400 Bad Request" ); 
-		$page = WEB_DIR . "400.html";
-		if( file_exists($page) ) 
+			if( $strict ) 
+				header( "HTTP/1.0 401 Unauthorized" ); 
+			$page = WEB_DIR . "401.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			// if(NULL===$msg) 
+				$msg = "Woops! Looks like you haven't authorized.";
+			$title = "Unauthorized";
+			$try_again_link = NULL;
+		} 
+		else if($code===400) 
 		{
-			include_once( $page );
-			escape();
-		}
-		if(NULL===$msg) 
-			$msg = "Woops! Looks like your request is invalid.";
-		$title = "Bad Request";
-	} 
-	$uri = $_SERVER['REQUEST_URI'];
-	$domain = $configs['DOMAIN'];
-/*HTML*/echo 
+			if( $strict ) 
+				header( "HTTP/1.0 400 Bad Request" ); 
+			$page = WEB_DIR . "400.html";
+			if( file_exists($page) ) 
+			{
+				include_once( $page );
+				escape();
+			}
+			// if(NULL===$msg) 
+				$msg = "Woops! Looks like your request is invalid.";
+			$title = "Bad Request";
+		} 
+		$uri = $_SERVER['REQUEST_URI'];
+		$domain = $configs['DOMAIN'];
+echo 
+/*=======================ECHO: THE ABORT TEMPLATE===================*/
 <<<EOL
 <!DOCTYPE html>
 	<head>
@@ -827,6 +915,11 @@ function abort( $code=404, $msg=NULL, $strict=true )
 			a 
 			{
 				font-weight: bold;
+			}
+			
+			code 
+			{
+				font-size: 10pt;
 			}
 			
 			.container 
@@ -908,6 +1001,7 @@ function abort( $code=404, $msg=NULL, $strict=true )
 </html>
 EOL;
 /*HTML*/
+	}
 	escape();
 }
 
@@ -940,8 +1034,8 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 			case 'Request':
 				return Zuuda\Config::get( 'REQUEST_VARIABLES' );
 			case 'Inflect':
-				global $inflect;
-				return $inflect; 
+				global $_inflect;
+				return $_inflect; 
 			default: 
 				global $configs;
 				if( TRUE===$configs[ 'COM' ] ) 
@@ -969,6 +1063,14 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 					{ 
 						return Zuuda\ExtensionInformationService::getInstance()->info( 'shortcut' );
 					} 
+					else if( 'WidgetServiceLive'===$const ) 
+					{
+						return Zuuda\WidgetInformationService::getInstance()->info( 'live' ); 
+					} 
+					else if( 'WidgetServiceAbout'===$const ) 
+					{
+						return Zuuda\WidgetInformationService::getInstance()->info( 'widget' );
+					}
 				else 
 					return NULL;
 				break;

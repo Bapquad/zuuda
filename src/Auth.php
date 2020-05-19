@@ -2,30 +2,45 @@
 
 namespace Zuuda;
 
+use Exception;
+use Zuuda\Config;
+use Zuuda\Fx;
+
 class Auth 
 {
 	
-	private static $class = '\Zuuda\Auth';
+	private static $this = '\Zuuda\Auth';
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
 	private function __clone() {} 
 	
-	public static function User($prop=NULL) { return self::__user($prop); } 
 	public static function Get($prop) { return self::__user($prop); } 
 	public static function GetAll() { return self::__getAll(); }
 	public static function Instance() { return self::__getInstance(); }
 	public static function Body($prop) { return self::__user($prop); } 
-	public static function Role() { return call_user_func_array([self::$class, '__role'], array(func_get_args())); } 
-	public static function Apply() { return call_user_func_array([self::$class, '__role'], array(func_get_args())); } 
+	public static function Role() { return call_user_func_array([self::$this, '__role'], array(func_get_args())); } 
+	public static function Apply() { return call_user_func_array([self::$this, '__role'], array(func_get_args())); } 
+	public static function Status() { return call_user_func_array([self::$this, '__status'], array()); }
 	
 	public static function __callStatic( $name, $args ) 
 	{
 		try 
 		{ 
 			if( empty($args) ) 
-				return self::__user($name); 
+			{
+				if( fx::is_dir(ROOT_DIR.$name) ) 
+				{
+					return authaction::instance($name);
+				} 
+				else 
+				{ 
+					return call_user_func_array( array(authaction::instance('root'), $name), $args ); 
+				} 
+			}
 			else 
-				throw new Exception( "Usage <strong>Auth::{$name}()</strong> is incorrect." ); 
+			{
+				throw new Exception( "<strong>Auth::{$name}()</strong> don't have any parameter. It just received only." ); 
+			}
 		} 
 		catch( Exception $e ) 
 		{ 
@@ -47,9 +62,9 @@ class Auth
 	{
 		if($prop) 
 		{
-			$data = session::get(auth); 
+			$data = session::get(user_auth); 
 			if( isset($data[$prop]) )
-				return session::get(auth)[$prop]; 
+				return session::get(user_auth)[$prop]; 
 			else
 				return NULL;
 		}
@@ -58,16 +73,16 @@ class Auth
 	
 	private static function __getAll() 
 	{ 
-		return session::get(auth);
+		return session::get(user_auth);
 	}
 	
 	public function __get( $prop ) // IMPORTANT: Must be public.
 	{
 		if($prop) 
 		{
-			$data = session::get(auth); 
+			$data = session::get(user_auth); 
 			if( isset($data[$prop]) )
-				return session::get(auth)[$prop]; 
+				return session::get(user_auth)[$prop]; 
 			else
 				return NULL;
 		}
@@ -94,14 +109,19 @@ class Auth
 		global $configs;
 		if(!count($args)) 
 		{
-			if(is_null(session::get(auth))) 
+			if(is_null(session::get(user_auth))) 
 				self::login();
 		}
 		if( isset($configs['AUTH']) ) 
 		{
-			if(session::get(auth)[$configs['AUTH']['apply_key']]!==current($args)) 
+			if(session::get(user_auth)[$configs['AUTH']['apply_key']]!==current($args)) 
 				self::login();
 		} 
-	}
+	} 
+	
+	private static function __status() 
+	{ 
+		return $_SESSION[auth];
+	} 
 	
 }

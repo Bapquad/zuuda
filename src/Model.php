@@ -13,9 +13,8 @@ class Model extends SQLQuery
 	{
 		try 
 		{ 
-			global $inflect;
-			if( method_exists($this, 'init') ) 
-				$this->init(); 
+			global $_inflect;
+			if( method_exists($this, 'init') ) return $this->init(); 
 			$c1 = isset($this->_table) || isset($this->_propTable);
 			$c2 = isset($this->_model) || isset($this->_propModel); 
 			$c3 = isset($this->_alias) || isset($this->_propAlias); 
@@ -27,7 +26,7 @@ class Model extends SQLQuery
 				$alias = explode(mad, $alias); 
 				sort($alias); 
 				foreach( $alias as $key => $word ) 
-					$alias[$key] = $inflect->singularize(strtolower($word)); 
+					$alias[$key] = $_inflect->singularize(strtolower($word)); 
 				$this->_alias = implode(mad, $alias); 
 				$this->__initConn();
 			}

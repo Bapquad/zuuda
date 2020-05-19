@@ -5,6 +5,12 @@ define ( 'ZUUDA_SECTION_SYMBOL', 'Zuuda\Section' );
 define ( 'ZUUDA_WIDGET_SYMBOL', 'Zuuda\Section' );
 
 use Exception;
+use Zuuda\Html; 
+use Zuuda\Query;
+use Zuuda\Request;
+use Zuuda\Session;
+use Zuuda\Cookie;
+use Zuuda\Comsite;
 
 abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetHost 
 {
@@ -26,6 +32,14 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		HTML_ASSET	=> array()
 	);
 	
+	protected $html;
+	protected $query;
+	protected $request;
+	protected $session;
+	protected $cookie;
+	protected $comsite;
+	
+	final public function rootName() { return __CLASS__; }
 	final protected function __getVars() { return $this->_vars; }
 	final protected function __getWidgets() { return $this->_widgets; }
 	/** private function _getName */
@@ -112,10 +126,15 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		$this->contentAsset( SCRIPT_ASSET, $value );
 	}
 	
-	final public function rootName() { return __CLASS__; }
-	
 	public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
 	{
+		$this->html = html::instance();
+		$this->query = query::instance();
+		$this->request = request::instance();
+		$this->session = session::instance();
+		$this->cookie = cookie::instance();
+		$this->comsite = comsite::instance();
+		
 		if( NULL!==$section_name ) 
 			$this->_name = $section_name;
 		
@@ -190,7 +209,7 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	
 	private function __renderLayout( $args = NULL ) 
 	{
-		global $configs, $inflect, $html, $file, $_get, $_post, $_file, $_server; 
+		global $_configs, $_inflect, $_get, $_post, $_file, $_server; 
 		
 		if( !is_null( $this->_tpl_name ) ) 
 		{
@@ -240,10 +259,9 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 		{
 			if( 1==$argsNum ) 
 			{
-				$mixed = current($args);
-				$mixed = each($mixed);
-				$name = $mixed['key']; 
-				$value = $mixed['value']; 
+				$mixed = current($args); 
+				$name = key($mixed); 
+				$value = current($mixed); 
 			} 
 			else if( 1<$argsNum ) 
 			{ 

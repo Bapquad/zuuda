@@ -84,11 +84,11 @@ class Inflection
 
     public static function pluralize( $string )
     {
-		global $irregularWords;
+		global $_irregularWords;
 		
         if ( in_array( strtolower( $string ), self::$uncountable ) )
             return $string;
-        foreach ( $irregularWords as $pattern => $result )
+        foreach ( $_irregularWords as $pattern => $result )
         {
             $pattern = '/' . $pattern . '$/i';
             if( preg_match($pattern, $string) )
@@ -110,10 +110,10 @@ class Inflection
 
     public static function singularize( $string )
     {	
-		global $irregularWords;
+		global $_irregularWords;
         if ( in_array( strtolower( $string ), self::$uncountable ) )
             return $string;
-        foreach ( $irregularWords as $result => $pattern )
+        foreach ( $_irregularWords as $result => $pattern )
         {
             $pattern = '/' . $pattern . '$/i';
             if ( preg_match( $pattern, $string ) )

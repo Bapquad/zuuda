@@ -3,7 +3,7 @@ namespace Zuuda;
 
 class Route implements iRoute 
 {
-	
+	private static $this = '\Zuuda\Route';
 	public static function GetInstance() { return sefl::__getInstance(); }
 	public static function GetAll() { return self::__getAll(); }
 	public static function Set( $pattern, $result ) { return self::__setVar( $pattern, $result); }

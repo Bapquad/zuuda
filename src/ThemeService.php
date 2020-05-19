@@ -4,6 +4,8 @@ namespace Zuuda;
 use Zuuda\Auth;
 use Zuuda\cFile;
 use Zuuda\Cache;
+use Zuuda\ServiceModel;
+use Zuuda\Config;
 
 class ThemeService implements iTaskService, iThemeService 
 {
@@ -61,6 +63,7 @@ class ThemeService implements iTaskService, iThemeService
 	
 	private static function __load( $service ) 
 	{
+		global $configs;
 		if( !call( cFile::get(), $service )->exist() )  
 		{
 			return false;
@@ -72,17 +75,16 @@ class ThemeService implements iTaskService, iThemeService
 			$name = $program->name;
 			if( $name == __CLASS__ ) 
 			{
-				$model = new ServiceModel(); 
-				$prefix = $program->name['prefix']->__toString();
+				$prefix = $configs['DATASOURCE'][$configs['DATASOURCE']['server']['default']]['prefix'];;
 				$modelName = $program->name['model']->__toString();
 				$aliasName = $program->name['alias']->__toString(); 
 				$tableName = $program->name['table']->__toString(); 
-				self::__task( $model
+				self::__task( servicemodel::instance() 
 					->setPrefix($prefix)
 					->setAliasName($aliasName)
 					->setModelName($modelName)
 					->setTableName($tableName)
-					->instance(), 
+					->start(), 
 					$modelName );
 				break;
 			}

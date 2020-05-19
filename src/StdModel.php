@@ -11,7 +11,7 @@ class StdModel extends SQLQuery
 	
 	public function __construct( $args, $hoFlg=false ) 
 	{
-		global $inflect; 
+		global $_inflect; 
 		$len = count($args);
 		$alias = explode( mad, $args[1] );
 		sort($alias); 
@@ -19,9 +19,9 @@ class StdModel extends SQLQuery
 		$model = array();
 		foreach( $alias as $key => $word ) 
 		{
-			$alias[$key] = $inflect->singularize(strtolower($word)); 
-			$table[$key] = $inflect->pluralize(strtolower($word)); 
-			$model[$key] = ucfirst($inflect->singularize(strtolower($word))); 
+			$alias[$key] = $_inflect->singularize(strtolower($word)); 
+			$table[$key] = $_inflect->pluralize(strtolower($word)); 
+			$model[$key] = ucfirst($_inflect->singularize(strtolower($word))); 
 		}
 		$table = implode( mad, $table ); 
 		$alias = implode( mad, $alias );

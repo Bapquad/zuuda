@@ -94,10 +94,10 @@ abstract class Authorization implements iAuthorization
 	
 	private function __destroyAuth() 
 	{
-		if( NULL !== Session::get( AUTH_DATA ) )
+		if( NULL !== Session::get(user_auth) )
 		{
 			$this->__setData( NULL );
-			Session::unregister( AUTH_DATA );
+			Session::unregister( user_auth );
 			Cookie::unregister( M_UUID );
 		}
 		
@@ -106,9 +106,9 @@ abstract class Authorization implements iAuthorization
 	
 	private function __lookAuth() 
 	{
-		if( NULL !== Session::get( AUTH_DATA ) )
+		if( NULL !== Session::get(user_auth) )
 		{
-			return Session::get( AUTH_DATA );
+			return Session::get( user_auth );
 		}
 		
 		return false;
