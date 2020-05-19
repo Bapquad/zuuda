@@ -39,7 +39,7 @@ function __($str_name)
 
 function __t($str_name) 
 {
-	global $configs;
+	global $configs; 
 	if( isset($configs['LOCATE']) && isset($configs['LOCATE']['TRANS'][$str_name]) ) 
 		return $configs['LOCATE']['TRANS'][$str_name];
 	else 
