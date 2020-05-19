@@ -57,11 +57,11 @@ class Request extends RequestHeader
 	
 	private static function __encrypt( $args, $argsNum ) 
 	{
-		global $_post;
+		global $_post, $configs;
 		$name = current($args); 
 		if( isset($_post[$name]) ) 
 		{
-			$_post[$name] = hash( $configs['ENCRYPT']['request'], $_get[$name] );
+			$_post[$name] = hash( $configs['ENCRYPT']['request'], $_post[$name] );
 			return $_post[$name];
 		} 
 		return NULL;
