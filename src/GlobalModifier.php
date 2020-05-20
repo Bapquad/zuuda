@@ -1,6 +1,8 @@
 <?php 
 namespace Zuuda;
 
+use Zuuda\Config;
+
 class GlobalModifier implements iGlobalModifier  
 {
 	private static $this = '\Zuuda\GlobalModifier';
