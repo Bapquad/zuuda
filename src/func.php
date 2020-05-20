@@ -18,7 +18,7 @@ function correct_path( $path )
 
 function __buildPath( $file_path, $file = false ) 
 {
-	return __assetPath( $file_path, $file, true );
+	return __assetPath( $file_path, $file );
 }
 
 function __($str_name) 
@@ -39,21 +39,21 @@ function __($str_name)
 
 function __t($str_name) 
 {
-	global $configs; 
+	global $configs;
 	if( isset($configs['LOCATE']) && isset($configs['LOCATE']['TRANS'][$str_name]) ) 
 		return $configs['LOCATE']['TRANS'][$str_name];
 	else 
 		return $str_name;
 } 
 
-function media( $filePath ) { return asset(MEDIA_NAME_DIR.$filePath); } 
-function photo( $filePath ) { return asset(MEDIA_PHOTO_NAME_DIR.$filePath); } 
-function audio( $filePath ) { return asset(MEDIA_AUDIO_NAME_DIR.$filePath); } 
-function video( $filePath ) { return asset(MEDIA_VIDEO_NAME_DIR.$filePath); } 
-function document( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); } 
-function compressed( $filePath ) { return asset(MEDIA_DOCUMENT_NAME_DIR.$filePath); }
+function media( $filePath ) { return asset(PS.MEDIA_NAME_DIR.$filePath); } 
+function photo( $filePath ) { return asset(PS.MEDIA_PHOTO_NAME_DIR.$filePath); } 
+function audio( $filePath ) { return asset(PS.MEDIA_AUDIO_NAME_DIR.$filePath); } 
+function video( $filePath ) { return asset(PS.MEDIA_VIDEO_NAME_DIR.$filePath); } 
+function document( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePath); } 
+function compressed( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePath); }
 function url( $path ) { return asset($path); } 
-function base( $path ) { return asset($path); } 
+function base( $path=NULL ) { return WEB_PATH.$path; } 
 function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
 
 function theme_installed($install_dir) 
@@ -67,34 +67,35 @@ function theme_installed($install_dir)
 	return false;
 } 
 
-function __assetPath( $file_path, $file = false, $build = false ) 
+function __assetPath( $file_path, $file = false ) 
 {
 	global $configs;
-	$theme_path = EMPTY_CHAR; 
+	$path_basic = correct_path(WEB_DIR.$file_path);
 	if( isset($configs['Theme']) && isset($configs['SHIP']) ) 
 	{
-		$theme_path = $configs['Theme'].$file_path;
-		$path = WEB_DIR.$theme_path;
-		if( call(Zuuda\cFile::get(), $path)->exist() || $build ) 
+		$path = correct_path(WEB_DIR.$configs['Theme'].$file_path); 
+		if( $file ) 
 		{
-			if( $file ) 
-				return $path;
-			return WEB_PATH.$configs['Theme'].$file_path;
+			if( call(\Zuuda\cFile::get(), $path)->exist() ) 
+				return $path; 
+			else if( call(\Zuuda\cFile::get(), $path_basic)->exist() ) 
+				return $path_basic;
+			return $path;
+		} 
+		else 
+		{
+			if( call(\Zuuda\cFile::get(), $path)->exist() ) 
+				return WEB_PATH.$configs['ThemePath'].$file_path; 
+			else if( call(\Zuuda\cFile::get(), $path_basic)->exist() ) 
+				return WEB_PATH.$file_path; 
+			return WEB_PATH.$file_path;
 		}
 	} 
-	
 	if( $file ) 
 	{
-		$path = WEB_DIR.$file_path;
-		if( call(Zuuda\cFile::get(), $path)->exist() )
-			return $path;
-		$file_path = __correctPath($file_path);
-		$theme_path = __correctPath($theme_path); 
-		if(false!==stripos($file_path, CACHE_TPL_NAME_DIR)) 
-			return WEB_DIR.$file_path; 
-		
-		/** Note: Return the Virtual path for updating.*/
-		return $file_path;
+		if( call(\Zuuda\cFile::get(), $path_basic)->exist() )
+			return $path_basic;
+		return $path_basic;
 	}
 	else 
 	{ 
@@ -102,17 +103,43 @@ function __assetPath( $file_path, $file = false, $build = false )
 	}
 }
 
+function __availbleClass( $class_name ) 
+{
+	global $configs;
+	$class_file = __correctPath( $class_name.$configs['EXT'] );
+	
+	if( $configs['COM'] && isset( $configs['SHIP'] ) ) 
+	{
+		$class_path = COM.$class_file;
+		if( !call( \Zuuda\cFile::get(), $class_path )->exist() ) 
+			$class_path = CODE.CODE_ENTRY.DS.$class_file;
+			if( !call( \Zuuda\cFile::get(), $class_path )->exist() ) 
+				$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$class_file; 
+				if( !call( \Zuuda\cFile::get(), $class_path )->exist() ) 
+					$class_path = MOD_DIR.$class_file; 
+	}
+	else 
+	{
+		$class_path = MOD_DIR.$class_file; 
+	}
+	
+	return call( \Zuuda\cFile::get(), $class_path )->exist();
+} 
+
 function __currentControllerFile() 
 {
 	global $configs;
 	$controller = $configs['MODULE'].DS.CTRLER_DIR.$configs['CONTROLLER'].CONTROLLER.$configs['EXT']; 
 	if( $configs['COM'] && isset( $configs['SHIP'] ) ) 
 	{
-		$code_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$controller;
+		$exts_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$controller;
+		$code_path = CODE.CODE_ENTRY.DS.$controller;
 		$com_path = COM.$controller;
-		if( call( Zuuda\cFile::get(), $code_path )->exist() ) 
+		if( call( \Zuuda\cFile::get(), $exts_path )->exist() ) 
+			return $exts_path; 
+		if( call( \Zuuda\cFile::get(), $code_path )->exist() ) 
 			return $code_path; 
-		if( call( Zuuda\cFile::get(), $com_path )->exist() ) 
+		if( call( \Zuuda\cFile::get(), $com_path )->exist() ) 
 			return $com_path; 
 	}
 	return MOD_DIR.$controller; 
@@ -121,37 +148,14 @@ function __currentControllerFile()
 function __currentModelClass() 
 {
 	global $configs;
-	return $configs[ 'MODULE' ].BS.MODEL_PRE.BS.$configs[ 'CONTROLLER' ].MODEL;
+	return $configs['MODULE'].BS.MODEL_PRE.BS.$configs['CONTROLLER'].MODEL;
 }
 
 function __currentViewClass() 
 {
 	global $configs;
-	return $configs[ 'MODULE' ].BS.VIEW_PRE.BS.$configs[ 'CONTROLLER' ].VIEW;
+	return $configs['MODULE'].BS.VIEW_PRE.BS.$configs['CONTROLLER'].VIEW;
 }
-
-function __availbleClass( $class_name ) 
-{
-	global $configs;
-	$class_file = __correctPath( $class_name.$configs[ 'EXT' ] );
-	
-	if( $configs[ 'COM' ] && isset( $configs[ 'SHIP' ] ) ) 
-	{
-		$class_path = COM.$class_file;
-		if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
-		{
-			$class_path = CODE.((isset($configs['CODE_OF']))?$configs['CODE_OF'].DS.EXTENSIONS.DS:NULL).$class_file; 
-			if( !call( Zuuda\cFile::get(), $class_path )->exist() ) 
-				$class_path = MOD_DIR.$class_file; 
-		}
-	}
-	else 
-	{
-		$class_path = MOD_DIR.$class_file; 
-	}
-	
-	return call( Zuuda\cFile::get(), $class_path )->exist();
-} 
 
 function isDev() 
 {
@@ -786,7 +790,7 @@ function __exc_handler( $e )
 		0					 => '<i>[SYNTAX ERROR]</i>', 
 	);
 	$errno = $e->getCode();
-	abort( 500, "<b>{$errortype[$errno]}:</b> ".$e->getMessage().\Zuuda\Error::Exchandle($e) ); 
+	abort( 500, "<b>{$errortype[$errno]}:</b> <span style=\"word-break: break-word\">".$e->getMessage().'</span>'.\Zuuda\Error::Exchandle($e) ); 
 }
 
 function __err_handler( $errno, $errmsg, $filename, $linenum, $vars )
@@ -808,7 +812,7 @@ function __err_handler( $errno, $errmsg, $filename, $linenum, $vars )
 		8192				 => '<i>[DEPRECATED WARNING]</i>', 
 		8192				 => '<i>[DEPRECATED WARNING]<i>', 
 	);
-	abort( 500, "<b>{$errortype[$errno]}:</b> ".$errmsg.BL.\Zuuda\Error::Errhandle(debug_backtrace()));
+	abort( 500, "<b>{$errortype[$errno]}:</b> <span style=\"word-break: break-word\">".$errmsg.'</span>'.BL.\Zuuda\Error::Errhandle(debug_backtrace()));
 }
 
 function abort( $code=404, $msg=NULL, $strict=true ) 
@@ -816,7 +820,7 @@ function abort( $code=404, $msg=NULL, $strict=true )
 	if( !headers_sent() ) 
 	{
 		global $configs;
-		Zuuda\Response::instance()->cors(!$strict); 
+		\Zuuda\Response::instance()->cors(!$strict); 
 		$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
 		if($code===500) 
 		{
@@ -1016,34 +1020,34 @@ EOL;
 	escape();
 }
 
-if( Zuuda\GlobalModifier::func( 'getSingleTon' ) ) 
+if( \Zuuda\GlobalModifier::func( 'getSingleTon' ) ) 
 {
 	function getSingleTon( $const ) 
 	{
 		switch( $const ) 
 		{
 			case 'Session':
-				return Zuuda\Session::getInstance();
+				return \Zuuda\Session::getInstance();
 			case 'Html':
-				return Zuuda\Html::getInstance();
+				return \Zuuda\Html::getInstance();
 			case 'File':
-				return Zuuda\cFile::getInstance();
+				return \Zuuda\cFile::getInstance();
 			case 'Config':
-				return Zuuda\Config::getInstance();
+				return \Zuuda\Config::getInstance();
 			case 'Global':
-				return Zuuda\GlobalModifier::getInstance();
+				return \Zuuda\GlobalModifier::getInstance();
 			case 'Post':
-				return Zuuda\Post::getInstance(); 
+				return \Zuuda\Post::getInstance(); 
 			case 'Put':
-				return Zuuda\Put::getInstance(); 
+				return \Zuuda\Put::getInstance(); 
 			case 'Delete':
-				return Zuuda\Delete::getInstance(); 
+				return \Zuuda\Delete::getInstance(); 
 			case 'Get':
 				return $_GET;
 			case 'Query':
-				return Zuuda\Config::get( 'QUERY_STRING' );
+				return \Zuuda\Config::get( 'QUERY_STRING' );
 			case 'Request':
-				return Zuuda\Config::get( 'REQUEST_VARIABLES' );
+				return \Zuuda\Config::get( 'REQUEST_VARIABLES' );
 			case 'Inflect':
 				global $_inflect;
 				return $_inflect; 
@@ -1052,35 +1056,35 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
 				if( TRUE===$configs[ 'COM' ] ) 
 					if( 'ExtensionServices'===$const ) 
 					{
-						return Zuuda\ExtensionInformationService::getInstance(); 
+						return \Zuuda\ExtensionInformationService::getInstance(); 
 					} 
 					else if( 'ExtensionServiceInformations'===$const ) 
 					{
-						return Zuuda\ExtensionInformationService::getInstance()->info();
+						return \Zuuda\ExtensionInformationService::getInstance()->info();
 					}
 					else if( 'ExtensionServiceMenu'===$const ) 
 					{
-						return Zuuda\ExtensionInformationService::getInstance()->info( 'menu' );
+						return \Zuuda\ExtensionInformationService::getInstance()->info( 'menu' );
 					} 
 					else if( 'ExtensionServiceLive'===$const ) 
 					{
-						return Zuuda\ExtensionInformationService::getInstance()->info( 'live' ); 
+						return \Zuuda\ExtensionInformationService::getInstance()->info( 'live' ); 
 					} 
 					else if( 'ExtensionServiceAbout'===$const ) 
 					{
-						return Zuuda\ExtensionInformationService::getInstance()->info( 'about' );
+						return \Zuuda\ExtensionInformationService::getInstance()->info( 'about' );
 					}
 					else if( 'ExtensionServiceShortcut'===$const ) 
 					{ 
-						return Zuuda\ExtensionInformationService::getInstance()->info( 'shortcut' );
+						return \Zuuda\ExtensionInformationService::getInstance()->info( 'shortcut' );
 					} 
 					else if( 'WidgetServiceLive'===$const ) 
 					{
-						return Zuuda\WidgetInformationService::getInstance()->info( 'live' ); 
+						return \Zuuda\WidgetInformationService::getInstance()->info( 'live' ); 
 					} 
 					else if( 'WidgetServiceAbout'===$const ) 
 					{
-						return Zuuda\WidgetInformationService::getInstance()->info( 'widget' );
+						return \Zuuda\WidgetInformationService::getInstance()->info( 'widget' );
 					}
 				else 
 					return NULL;
@@ -1096,7 +1100,7 @@ if( Zuuda\GlobalModifier::func( 'getSingleTon' ) )
  * - $func : the function want to call.
  * - $args: the arguments  
  */
-if( Zuuda\GlobalModifier::func( 'call' ) ) 
+if( \Zuuda\GlobalModifier::func( 'call' ) ) 
 {
 	function call( $func, $args = NULL ) 
 	{
@@ -1117,7 +1121,7 @@ if( Zuuda\GlobalModifier::func( 'call' ) )
  * This will call any a function end the program.
  * @params ( not )
  */
-if( Zuuda\GlobalModifier::func( 'finish' ) ) 
+if( \Zuuda\GlobalModifier::func( 'finish' ) ) 
 {
 	function finish() 
 	{

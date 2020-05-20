@@ -506,17 +506,17 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function __includeAsset( $assets )
 	{
-		foreach( $assets[ HTML_ASSET ] as $html ) 
+		foreach( $assets[HTML_ASSET] as $html ) 
 		{
 			echo $html . NL;
 		}
 		
-		foreach( $assets[ STYLE_ASSET ] as $href ) 
+		foreach( $assets[STYLE_ASSET] as $href ) 
 		{
 			if( preg_match( '/(https)|(http):\/\//', $href ) ) 
 				$css_path = $href;
 			else 
-				$css_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $href))?'':'skin/css/').$href.'.css' ); 
+				$css_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ); 
 $str = <<<EOD
 <link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
@@ -528,7 +528,7 @@ EOD;
 			if( preg_match( '/(https)|(http):\/\//', $src ) ) 
 				$js_path = $src; 
 			else 
-				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?'':'js/').$src.'.js' );
+				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' );
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;
@@ -620,7 +620,7 @@ EOD;
 		{
 			foreach($layout_content as $template) 
 			{
-				__assetPath(TPL_NAME_DIR . $template, true); 
+				__assetPath(TPL_NAME_DIR.$template, true); 
 			}
 			$this->_layout_engine_vars = $layout_content;
 			$layout_route = array(
@@ -647,7 +647,7 @@ EOD;
 			$cache_main_path = preg_replace( '/[\/\\\]/', '_', $this->_layout_main_path );
 		}
 
-		$cache_file_name = __assetPath( CACHE_LAYOUT_NAME_DIR.$cache_main_path, true );
+		$cache_file_name = correct_path(ROOT_DIR.CACHE_LAYOUT_NAME_DIR.$cache_main_path);
 
 		if( file_exists( $cache_file_name ) ) 
 		{

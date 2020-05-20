@@ -85,14 +85,14 @@ class Pagination implements iHTML, iPagination
 		if( stripos( $url, $key ) !== false ) 
 		{
 			if( $page !== 1 ) 
-				return ORIGIN_DOMAIN . str_replace( $key, $page, $url );
-			return ORIGIN_DOMAIN . ( str_replace( $key, '', $url ) );
+				return base(str_replace( $key, $page, $url ));
+			return base(str_replace($key, '', $url));
 		}
 		else 
 		{
 			if( $page !== 1 ) 
-				return WEB_PATH . ( $url ) . $this->__getPageParam();
-			return WEB_PATH . ( $url );
+				return base($url.$this->__getPageParam());
+			return base($url);
 		}
 	}
 	
@@ -105,7 +105,7 @@ class Pagination implements iHTML, iPagination
 			$page = (int) $this->__getCurrent();
 		}
 		
-		return '?' . ( $key ) . '=' . ( (int) $page );
+		return '?'.$key.'='.((int) $page);
 	}
 	
 	protected function __getPageUrl( $page = NULL, $data = NULL ) 
@@ -124,23 +124,21 @@ class Pagination implements iHTML, iPagination
 				foreach( $data as $name => $value ) 
 					$params[] = "$name=$value";
 			if( count($params) ) 
-				$href = $url . '?' . implode( '&', $params );
+				$href = base($url.'?'.implode('&', $params));
 			else
-				$href = $url;
-			$href = ORIGIN_DOMAIN . $href;
+				$href = base($url);
 		}
 		else 
 		{
 			if( $page !== 1 ) 
 			{
-				$key = $params[ $key ] = "{".$key."}";
+				$key = $params[$key] = "{".$key."}";
 			}
 			else 
 			{
 				$key = "{$key}={".$key."}";
 			}
-			$href = ( $url ) . '?' . urldecode( http_build_query( $params ) );
-			$href = WEB_PATH . $href;
+			$href = base($url).'?'.urldecode(http_build_query($params));
 		}
 		
 		$href = preg_replace(
@@ -171,20 +169,20 @@ class Pagination implements iHTML, iPagination
 			if( $pages > 1 ) 
 			{
 				$href = str_replace( $key, 2, $href );
-				return array( '<link rel="next" href="' . ( $href ) . '" />' );
+				return array( '<link rel="next" href="'.base($href).'" />' );
 			}
 			return array();
 		}
 		
 		$next_page_tags = array(
-			'<link rel="prev" href="' . ( str_replace( $key, $page - 1, $href ) ) . '" />'
+			'<link rel="prev" href="'.base((str_replace($key, $page - 1, $href))).'" />'
 		);
 		
 		if( $pages > $page ) 
 		{
 			array_push(
 				$next_page_tags, 
-				'<link rel="next" href="' . ( str_replace( $key, $page + 1, $href ) ) . '" />'
+				'<link rel="next" href="'.base((str_replace($key, $page + 1, $href))).'" />'
 			);
 		}
 		

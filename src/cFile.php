@@ -23,7 +23,7 @@ class cFile implements iFile
 	public static function Remove( $path ) { return self::__remove($path); } 
 	
 	public static function AssetPath( $path, $file = true ) { return __assetPath( $path, $file ); }
-	public static function BuildPath( $path, $file = true ) { return __assetPath( $path, $file, true ); }
+	public static function BuildPath( $path, $file = true ) { return __assetPath( $path, $file ); }
 	
 	public function __invoke( $name ) { return new FileInfo( $name, true ); }
 	private function __clone(){}

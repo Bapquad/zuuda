@@ -71,32 +71,32 @@ class Html implements iHTML
 	
 	private static function __includeJs( $file_name ) 
 	{
-		return '<script type="text/javascript" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('js/'.$file_name.'.js', false)).'"></script>'."\n";
+		return '<script type="text/javascript" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('js/'.$file_name.'.js')).'"></script>'."\n";
 	}
 	
 	private static function __includeCss( $file_name ) 
 	{
-		return '<link rel="stylesheet" type="text/css" href="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('skin/css/'.$file_name.'.css', false)).'" />'."\n";
+		return '<link rel="stylesheet" type="text/css" href="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath('skin/css/'.$file_name.'.css')).'" />'."\n";
 	}
 	
 	private static function __includeImg( $file_name, $atl_text ) 
 	{
-		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name, false)).'" />';
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name)).'" />';
 	}
 	
 	private static function __includeGif( $file_name, $alt_text ) 
 	{
-		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.gif', false)).'" />'; 
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.gif')).'" />'; 
 	}
 	
 	private static function __includePng( $file_name, $alt_text ) 
 	{
-		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.png', false)).'" />';
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.png')).'" />';
 	}
 	
 	private static function __includeJpeg( $file_name, $alt_text ) 
 	{
-		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.jpg', false)).'" />';
+		return '<img alt="'.$alt_text.'" src="'.((preg_match('/(https)|(http):\/\//', $file_name))?$file_name:cFile::assetPath($file_name.'.jpg')).'" />';
 	}
 	
 	private static function __assign( $name, $value, $template ) 
