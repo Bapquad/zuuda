@@ -3,6 +3,7 @@
 namespace Zuuda; 
 
 use Zuuda\Session;
+use Zuuda\Fx;
 
 class Error 
 { 
