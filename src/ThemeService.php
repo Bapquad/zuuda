@@ -54,7 +54,7 @@ class ThemeService implements iTaskService, iThemeService
 				if( NULL!==$data['value'] || EMPTY_CHAR!==$data['value'] ) 
 				{
 					config::set( 'Theme', $data['value'] ); 
-					config::set( 'ThemePath', PS.substr($data['value'], strlen($data['value'])-1, 1) );
+					config::set( 'ThemePath', PS.substr($data['value'], 0, strlen($data['value'])-1) );
 				}
 			}
 			return true;
