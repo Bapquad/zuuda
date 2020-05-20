@@ -1153,13 +1153,8 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				$model = $this->_propModel;
-				$data = $this->find(current($args));
-				$entity = $this->__clone(); 
-				if( isset($data[$model]) ) 
-					return $entity->assign($data[$model]); 
-				else 
-					return NULL; 
+				$this->_primaryKey = current($args); 
+				return $this;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::entity()</strong> is incorrect." ); 
@@ -1592,10 +1587,8 @@ abstract class SQLQuery
 							else 
 								$data = array_merge($this->_propsRole, $data); 
 						} 
-						
 						if( method_exists($this, 'onride') ) 
 							$this->_eventOnRide = $this->onride( $data ); 
-						
 						return $data; 
 					}
 					else 

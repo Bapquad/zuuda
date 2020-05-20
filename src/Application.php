@@ -12,6 +12,7 @@ use ReflectionClass;
 use Exception;
 use Zuuda\Error;
 use Zuuda\Fx;
+use Zuuda\Text;
 
 class Application 
 {
@@ -288,6 +289,7 @@ class Application
 				}
 				$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
 				$action = $configs['ACTION']; 
+				$_get = array_merge( $_get, self::__get_uri_var($action) ); 
 				$action = explode( ';', $action );
 				foreach( $action as $key => $value ) 
 				{
@@ -327,4 +329,18 @@ class Application
 		escape(); 
 		return $this;
 	}
+	
+	static private function __get_uri_var( &$in ) 
+	{ 
+		$out = array(); 
+		if( false!==stripos($in, '?') ) 
+		{
+			$in = explode('?', $in); 
+			$vars = $in[1]; 
+			$in = $in[0]; 
+			return array_merge( $out, text::instance()->urldecode($vars) ); 
+		} 
+		return $out;
+	} 
+	
 }
