@@ -5,6 +5,7 @@ namespace Zuuda;
 use Exception;
 use Zuuda\Config;
 use Zuuda\Fx;
+use Zuuda\AuthAction;
 
 class Auth 
 {
