@@ -185,12 +185,12 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	
 	private function __getName() 
 	{
-		global $configs;
+		global $_configs;
 		try 
 		{
 			if( is_null( $this->_name ) ) 
 			{
-				if( $configs[ DEVELOPER_WARNING ] ) 
+				if( $_configs[ DEVELOPER_WARNING ] ) 
 					throw new Exception( 'Your ' . get_class( $this ) . ' has no name!' ); 
 			}
 			else 
@@ -226,12 +226,12 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 				
 				$basename = __correctPath(str_replace('\Blocks', '', get_class($this))).DS.$this->_tpl_name; 
 				$path = BLOCK_DIR.$basename; 
-				if( isset($configs['COM']) ) 
+				if( isset($_configs['COM']) ) 
 				{
 					if( NULL!==$this->_codeof ) 
 						$path = BLOCK_DIR.$this->_codeof.DS.$basename; 
-					if( isset($configs['CODE_OF']) ) 
-						$path = BLOCK_DIR.$configs['CODE_OF'].DS.$basename; 
+					if( isset($_configs['CODE_OF']) ) 
+						$path = BLOCK_DIR.$_configs['CODE_OF'].DS.$basename; 
 				} 
 				
 				$path = getSingleton('File')->assetPath($path);
