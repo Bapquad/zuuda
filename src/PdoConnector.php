@@ -57,11 +57,13 @@ class PdoConnector extends PDO
 	private function __init() 
 	{
 		global $configs;
-		$ds = $configs[ 'DATASOURCE' ];
-		$this->_host 		= $ds[ 'HOSTNAME' ]; 
-		$this->_dbname 		= $ds[ 'DATABASE' ]; 
-		$this->_username	= $ds[ 'USERNAME' ]; 
-		$this->_password	= $ds[ 'PASSWORD' ]; 
+		$ds = $configs['DATASOURCE'];
+		$myapp = $ds['server']['default'];
+		$server = $ds['server'][$ds[$myapp]['server']];
+		$this->_dbname 		= $ds[$myapp]['database']; 
+		$this->_host 		= $server['hostname']; 
+		$this->_username	= $server['username']; 
+		$this->_password	= $server['password']; 
 	} 
 	
 	/**
