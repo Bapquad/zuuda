@@ -33,6 +33,8 @@ DEFINE ( 'underscore', 				UNDERSCORE );
 DEFINE ( 'mad', 					'_' ); 
 DEFINE ( 'SPACE', 					' ' );
 DEFINE ( 'space', 					' ' );
+DEFINE ( 'QUOTE', 					"'" );
+DEFINE ( 'quote', 					QUOTE );
 DEFINE ( 'EMPTY_STRING', 			"" );
 DEFINE ( 'empty_string', 			EMPTY_STRING );
 DEFINE ( 'emps', 					EMPTY_STRING );

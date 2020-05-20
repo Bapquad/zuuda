@@ -17,6 +17,15 @@ class Text
 	
 	final static private function __instance( $data=NULL ) 
 	{ 
+		static $inst;
+		if( NULL===$data ) 
+		{
+			if( NULL===$inst ) 
+			{
+				$inst = new Text;
+			} 
+			return $inst; 
+		} 
 		return new Text( $data ); 
 	} 
 
@@ -50,6 +59,14 @@ class Text
 		{ 
 			$out = $this->__urlDecode($data); 
 		} 
+		return $out;
+	} 
+	
+	final private function __addQuote( $in=NULL ) 
+	{ 
+		$out = array(); 
+		$data = $in ?: $this->_data; 
+		$out = quote.$data.quote;
 		return $out;
 	} 
 }

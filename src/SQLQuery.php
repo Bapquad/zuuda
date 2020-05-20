@@ -1517,7 +1517,7 @@ abstract class SQLQuery
 			{ 
 				if( array_key_exists($field, $this->_eventRide) ) 
 				{
-					$value = $this->escape_string( $this->_eventRide[$field] ); 
+					$value = quote.$this->escape_string($this->_eventRide[$field]).quote; 
 					$outSql[] = "`{$field}` = '{$value}'"; 
 					$data[$field] = $value;
 				} 
@@ -1636,12 +1636,12 @@ abstract class SQLQuery
 				if( EMPTY_CHAR===$data[$field] || is_null($data[$field]) ) 
 					$values[] = "NULL";
 				else 
-					$values[] = "'".$this->escape_string( $data[$field] )."'";
+					$values[] = quote.$this->escape_string( $data[$field] ).quote;
 				$fields[] = "`".$field."`";
 			}
 			else if( is_array($this->_eventBoot) && array_key_exists($field, $this->_eventBoot) ) 
 			{
-				$values[] = $this->escape_string( $this->_eventBoot[$field] ); 
+				$values[] = quote.$this->_eventBoot[$field].quote; 
 				$fields[] = "`".$field."`";
 				$data[$field] = $this->_eventBoot[$field]; 
 			}
