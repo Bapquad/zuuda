@@ -7,6 +7,7 @@ use Zuuda\Request;
 use Zuuda\Session;
 use Zuuda\Cookie;
 use Zuuda\Comsite;
+use Zuuda\Config;
 
 abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock 
 {
@@ -516,9 +517,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 			if( preg_match( '/(https)|(http):\/\//', $href ) ) 
 				$css_path = $href;
 			else 
-				$css_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ); 
+				$css_path = getSingleton('Html')->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ); 
+			if( config::get(DEVELOPMENT_ENVIRONMENT) ) 
+			{
+				$css_path .= question.uniqid();
+			}
 $str = <<<EOD
-<link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
+		<link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
 			echo $str;
 		}
@@ -529,6 +534,10 @@ EOD;
 				$js_path = $src; 
 			else 
 				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' );
+			if( config::get(DEVELOPMENT_ENVIRONMENT) ) 
+			{
+				$js_path .= question.uniqid();
+			}
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;
@@ -647,7 +656,7 @@ EOD;
 			$cache_main_path = preg_replace( '/[\/\\\]/', '_', $this->_layout_main_path );
 		}
 
-		$cache_file_name = correct_path(ROOT_DIR.CACHE_LAYOUT_NAME_DIR.$cache_main_path);
+		$cache_file_name = correct_path(APP_DIR.CACHE_LAYOUT_NAME_DIR.$cache_main_path);
 
 		if( file_exists( $cache_file_name ) ) 
 		{

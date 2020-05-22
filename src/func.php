@@ -218,11 +218,11 @@ function __dispatch_autoload_class_file( $class_name )
 						{
 							$class_path = CODE.$configs['CODE_OF'].DS.WIDGETS.DS.$class_file; 
 						}
-					}
+					} 
 				}
 			}
 			if( !file_exists($class_path) ) 
-				$class_path = MOD_DIR . $class_file;
+				$class_path = MOD_DIR.$class_file; 
 		} 
 		
 		if( file_exists($class_path) ) 
@@ -790,7 +790,7 @@ function __exc_handler( $e )
 		E_USER_NOTICE        => '<i>[USER NOTICE]</i>',
 		E_STRICT             => '<i>[RUNTIME NOTICE]</i>',
 		E_RECOVERABLE_ERROR  => '<i>[CATCHABLE FALTA ERROR]</i>', 
-		8192				 => '<i>[DEPRECATED WARNING]</i>', 
+		8192				 => '<i>[SYNTAX WARNING]</i>', 
 		0					 => '<i>[SYNTAX ERROR]</i>', 
 	);
 	$errno = $e->getCode();
@@ -813,8 +813,7 @@ function __err_handler( $errno, $errmsg, $filename, $linenum, $vars )
 		E_USER_NOTICE        => '<i>[USER NOTICE]</i>',
 		E_STRICT             => '<i>[RUNTIME NOTICE]</i>',
 		E_RECOVERABLE_ERROR  => '<i>[CATCHABLE FALTA ERROR]</i>', 
-		8192				 => '<i>[DEPRECATED WARNING]</i>', 
-		8192				 => '<i>[DEPRECATED WARNING]<i>', 
+		8192				 => '<i>[SYNTAX WARNING]</i>', 
 	);
 	abort( 500, "<b>{$errortype[$errno]}:</b> <span style=\"word-break: break-word\">".$errmsg.'</span>'.BL.\Zuuda\Error::Errhandle(debug_backtrace()));
 }
@@ -823,7 +822,7 @@ function abort( $code=404, $msg=NULL, $strict=true )
 {
 	if( !headers_sent() ) 
 	{
-		global $configs;
+		global $_CONFIG;
 		\Zuuda\Response::instance()->cors(!$strict); 
 		$try_again_link = '<li>Let\'s try <a href="javascript:void(0)" onclick="window.location.reload(true)">again</a>.</li>';
 		if($code===500) 
@@ -838,7 +837,8 @@ function abort( $code=404, $msg=NULL, $strict=true )
 			}
 			if(NULL===$msg) 
 				$msg = "Woops! You have an internal server error.";
-			$title = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
+			$title = "Internal Server Error";
+			$title_txt = "<span style=\"font-size: 1.8rem\">Internal Server Error</span>";
 		}
 		else if($code===408) 
 		{
@@ -850,9 +850,9 @@ function abort( $code=404, $msg=NULL, $strict=true )
 				include_once( $page );
 				escape();
 			}
-			// if(NULL===$msg) 
+			if(NULL===$msg || !$_CONFIG[DEVELOPMENT_ENVIRONMENT]) 
 				$msg = "Woops! Looks like your request is timeout.";
-			$title = "Request Timeout";
+			$title_txt = $title = "Request Timeout";
 		} 
 		else if($code===404) 
 		{
@@ -864,9 +864,9 @@ function abort( $code=404, $msg=NULL, $strict=true )
 				include_once( $page );
 				escape();
 			}
-			// if(NULL===$msg) 
+			if(NULL===$msg || !$_CONFIG[DEVELOPMENT_ENVIRONMENT]) 
 				$msg = "Woops! Looks like your page couldn't found.";
-			$title = "Not Found";
+			$title_txt = $title = "Not Found";
 		} 
 		else if($code===403) 
 		{
@@ -878,9 +878,9 @@ function abort( $code=404, $msg=NULL, $strict=true )
 				include_once( $page );
 				escape();
 			}
-			// if(NULL===$msg) 
+			if(NULL===$msg || !$_CONFIG[DEVELOPMENT_ENVIRONMENT]) 
 				$msg = "Woops! Looks like you have deny from this request.";
-			$title = "Forbidden";
+			$title_txt = $title = "Forbidden";
 			$try_again_link = NULL;
 		} 
 		else if($code===401) 
@@ -893,9 +893,9 @@ function abort( $code=404, $msg=NULL, $strict=true )
 				include_once( $page );
 				escape();
 			}
-			// if(NULL===$msg) 
+			if(NULL===$msg || !$_CONFIG[DEVELOPMENT_ENVIRONMENT]) 
 				$msg = "Woops! Looks like you haven't authorized.";
-			$title = "Unauthorized";
+			$title_txt = $title = "Unauthorized";
 			$try_again_link = NULL;
 		} 
 		else if($code===400) 
@@ -908,18 +908,19 @@ function abort( $code=404, $msg=NULL, $strict=true )
 				include_once( $page );
 				escape();
 			}
-			// if(NULL===$msg) 
+			if(NULL===$msg || !$_CONFIG[DEVELOPMENT_ENVIRONMENT]) 
 				$msg = "Woops! Looks like your request is invalid.";
-			$title = "Bad Request";
+			$title_txt = $title = "Bad Request";
 		} 
 		$uri = $_SERVER['REQUEST_URI'];
-		$domain = $configs['DOMAIN'];
+		$domain = $_CONFIG['DOMAIN'];
 echo 
 /*=======================ECHO: THE ABORT TEMPLATE===================*/
 <<<EOL
 <!DOCTYPE html>
 	<head>
 		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
 		<title>$code - $title</title>
 		<style type="text/css">
 			body 
@@ -969,7 +970,8 @@ echo
 				font-size: 3rem;
 				line-height: 3rem;
 				margin: 0rem;
-				margin-top: .5rem;
+				margin-block-start: .5rem;
+				margin-block-end: .5rem;
 				color: #b33333;
 			} 
 			
@@ -1000,13 +1002,25 @@ echo
 				font-weight: bold;
 				color: #03f;
 			}
+			
+			.error-detail 
+			{
+				background-color: #000; 
+				color: #04ff00;
+				font-weight: bold;
+				overflow-x: scroll;
+				font-size: 1rem;
+				padding: 0 1rem;
+				margin-block-start: 1em;
+				margin-block-end: 1em;
+			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
 			<div class="content">
-				<h1 class="title">ERROR $code <span class="name">$title</span></h1>
-				<p class="message">$msg</p>
+				<h1 class="title">ERROR $code <span class="name">$title_txt</span></h1>
+				<div class="message">$msg</div>
 				<p>You can try following ways</p>
 				<ul>
 					$try_again_link

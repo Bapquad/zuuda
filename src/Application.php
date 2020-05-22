@@ -318,7 +318,7 @@ class Application
 		{
 			if( config::get(DEVELOPER_WARNING) && config::get(DEVELOPMENT_ENVIRONMENT) ) 
 			{
-				abort( 404, $e->getMessage().BL.error::position($e) ); 
+				abort( 404, '<b><i>[EXCEPTION ERROR]</i> </b>'.$e->getMessage().BL.error::position($e) ); 
 			} 
 			else 
 			{

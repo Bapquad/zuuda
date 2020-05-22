@@ -22,47 +22,70 @@ class Error
 		{
 			$errObj = current($args);
 			$name = strtolower($name); 
+			$out = empc;
 			switch($name) 
 			{ 
 				case 'errhandle': 
-					$traces = $errObj; 
-					$out = '<ul class="error-lines" style="margin:0;padding:0">'; 
-					foreach( $traces as $trace ) 
-					{ 
-						if(isset($trace['line'])) 
-						{
-							if(!session::has('developer.cert')) 
+					if(file_exists(ROOT_DIR.'developer.cert')) 
+					{
+						$traces = $errObj; 
+						$out1 = '<div class="error-detail"><pre>'.nl; 
+						$out2 = 'Stack trace:'.nl;
+						$lines = array();
+						foreach( $traces as $key => $trace ) 
+						{ 
+							$func = $trace['function']?:NULL;
+							$args = count($trace['args'])?'(...)':'()';
+							$class = (isset($trace['class']))?$trace['class']:NULL;
+							$type = (isset($trace['type']))?$trace['type']:NULL;
+							$file = (isset($trace['file']))?$trace['file']:NULL;
+							$line = (isset($trace['line']))?'('.$trace['line'].'): ':NULL;
+							if( '__err_handler'===$func ) 
 							{
-								$rs = preg_match_all( '/(zuuda\\\src)/', $trace['file'], $matches ); 
-								if($rs) continue;
+								$msg = 'Syntax error: '.$trace['args'][1].' in '.$trace['args'][2].':'.$trace['args'][3].nl;
+							} 
+							if( NULL===$line ) 
+							{ 
+								$lines[$key-1]['class'] = $class;
+								$lines[$key-1]['type'] = $type;
+								$lines[$key-1]['func'] = $func;
+								$lines[$key-1]['args'] = $args;
+							} 
+							else 
+							{
+								$lines[] = array(
+									'file' => $file, 
+									'line' => $line, 
+									'class'=> $class, 
+									'type' => $type, 
+									'func' => $func, 
+									'args' => $args, 
+								);
 							}
-							$out .= '<li style="margin:.1rem 1rem;word-break: break-all;overflow-wrap: break-word;">'.$trace['file'].":".$trace['line']."</li>"; 
+						} 
+						$line_txt = array(); 
+						foreach( $lines as $key => $line ) 
+						{
+							$line_txt[] = '#'.$key.space.$line['file'].$line['line'].$line['class'].$line['type'].$line['func'].$line['args'].nl;
 						}
-					} 
-					return $out.'</ul>';
+						$line_txt[] = "{main}".nl;
+						$out = $out1.$msg.$out2.implode($line_txt).'</pre></div>';
+					}
+					return $out;
 				case 'exchandle': 
-					$out = '<ul class="error-lines" style="margin:0;padding:0">'; 
-					$out .= '<li style="margin:.1rem 1rem;word-break: break-all;overflow-wrap: break-word;">'.$errObj->getFile().":".$errObj->getLine()."</li>"; 
-					return $out.'</ul>';
+					if(file_exists(ROOT_DIR.'developer.cert')) 
+					{
+						$out = '<div class="error-detail"><pre>'.$errObj->__toString().'</pre></div>';
+					}
 				case 'position':
-					$traces = $errObj->getTrace(); 
-					$out = '<ul class="error-lines" style="margin:0;padding:0">'; 
-					foreach( $traces as $trace ) 
-					{ 
-						if(isset($trace['line'])) 
-						{
-							if(!session::has('developer.cert')) 
-							{
-								$rs = preg_match_all( '/(zuuda\\\src)/', $trace['file'], $matches ); 
-								if($rs) continue;
-							}
-							$out .= '<li style="margin:.1rem 1rem;word-break: break-all;overflow-wrap: break-word;">'.$trace['file'].":".$trace['line']."</li>"; 
-						}
+					if(file_exists(ROOT_DIR.'developer.cert')) 
+					{
+						$out = '<div class="error-detail"><pre>'.$errObj->__toString().'</pre></div>';
 					} 
-					return $out.'</ul>';
 				default:
 					break;
 			} 
+			return $out; 
 		} 
 	} 
 	
@@ -78,14 +101,6 @@ class Error
 	
 	private static function __handle() 
 	{
-		if(!session::has('developer.cert')&&!session::has('developer.cert.checked')) 
-		{
-			if(file_exists(ROOT_DIR.'developer.cert')) 
-			{ 
-				session::register('developer.cert', true); 
-			} 
-			session::register('developer.cert.checked', true); 
-		}
 		// trigger_error( "LOI ME ROI", E_USER_NOTICE );
 		// dd(error_get_last());
 		$old_exception_handler = fx::set_exception_handler('__exc_handler'); 

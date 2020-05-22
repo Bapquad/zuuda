@@ -67,4 +67,9 @@ class Fx
 		} 
 	} 
 	
+	final static public function get_ipv4() 
+	{ 
+		return gethostbyname(exec('hostname')); 
+	} 
+	
 }
