@@ -30,6 +30,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	private $_controller;
 	private $_action;
 	private $_tpl_path;
+	private $_tpl_id;
 	private $_layout_json;
 	private $_layout_header_path;
 	private $_layout_footer_path;
@@ -99,6 +100,8 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		$this->__setAction( [ 'ACTION' ] );
 		$this->__setHeaderLayoutPath( 'header.tpl' );
 		$this->__setFooterLayoutPath( 'footer.tpl' );
+		
+		$this->_tpl_id = cache::loadTemplateId();
 	}
 	
 	final public function IncludeAsset( $assets ) { return $this->__includeAsset( $assets ); }
@@ -518,10 +521,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 				$css_path = $href;
 			else 
 				$css_path = getSingleton('Html')->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ); 
-			if( config::get(DEVELOPMENT_ENVIRONMENT) ) 
-			{
-				$css_path .= question.uniqid();
-			}
+			$css_path .= question.$this->_tpl_id;
 $str = <<<EOD
 		<link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
@@ -534,10 +534,7 @@ EOD;
 				$js_path = $src; 
 			else 
 				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' );
-			if( config::get(DEVELOPMENT_ENVIRONMENT) ) 
-			{
-				$js_path .= question.uniqid();
-			}
+			$js_path .= question.$this->_tpl_id;
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;

@@ -3,6 +3,7 @@
 namespace Zuuda;
 
 use Zuuda\FileUploader;
+use Zuuda\Fx;
 
 class Cache 
 {
@@ -35,6 +36,12 @@ class Cache
 		fclose($handle);
 	} 
 	
+	final static public function LoadTemplateId() 
+	{ 
+		$id = file_get_contents(ROOT_DIR.self::$templateDir.'empty'); 
+		return $id;
+	} 
+	
 	final static public function clear($type) 
 	{ 
 		// Get the file-system modifier.
@@ -56,6 +63,7 @@ class Cache
 			case 'template': 
 				$dir_name = ROOT_DIR.self::$templateDir; 
 				$files = $modifier->listFile( $dir_name ); 
+				fx::touch($dir_name.'empty', uniqid());
 				break; 
 			case 'upload-temp': 
 				$dir_name = ROOT_DIR.FileUploader::$uploadDir;
