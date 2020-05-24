@@ -9,7 +9,7 @@ class Request extends RequestHeader
 {
 	
 	private $_data; 
-	private static $this = '\Zuuda\Request';
+	public static $this = '\Zuuda\Request';
 	public static function All() { return self::__params(); } 
 	public static function Has($name) { return self::__has($name); }
 	public static function Params() { return self::__params(); } 

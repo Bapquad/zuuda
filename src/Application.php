@@ -1,13 +1,6 @@
 <?php
 namespace Zuuda;
 
-const SCRIPT_ASSET 	= 'script';
-const STYLE_ASSET 	= 'style';
-const HTML_ASSET 	= 'html';
-const HEADER_LAYOUT = 'header';
-const FOOTER_LAYOUT = 'footer';
-const MAIN_LAYOUT 	= 'main'; 
-
 use ReflectionClass;
 use Exception;
 use Zuuda\Error;
@@ -86,39 +79,16 @@ class Application
 	
 	private function __parseQuery( $query, $override = true ) 
 	{
-		global $configs;
-		$has_vars = stripos( $query, '?' );
-		$exepos = $has_vars;
-		if( $has_vars ) 
+		global $_CONFIG;
+		if( stripos( $query, '?' ) ) 
 		{
-			$has_vars = substr( $query, $has_vars + 1 ); 
-			if( $has_vars ) 
-			{
-				$arr_vars = explode( '&', $has_vars );
-				$configs[ 'REQUEST_VARIABLES' ] = array();
-				foreach( $arr_vars as $key => $value ) 
-				{
-					$var = explode( '=', $value ); 
-					if( isset( $configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ] ) ) 
-					{
-						if( !is_array( $configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ] ) ) 
-						{
-							$first_value = $configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ];
-							$configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ] = array( $first_value );
-						}
-						array_push( $configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ], urldecode( $var[ 1 ] ) );
-					}
-					else 
-					{
-						$configs[ 'REQUEST_VARIABLES' ][ $var[ 0 ] ] = isset( $var[ 1 ] ) ? urldecode( $var[ 1 ] ) : '';
-					}
-				}
-			}
+			$query = explode( question, $query ); 
+			$_CONFIG[ 'REQUEST_VARIABLES' ] = text::instance()->parseStr($query[1]); 
 			
-			if( array_key_exists( 'REQUEST_VARIABLES', $configs ) ) 
+			if( array_key_exists( 'REQUEST_VARIABLES', $_CONFIG ) ) 
 			{
-				GlobalModifier::set( '_GET', $configs[ 'REQUEST_VARIABLES' ] );
-				GlobalModifier::set( '_get', $configs[ 'REQUEST_VARIABLES' ] );
+				GlobalModifier::set( '_GET', $_CONFIG[ 'REQUEST_VARIABLES' ] );
+				GlobalModifier::set( '_get', $_CONFIG[ 'REQUEST_VARIABLES' ] );
 			}
 		}
 		else if( $override )
@@ -126,13 +96,13 @@ class Application
 			GlobalModifier::set( '_GET', array() );
 			GlobalModifier::set( '_get', array() );
 		} 
-		return $exepos;
+		return;
 	}
 	
 	private function __bootParams() 
 	{
-		global $configs;
-		$configs['QUERY_STRING'] = explode(PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')); 
+		global $_CONFIG;
+		$_CONFIG['QUERY_STRING'] = explode(PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')); 
 		$this->__parseQuery($GLOBALS['request_uri']);
 		GlobalModifier::set( '_server', $_SERVER );
 	}
@@ -144,31 +114,31 @@ class Application
 
 	private function __extractController() 
 	{
-		global $configs;
+		global $_CONFIG;
 		global $router;
 		$_extract = array();
-		if(is_array($configs['QUERY_STRING'])) 
+		if(is_array($_CONFIG['QUERY_STRING'])) 
 		{
-			$module = $configs['QUERY_STRING'][0];
-			array_push($_extract, array_shift($configs['QUERY_STRING']));
-			$configs["MODULE"] = ucfirst($module); 
-			$controller = (isset($configs['QUERY_STRING']) && isset($configs['QUERY_STRING'][0])) ? $configs['QUERY_STRING'][0] : NULL;
+			$module = $_CONFIG['QUERY_STRING'][0];
+			array_push($_extract, array_shift($_CONFIG['QUERY_STRING']));
+			$_CONFIG["MODULE"] = ucfirst($module); 
+			$controller = (isset($_CONFIG['QUERY_STRING']) && isset($_CONFIG['QUERY_STRING'][0])) ? $_CONFIG['QUERY_STRING'][0] : NULL;
 			if( NULL === $controller || empty_char === $controller ) 
 			{
 				$controller = 'index';
 			} 
 			$controller = ucfirst($controller); 
-			array_push($_extract, array_shift($configs['QUERY_STRING']));
+			array_push($_extract, array_shift($_CONFIG['QUERY_STRING']));
 			$controller = explode('-', $controller);
 			foreach($controller as $k =>  $c) 
 			{ 
 				$controller[$k] = ucfirst($c);
 			} 
 			$controller = implode( EMPTY_CHAR, $controller ); 
-			$configs["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
-			$configs['ACTION'] = array_shift($configs['QUERY_STRING']);
+			$_CONFIG["CONTROLLER"] = preg_replace( '/[\-\_\s]/', '', $controller );
+			$_CONFIG['ACTION'] = array_shift($_CONFIG['QUERY_STRING']);
 
-			$_extract = $configs["MODULE"].BS.CTRLER_PRE.BS.$configs["CONTROLLER"].CONTROLLER;
+			$_extract = $_CONFIG["MODULE"].BS.CTRLER_PRE.BS.$_CONFIG["CONTROLLER"].CONTROLLER;
 			return $_extract;
 		}
 		return $router['default']['controller'];
@@ -207,21 +177,21 @@ class Application
 	
 	static function Handling( Controller $dispatcher, String $action ) 
 	{
-		global $configs; 
+		global $_CONFIG; 
 		$_instance = Application::Instance();
 		call_user_func_array(array($dispatcher, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
-		call_user_func_array(array($dispatcher, "BeforeAction"), $configs["QUERY_STRING"]);
-		call_user_func_array(array($dispatcher, $action), $configs["QUERY_STRING"]);
-		call_user_func_array(array($dispatcher, "AfterAction"), $configs["QUERY_STRING"]); 
-		call_user_func_array(array($dispatcher, "BeforeRender"), $configs["QUERY_STRING"]); 
-		call_user_func_array(array($dispatcher, "FinalRender" ), $configs["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, "BeforeAction"), $_CONFIG["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, $action), $_CONFIG["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, "AfterAction"), $_CONFIG["QUERY_STRING"]); 
+		call_user_func_array(array($dispatcher, "BeforeRender"), $_CONFIG["QUERY_STRING"]); 
+		call_user_func_array(array($dispatcher, "FinalRender" ), $_CONFIG["QUERY_STRING"]);
 		return $_instance;
 	}
 	
 	public function SetReporting() 
 	{
-		global $configs; 
-		if ( $configs[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
+		global $_CONFIG; 
+		if ( $_CONFIG[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
 		{
 			error_reporting(E_ALL);
 			ini_set('display_errors', 1);
@@ -272,7 +242,7 @@ class Application
 
 	public function Start() 
 	{
-		global $configs, $_get; 
+		global $_CONFIG, $_get; 
 		try 
 		{
 			$controller_class_name = $this->__extractController(); 
@@ -288,7 +258,7 @@ class Application
 					$args[] = new $propName;
 				}
 				$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
-				$action = $configs['ACTION']; 
+				$action = $_CONFIG['ACTION']; 
 				$_get = array_merge( $_get, self::__get_uri_var($action) ); 
 				$action = explode( ';', $action );
 				foreach( $action as $key => $value ) 
@@ -337,8 +307,7 @@ class Application
 		{
 			$in = explode('?', $in); 
 			$vars = $in[1]; 
-			$in = $in[0]; 
-			return array_merge( $out, text::instance()->urldecode($vars) ); 
+			$out = text::instance()->parsestr($vars);  
 		} 
 		return $out;
 	} 

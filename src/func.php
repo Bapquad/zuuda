@@ -26,7 +26,14 @@ function __($str_name)
 	global $configs;
 	if( isset($configs['LOCATE']) ) 
 	{
-		$refs = $configs['LOCATE']['TRANS'];
+		if( isset($configs['LOCATE']['TRANS']) ) 
+		{
+			$refs = $configs['LOCATE']['TRANS']; 
+		}
+		else 
+		{
+			$refs = array(); 
+		}
 		$keys = explode('.', $str_name); 
 		foreach($keys as $key) 
 		{
@@ -772,6 +779,16 @@ function fetch_validated_errors($errors, $input)
 function padnum($input, $length=5) 
 { 
 	return str_pad($input, $length, '0', STR_PAD_LEFT); 
+} 
+
+function get_ipv4() 
+{ 
+	return gethostbyname(exec('hostname')); 
+} 
+
+function get_ipv4s() 
+{ 
+	return gethostbynamel(exec('hostname')); 
 } 
 
 function __exc_handler( $e ) 

@@ -6,7 +6,7 @@ class Query
 {
 	
 	private $_data; 
-	private static $this = '\Zuuda\Query';
+	public static $this = '\Zuuda\Query';
 	
 	public static function All() { return self::__params(); } 
 	public static function Has($name) { return self::__has($name); }

@@ -30,7 +30,7 @@ class Html implements iHTML
 
 	public static function Instance() { return self::__getInstance(); }
 	public static function GetInstance() { return self::__getInstance(); }
-	public static function Link( $text, $path, $prompt = null, $confirm_msg = "Are you sure?") { return self::__link( $text, $path, $prompt, $confirm_msg ); }
+	public static function Link( $text, $path ) { return self::__link( $text, $path ); }
 	public static function AssetPath( $file_path ) { return self::__assetPath( $file_path ); } 
 	public static function IncludeJs( $file_name ) { return self::__includeJs( $file_name ); }
 	public static function IncludeCss( $file_name ) { return self::__includeCss( $file_name ); }
@@ -54,14 +54,9 @@ class Html implements iHTML
 		return $_instance;
 	}
 	
-	private static function __link( $text, $path, $prompt, $confirm_msg ) 
+	private static function __link( $text, $path ) 
 	{
-		$path = str_replace( ' ', '-', $path );
-		if ($prompt) 
-			$data = '<a href="javascript:void(0);" onclick="javascript:jumpTo(\''.$path.'\',\''.$confirm_msg.'\')">'.$text.'</a>';
-		else 
-			$data = '<a href="'.$path.'">'.$text.'</a>';	
-		return $data;
+		return '<a href="'.$path.'">'.$text.'</a>';	
 	} 
 
 	private static function __assetPath( $file_path ) 
@@ -101,6 +96,6 @@ class Html implements iHTML
 	
 	private static function __assign( $name, $value, $template ) 
 	{
-		return str_replace( "{" . $name . "}", $value, $template );
+		return str_replace( "{{" . $name . "}}", $value, $template );
 	}
 }

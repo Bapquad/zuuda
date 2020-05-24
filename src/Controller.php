@@ -10,6 +10,7 @@ use Zuuda\Auth;
 use Zuuda\Fx;
 use Zuuda\Response;
 use Zuuda\Text;
+use Zuuda\RouteView;
 
 abstract class Controller implements iController, iDeclare, iBlock 
 {
@@ -143,7 +144,17 @@ abstract class Controller implements iController, iDeclare, iBlock
 			}
 			$dispatch = (empty($args))?new $view_class_name():$ctrlRefl->newInstanceArgs((array) $args);
 			$this->__setVarView( $dispatch );
+		} 
+		else 
+		{
+			$dispatch = routeview::instance(); 
+			$this->__setVarView($dispatch); 
 		}
+	} 
+	
+	final public function service() 
+	{
+		$this->__setVarView( routeview::instance() ); 
 	}
 	
 	final protected function __includeMeta( $value ) 

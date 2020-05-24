@@ -72,4 +72,9 @@ class Fx
 		return gethostbyname(exec('hostname')); 
 	} 
 	
+	final static public function get_ipv4s() 
+	{ 
+		return gethostbynamel(exec('hostname')); 
+	} 
+	
 }

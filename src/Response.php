@@ -125,7 +125,7 @@ class Response extends ResponseHeader
 	{
 		try 
 		{ 
-			if( 1>$argsNum ) 
+			if( 1<$argsNum ) 
 			{ 
 				throw new Exception("You just use the Response::cors() with 1 or 0 paramerter only"); 
 			} 

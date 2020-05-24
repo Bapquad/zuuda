@@ -14,13 +14,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	private $_vars = array();
 	private $_blocks = array();
 	
-	private $_head_assets = array( 
+	protected $_head_assets = array( 
 		STYLE_ASSET => array(), 
 		SCRIPT_ASSET=> array(), 
 		HTML_ASSET	=> array()
 	);
 	
-	private $_content_assets = array(
+	protected $_content_assets = array(
 		STYLE_ASSET	=> array(), 
 		SCRIPT_ASSET=> array(), 
 		HTML_ASSET	=> array()
@@ -239,7 +239,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		$this->__loadFooter();
 	}
 
-	private function __setTemplate( $tpl_path ) 
+	protected function __setTemplate( $tpl_path ) 
 	{
 		return $this->__setTemplatePath( $tpl_path );
 	}
@@ -261,7 +261,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		}
 	}
 	
-	private function __renderLayout( $args = NULL ) 
+	protected function __renderLayout( $args = NULL ) 
 	{
 		global $_configs, $_inflect, $_get, $_post, $_file, $_server; 
 		$this->__packageVars( $args );
