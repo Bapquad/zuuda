@@ -86,7 +86,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function rootName() { return __CLASS__; }
 	public function __construct() 
 	{
-		global $configs;
+		global $_CONFIG;
 		
 		$this->html = html::instance();
 		$this->query = query::instance();
@@ -94,14 +94,17 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		$this->session = session::instance();
 		$this->cookie = cookie::instance();
 		$this->comsite = comsite::instance();
+		$this->_tpl_id = cache::loadTemplateId();
 		
-		$this->__setModule( $configs[ 'MODULE' ] );
-		$this->__setController( $configs[ 'CONTROLLER' ] );
-		$this->__setAction( [ 'ACTION' ] );
+		if( isset($_CONFIG['MODULE']) )
+			$this->__setModule( $_CONFIG['MODULE'] );
+		if( isset($_CONFIG['CONTROLLER']) )
+			$this->__setController( $_CONFIG['CONTROLLER'] );
+		if( isset($_CONFIG['ACTION']) ) 
+			$this->__setAction( $_CONFIG['ACTION'] );
+		
 		$this->__setHeaderLayoutPath( 'header.tpl' );
 		$this->__setFooterLayoutPath( 'footer.tpl' );
-		
-		$this->_tpl_id = cache::loadTemplateId();
 	}
 	
 	final public function IncludeAsset( $assets ) { return $this->__includeAsset( $assets ); }

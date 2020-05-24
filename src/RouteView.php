@@ -6,8 +6,12 @@ class RouteView extends View
 {
 
 	private static $this = '\Zuuda\RouteView';
-	private function __construct() {} 
 	final static public function Instance() { return call_user_func_array(array(self::$this, '__instance'), array()); } 
+	
+	private function __construct() 
+	{
+		parent::__construct(); 
+	} 
 	
 	final static protected function __instance() 
 	{
