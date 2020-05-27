@@ -208,7 +208,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			$opera = strtolower( $filter[ 'opera' ] );
 			$model->$opera( $filter[ 'field' ], '%'.$keyword.'%' );
-			$extra_printer .= 'key={key}&';
+			$extra_printer .= 'key={{key}}&';
 		}
 		
 		if( !is_null( $order ) ) 
@@ -220,8 +220,8 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 			} 
 			if( isset( $configs[ 'REQUEST_VARIABLES' ][ 'order' ] ) ) 
 			{
-				$extra_printer .= 'sort={sort}&';
-				$extra_printer .= 'order={order}&';
+				$extra_printer .= 'sort={{sort}}&';
+				$extra_printer .= 'order={{order}}&';
 			}
 			$model->orderBy( $order, $sort );
 		}
@@ -250,10 +250,10 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		if( $current_page > $total_pages ) 
 		{
 			$current_page = ( $total_pages > 0 ) ? $total_pages : 1;
-			$push_state = str_replace( '{page}', ( ( $current_page != 1 ) ? $current_page : NULL ), $printer );
-			$push_state = str_replace( '{key}', $keyword, $push_state );
-			$push_state = str_replace( '{sort}', $sort, $push_state );
-			$push_state = str_replace( '{order}', $order, $push_state );
+			$push_state = str_replace( '{{page}}', ( ( $current_page != 1 ) ? $current_page : NULL ), $printer );
+			$push_state = str_replace( '{{key}}', $keyword, $push_state );
+			$push_state = str_replace( '{{sort}}', $sort, $push_state );
+			$push_state = str_replace( '{{order}}', $order, $push_state );
 			$this->set( 'push_state', $push_state );
 			$this->__setCurrentPage( $current_page );
 		}
@@ -262,7 +262,7 @@ abstract class DataGrid implements iHTML, iData, iDataGridv1_0, iSection, iTempl
 		{
 			$paging = new Pagination( $current_page, $length );
 			// $paging->setPath( 'admin/stat/index/' );
-			// $paging->setPath( '/?page={page}' );
+			// $paging->setPath( '/?page={{page}}' );
 			$paging->setPath( $printer );
 			$paging->setRpp( $num_of_rows );
 			$this->set( 'paging', $paging );

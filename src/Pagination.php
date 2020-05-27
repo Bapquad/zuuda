@@ -80,7 +80,7 @@ class Pagination implements iHTML, iPagination
 	{
 		$url = $this->__getPath();
 		$page = (int) $this->__getCurrent();
-		$key = "{".$this->__getKey()."}";
+		$key = "{{".$this->__getKey()."}}";
 		
 		if( stripos( $url, $key ) !== false ) 
 		{
@@ -114,11 +114,11 @@ class Pagination implements iHTML, iPagination
 		$url = $this->__getPath();
 		$key = $this->__getKey();
 		$params = ( isset( $configs[ 'REQUEST_VARIABLES' ] ) ) ? $configs[ 'REQUEST_VARIABLES' ] : array();
-		if( stripos( $url, "{".$key."}") ) 
+		if( stripos( $url, "{{".$key."}}") ) 
 		{
-			$key = "{".$key."}";
+			$key = "{{".$key."}}";
 			foreach( $params as $name => $value ) 
-				$url = str_replace( "{".$name."}", $value, $url );
+				$url = str_replace( "{{".$name."}}", $value, $url );
 			$params = array();
 			if( NULL!==$data )
 				foreach( $data as $name => $value ) 
@@ -132,11 +132,11 @@ class Pagination implements iHTML, iPagination
 		{
 			if( $page !== 1 ) 
 			{
-				$key = $params[$key] = "{".$key."}";
+				$key = $params[$key] = "{{".$key."}}";
 			}
 			else 
 			{
-				$key = "{$key}={".$key."}";
+				$key = "{$key}={{".$key."}}";
 			}
 			$href = base($url).'?'.urldecode(http_build_query($params));
 		}
@@ -158,7 +158,7 @@ class Pagination implements iHTML, iPagination
 	protected function __getRelPrevNextLinkTags() 
 	{
 		global $configs;
-		$key = "{".$this->__getKey()."}";
+		$key = "{{".$this->__getKey()."}}";
 		$page = (int) $this->__getCurrent();
 		$pages = ( (int) ceil( $this->__getTotal() / $this->__getRpp() ) );
 		
