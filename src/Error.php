@@ -22,7 +22,7 @@ class Error
 		{
 			$errObj = current($args);
 			$name = strtolower($name); 
-			$out = empc;
+			$out = empc; 
 			switch($name) 
 			{ 
 				case 'errhandle': 
@@ -34,22 +34,35 @@ class Error
 						$lines = array();
 						foreach( $traces as $key => $trace ) 
 						{ 
+							if(isset($trace['args']) ) 
+							{
+								$args = count($trace['args'])?'(...)':'()';
+							} 
+							else 
+							{
+								$trace['args'] = false; 
+							}
 							$func = $trace['function']?:NULL;
-							$args = count($trace['args'])?'(...)':'()';
 							$class = (isset($trace['class']))?$trace['class']:NULL;
 							$type = (isset($trace['type']))?$trace['type']:NULL;
 							$file = (isset($trace['file']))?$trace['file']:NULL;
 							$line = (isset($trace['line']))?'('.$trace['line'].'): ':NULL;
-							if( '__err_handler'===$func ) 
+							if( '__err_handler'===$func) 
 							{
 								$msg = 'Syntax error: '.$trace['args'][1].' in '.$trace['args'][2].':'.$trace['args'][3].nl;
 							} 
-							if( NULL===$line ) 
+							if( false===$trace['args'] ) 
 							{ 
-								$lines[$key-1]['class'] = $class;
-								$lines[$key-1]['type'] = $type;
-								$lines[$key-1]['func'] = $func;
-								$lines[$key-1]['args'] = $args;
+								$lines[count($lines)-1]['class'] = $class;
+								$lines[count($lines)-1]['type'] = $type;
+								$lines[count($lines)-1]['func'] = $func;
+							} 
+							else if( NULL===$line ) 
+							{ 
+								$lines[count($lines)-1]['class'] = $class;
+								$lines[count($lines)-1]['type'] = $type;
+								$lines[count($lines)-1]['func'] = $func;
+								$lines[count($lines)-1]['args'] = $args;
 							} 
 							else 
 							{
@@ -70,7 +83,7 @@ class Error
 						}
 						$line_txt[] = "{main}".nl;
 						$out = $out1.$msg.$out2.implode($line_txt).'</pre></div>';
-					}
+					} 
 					return $out;
 				case 'exchandle': 
 					if(file_exists(ROOT_DIR.'developer.cert')) 
@@ -92,7 +105,7 @@ class Error
 	private static function __getInstance() 
 	{
 		static $_instance;
-		if( is_null( $_instance ) ) 
+		if( is_null($_instance) ) 
 		{
 			$_instance = new Error;
 		}

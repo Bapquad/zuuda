@@ -1052,6 +1052,42 @@ echo
 EOL;
 /*HTML*/
 	}
+	else 
+	{
+		if($code===500) 
+		{
+			$title = "Internal Server Error";
+		} 
+		else if($code===408) 
+		{
+			$title = "Request Timeout";
+		} 
+		else if($code===404) 
+		{
+			$title = "Not Found";
+		} 
+		else if($code===403) 
+		{
+			$title = "Forbidden";
+		} 
+		else if($code===401) 
+		{
+			$title = "Forbidden";
+		} 
+		else if($code===400) 
+		{
+			$title = "Bad Request";
+		}
+echo 
+<<<EOL
+<div class="container">
+	<div class="content">
+		<h1 class="title">ERROR $code <span class="name">$title</span></h1>
+		<div class="message">$msg</div>
+	</div>
+</div>
+EOL;
+	}
 	escape();
 }
 
