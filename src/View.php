@@ -633,7 +633,11 @@ EOD;
 		{
 			foreach($layout_content as $template) 
 			{
-				__assetPath(TPL_NAME_DIR.$template, true); 
+				$assetPath = __assetPath(TPL_NAME_DIR.$template, true); 
+				if( !file_exists($assetPath) ) 
+				{
+					abort( 500, '<b>[FILE MISSED]</b>: '.$assetPath.' is missed.' );
+				}
 			}
 			$this->_layout_engine_vars = $layout_content;
 			$layout_route = array(
