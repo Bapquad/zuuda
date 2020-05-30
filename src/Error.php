@@ -79,6 +79,8 @@ class Error
 						$line_txt = array(); 
 						foreach( $lines as $key => $line ) 
 						{
+							if( !isset($line['file']) ) 
+								continue;
 							$line_txt[] = '#'.$key.space.$line['file'].$line['line'].$line['class'].$line['type'].$line['func'].$line['args'].nl;
 						}
 						$line_txt[] = "{main}".nl;
