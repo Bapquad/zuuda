@@ -159,7 +159,6 @@ class Application
 		Error::handle();
 		$_instance = application::instance();
 		$_instance->__bootService();
-		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
 		if( Config::has('COM') ) 
 		{
 			$_instance->__bootServices( Comsite::getInstance(), $_instance ); 
@@ -171,6 +170,7 @@ class Application
 			$_instance->__bootServices( ExtensionInformationService::getInstance(), $_instance );
 			$_instance->__bootServices( WidgetInformationService::getInstance(), $_instance );
 		}
+		$_instance->__bootServices( LocateService::getInstance(), $_instance ); 
 		$_instance->__bootParams(); 
 		return $_instance;
 	} 
