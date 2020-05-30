@@ -1153,7 +1153,13 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				$this->_primaryKey = current($args); 
+				$pk = $this->_primaryKey;
+				$this->$pk = current($args); 
+				$item = call_user_func_array(array($this, '__item'), array([':pk', $this->$pk], 2)); 
+				$this->__clear(true); 
+				$this->$pk = current($args); 
+				foreach($item as $field => $value) 
+					$this->$field = $value;
 				return $this;
 			} 
 			else 
@@ -1256,7 +1262,7 @@ abstract class SQLQuery
 				break;
 			case ':pk':
 			case 'pk:':
-				$data = $this->clear()->equal($this->_primaryKey, $args[1])->limit(1)->search();
+				$data = current($this->clear()->equal($this->_primaryKey, $args[1])->limit(1)->search());
 				break;
 			case ':last':
 				$data = call_user_func_array( [$this,mcbm_last], array([], 0) );
@@ -1490,12 +1496,10 @@ abstract class SQLQuery
 		$outSql = array(); 
 		foreach ( $this->_propsDescribe as $field ) 
 		{
-			if( $field==$this->_primaryKey && 
-				isset($data[$this->_primaryKey]) && 
-				is_numeric($data[$field]) ) 
+			if( $field==$this->_primaryKey && isset($data[$this->_primaryKey]) && is_numeric($data[$field]) ) 
 			{
 				continue; 
-			}
+			} 
 			elseif( array_key_exists($field, $data) ) 
 			{
 				if( is_null($data[$field]) ) 
