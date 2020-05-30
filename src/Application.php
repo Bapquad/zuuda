@@ -260,13 +260,16 @@ class Application
 				$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
 				$action = $_CONFIG['ACTION']; 
 				$_get = array_merge( $_get, self::__get_uri_var($action) ); 
-				$action = explode( ';', $action );
-				foreach( $action as $key => $value ) 
+				if( is_string($action) ) 
 				{
-					$action[ $key ] = strtoupper( substr( $value, 0, 1 ) ).substr( $value, 1 );
+					$action = explode( ';', $action );
+					foreach( $action as $key => $value ) 
+					{
+						$action[$key] = strtoupper(substr($value, 0, 1)).substr($value, 1); 
+					}
+					$action = implode(EMPTY_CHAR, $action); 
 				}
-				$action = implode( EMPTY_CHAR, $action );
-				$actionDelimeter = '|'; 
+				$actionDelimeter = '*.*'; 
 				$actionInjector = '/[\-\_\s]/';
 				$action = explode( $actionDelimeter, preg_replace( $actionInjector, $actionDelimeter, $action ) );
 				foreach( $action as $key => $word ) 
@@ -274,7 +277,7 @@ class Application
 				$action = implode(EMPTY_CHAR, $action);
 				$action .= ACTION;
 				if($action === 'Action') $action = 'IndexAction';
-				if((int)method_exists($dispatch, $action)) 
+				if( method_exists($dispatch, $action) ) 
 				{
 					Application::Handling($dispatch, $action);
 				}
@@ -307,7 +310,8 @@ class Application
 		{
 			$in = explode('?', $in); 
 			$vars = $in[1]; 
-			$out = text::instance()->parsestr($vars);  
+			$out = text::instance()->parsestr($vars); 
+			$in = current($in);
 		} 
 		return $out;
 	} 
