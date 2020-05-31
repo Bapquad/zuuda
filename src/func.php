@@ -60,23 +60,34 @@ function video( $filePath ) { return asset(PS.MEDIA_VIDEO_NAME_DIR.$filePath); }
 function document( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePath); } 
 function compressed( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePath); }
 function url( $path ) { return asset($path); } 
-function base( $path=NULL ) { return WEB_PATH.$path; } 
+function base( $path=NULL ) { return __base($path); } 
 function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
 
 function theme_installed($install_dir) 
 { 
-	global $configs;
-	
+	global $configs; 
 	if( isset($configs['Theme']) ) 
-	{	
 		return $install_dir===$configs['Theme']; 
-	} 
 	return false;
 } 
+
+function __http_pat() 
+{
+	return '#^((https:|http:)?\/\/)+#'; 
+}
+
+function __base( $path ) 
+{
+	if( preg_match(__http_pat(), $path) ) 
+		return $path; 
+	return WEB_PATH.$path; 
+}
 
 function __assetPath( $file_path, $file = false ) 
 {
 	global $configs;
+	if( preg_match(__http_pat(), $file_path) ) 
+		return $file_path; 
 	$path_basic = correct_path(WEB_DIR.$file_path);
 	if( isset($configs['Theme']) && isset($configs['SHIP']) ) 
 	{
