@@ -214,10 +214,10 @@ function __dispatch_autoload_class_file( $class_name )
 		{
 			if( $configs['COM'] ) 
 			{
-				$class_path = COM . $class_file;
+				$class_path = CODE.CODE_ENTRY.DS.$class_file;
 				if( !file_exists($class_path) ) 
 				{
-					$class_path = CODE.CODE_ENTRY.DS.$class_file;
+					$class_path = COM.$class_file;
 					if( !file_exists($class_path) && isset($configs['CODE_OF']) ) 
 					{
 						$class_path = CODE.$configs['CODE_OF'].DS.EXTENSIONS.DS.$class_file; 
