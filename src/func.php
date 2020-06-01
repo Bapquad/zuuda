@@ -71,12 +71,12 @@ function __asset( $filePath, $file=false )
 		return str_replace(DS, PS, __assetPath($filePath, $file));
 } 
 
-function filepath( $filePath ) 
+function assetfile( $filePath ) 
 {
-	return __filepath( $filePath ); 
+	return __assetfile( $filePath ); 
 }
 
-function __filepath( $filePath ) 
+function __assetfile( $filePath ) 
 {
 	return str_replace(PS, DS, __assetPath($filePath, true)); 
 }
