@@ -69,6 +69,16 @@ function __asset( $filePath, $file=false )
 		return str_replace(PS, DS, __assetPath($filePath, $file)); 
 	else 
 		return str_replace(DS, PS, __assetPath($filePath, $file));
+} 
+
+function filepath( $filePath ) 
+{
+	return __filepath( $filePath ); 
+}
+
+function __filepath( $filePath ) 
+{
+	return str_replace(PS, DS, __assetPath($filePath, true)); 
 }
 
 function theme_installed($install_dir) 
