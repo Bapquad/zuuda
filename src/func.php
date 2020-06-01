@@ -61,7 +61,15 @@ function document( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePa
 function compressed( $filePath ) { return asset(PS.MEDIA_DOCUMENT_NAME_DIR.$filePath); }
 function url( $path ) { return asset($path); } 
 function base( $path=NULL ) { return __base($path); } 
-function asset( $filePath ) { return str_replace(DS, PS, __assetPath($filePath)); } 
+function asset( $filePath, $file=false ) { return __asset( $filePath, $file ); } 
+
+function __asset( $filePath, $file=false ) 
+{
+	if( $file ) 
+		return str_replace(PS, DS, __assetPath($filePath, $file)); 
+	else 
+		return str_replace(DS, PS, __assetPath($filePath, $file));
+}
 
 function theme_installed($install_dir) 
 { 
