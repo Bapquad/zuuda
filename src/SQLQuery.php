@@ -1391,7 +1391,7 @@ abstract class SQLQuery
 				else
 					$pattern = "/SELECT (.*?) FROM (.*)/i"; 
 				
-				$replacement = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM $2";
+				$replacement = "SELECT COUNT(`".$this->_propModel."`.`".$this->_primaryKey."`) AS `total` FROM $2";
 				$sql = preg_replace( $pattern, $replacement, $this->_querySQL );
 				$qr = $this->__query( $sql ); 
 				$this->__clear();

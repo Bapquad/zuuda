@@ -214,6 +214,7 @@ class Pagination implements iHTML, iPagination
 		$clean = $this->__getClean();
 		$current = $this->__getCurrent();
 		$total = $this->__getTotal();
+		
 		ob_start();
 		include( ROOT_DIR.WIDGET_DIR.__correctPath(str_replace('zuuda\\', '', strtolower(__CLASS__)).DS.'render.inc.php') );
 		$_response = ob_get_contents();
