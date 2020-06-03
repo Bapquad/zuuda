@@ -175,13 +175,13 @@ class Application
 		return $_instance;
 	} 
 	
-	static function Handling( Controller $dispatcher, String $action ) 
+	static function Handling( Controller $dispatcher, String $patchAction ) 
 	{
 		global $_CONFIG; 
 		$_instance = Application::Instance();
 		call_user_func_array(array($dispatcher, "CheckMass"), array(strtolower($_SERVER['REQUEST_METHOD'])) ); 
 		call_user_func_array(array($dispatcher, "BeforeAction"), $_CONFIG["QUERY_STRING"]);
-		call_user_func_array(array($dispatcher, $action), $_CONFIG["QUERY_STRING"]);
+		call_user_func_array(array($dispatcher, $patchAction), $_CONFIG["QUERY_STRING"]);
 		call_user_func_array(array($dispatcher, "AfterAction"), $_CONFIG["QUERY_STRING"]); 
 		call_user_func_array(array($dispatcher, "BeforeRender"), $_CONFIG["QUERY_STRING"]); 
 		call_user_func_array(array($dispatcher, "FinalRender" ), $_CONFIG["QUERY_STRING"]);
@@ -275,11 +275,16 @@ class Application
 				foreach( $action as $key => $word ) 
 					$action[$key] = ucfirst($word); 
 				$action = implode(EMPTY_CHAR, $action);
+				$_CONFIG['BEFORE_RENDER_EVENT'] = $action.'Render'; 
 				$action .= ACTION;
-				if($action === 'Action') $action = 'IndexAction';
+				if($action === 'Action') 
+				{
+					$_CONFIG['BEFORE_RENDER_EVENT'] = 'IndexRender'; 
+					$action = 'IndexAction';
+				}
 				if( method_exists($dispatch, $action) ) 
 				{
-					Application::Handling($dispatch, $action);
+					Application::Handling($dispatch, $action); 
 				}
 				else
 					throw new Exception("Ops! Your action <strong>$action</strong> is not found in <strong>$controller_class_name.php</strong>.");

@@ -29,7 +29,6 @@ abstract class Controller implements iController, iDeclare, iBlock
 	protected function __getModel() { return $this->_model; } 
 
 	private function __resting( $seconds ) { sleep( $seconds ); } 
-	
 	private function __setVarModule( $value ) { $this->_module = $value; return $this; }
 	private function __setVarController( $value ) { $this->_controller = $value; return $this; }
 	private function __setVarAction( $value ) { $this->_action = $value; return $this; }
@@ -48,29 +47,6 @@ abstract class Controller implements iController, iDeclare, iBlock
 	private function SetView( $value ) { return $this->__setVarView( $value ); }
 	private function SetModel( $value ) { return $this->__setVarModel( $value ); }
 	
-	public function __get( $name ) 
-	{
-		if( $name == 'model' || 
-			$name == 'view' ) 
-		{
-			try 
-			{
-				if( $name == 'model' && NULL===$this->_model ) 
-					throw new Exception("Your model <b>" . $model_class_name . "</b> coundn't found.");
-				elseif( $name == 'view' && NULL===$this->_model ) 
-					throw new Exception("Your view <b>" . $view_class_name . "</b> coundn't found.");
-				else 
-					return $this->{ '_' . $name }; 
-			} 
-			catch( Exception $e ) 
-			{ 
-				if( isset($configs['CONTROLER_ERRORS_WARNING']) ) 
-					if( $configs['CONTROLER_ERRORS_WARNING'] ) 
-						abort( 500, $e->getMessage() ); 
-			} 
-		}
-	}
-	
 	/** Implements interface iDeclare */
 	public function IncludeMeta( $value ) { return $this->__includeMeta( $value ); }
 	public function IncludeHtml( $value ) { return $this->__includeHtml( $value ); }
@@ -83,9 +59,11 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function RequireJs( $value ) { return $this->__preloadJs( $value ); }
 	public function RequireJui( $value ) { return $this->__requireJui( $value ); }
 	public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
-	public function Assign() { return $this->__setVar( func_get_args(), func_num_args() ); }
-	public function Set() { return $this->__setVar( func_get_args(), func_num_args() ); }
-	public function Share() { return $this->__setVar( func_get_args(), func_num_args() ); }
+	public function Computed() { $args = func_get_args(); $com = current($args); $in = next($args); return call_user_func_array(array($this, $com), array($in)); }
+	public function Map() { return call_user_func_array(array($this, '__map'), array(func_get_args())); }
+	public function Set() { return $this->__setVar( func_get_args(), func_num_args()); }
+	public function Assign() { return $this->__setVar( func_get_args(), func_num_args()); }
+	public function Share() { return $this->__setVar( func_get_args(), func_num_args()); }
 	public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
 	public function Json( $args ) { return $this->__json( $args ); } 
 	public function Cors() { return $this->__cors(); } 
@@ -110,7 +88,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	final public function Back() { response::back(); } 
 	
 	final public function rootName() { return __CLASS__; }
-	final public function FinalRender( $query = NULL ) { $this->__finalRender( $this->_template ); }
+	final public function FinalRender( $query = NULL ) { $this->__finalRender( $query ); }
 
 	public function __construct() 
 	{
@@ -155,6 +133,36 @@ abstract class Controller implements iController, iDeclare, iBlock
 	final public function service() 
 	{
 		$this->__setVarView( routeview::instance() ); 
+	}
+	
+	public function __get( $name ) 
+	{
+		if( $name == 'model' || 
+			$name == 'view' ) 
+		{
+			try 
+			{
+				if( $name == 'model' && NULL===$this->_model ) 
+					throw new Exception("Your model <b>" . $model_class_name . "</b> coundn't found.");
+				elseif( $name == 'view' && NULL===$this->_model ) 
+					throw new Exception("Your view <b>" . $view_class_name . "</b> coundn't found.");
+				else 
+					return $this->{ '_' . $name }; 
+			} 
+			catch( Exception $e ) 
+			{ 
+				if( isset($configs['CONTROLER_ERRORS_WARNING']) ) 
+					if( $configs['CONTROLER_ERRORS_WARNING'] ) 
+						abort( 500, $e->getMessage() ); 
+			} 
+		}
+	} 
+	
+	final protected function __map( $args ) 
+	{
+		$map = current($args); 
+		$in = next($args);
+		return array_map(array($this, $map), $in); 
 	}
 	
 	final protected function __includeMeta( $value ) 
@@ -353,17 +361,26 @@ abstract class Controller implements iController, iDeclare, iBlock
 		return $this;
 	} 
 	
-	final protected function __finalRender() 
+	final protected function __finalRender( $query ) 
 	{
+		global $_CONFIG;
 		if( isset($this->_downloader) ) 
 			return;
 		$view = $this->__getView(); 
 		if( NULL!==$view ) 
 		{
 			if( $json = $view->isJson() ) 
+			{
 				$view->renderJson( $json ); 
+			}
 			else 
-				$view->render( $this->_template );
+			{
+				if( method_exists($view, $_CONFIG['BEFORE_RENDER_EVENT']) )
+				{
+					call_user_func_array(array($view, $_CONFIG['BEFORE_RENDER_EVENT']), array( $query )); 
+				}
+				$view->render( $this->_template ); 
+			}
 		} 
 	}
 

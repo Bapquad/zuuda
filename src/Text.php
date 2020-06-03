@@ -17,6 +17,7 @@ class Text
 	final public function UrlEncode() { return call_user_func_array(array($this, '__urlEncode'), func_get_args()); } 
 	final public function RawUrlDecode() { return call_user_func_array(array($this, '__rawUrlDecode'), func_get_args()); } 
 	final public function RawUrlEncode() { return call_user_func_array(array($this, '__rawUrlEncode'), func_get_args()); } 
+	final public function Json() { return call_user_func_array(array($this, '__json'), func_get_args()); }
 	final public function JsonDecode() { return call_user_func_array(array($this, '__jsonDecode'), func_get_args()); }
 	final public function JsonEncode() { return call_user_func_array(array($this, '__jsonEncode'), func_get_args()); }
 	final public function BuildQuery() { return call_user_func_array(array($this, '__buildQuery'), array(func_get_args())); }
@@ -71,6 +72,18 @@ class Text
 		$data = trim($in ?: $this->_data); 
 		return rawurlencode($data); 
 	} 
+	
+	final private function __json( $in ) 
+	{
+		if( is_string($in) ) 
+		{
+			return json_decode($in); 
+		} 
+		else 
+		{
+			return json_encode($in); 
+		}
+	}
 	
 	final private function __jsonDecode( $in=NULL ) 
 	{ 

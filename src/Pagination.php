@@ -44,24 +44,33 @@ class Pagination implements iHTML, iPagination
 	protected function __setCurrent( $value ) { $this->_current = $value; return $this; }
 	protected function __setTotal( $value ) { $this->_total = $value; return $this; }
 	
-	public function AddClasses( $values ) { return $this->__addClasses( $values ); }
-	public function AlwaysShow() { return $this->__setAlwaysShow( true ); }
+	final public function rootName() { return __CLASS__; }
 	public function GetCanonicalUrl() { return $this->__getCanonicalUrl(); }
 	public function GetPageParam() { return $this->__getPageParam(); }
 	public function GetPageUrl( $page = NULL, $data = NULL ) { return $this->__getPageUrl( $page, $data ); }
 	public function GetRelPrevNextLinkTags() { return $this->__getRelPrevNextLinkTags(); }
 	public function Parse() { return $this->__parse(); }
+	public function AddClasses( $values ) { return $this->__addClasses( $values ); }
 	public function SetClasses( $classes ) { return $this->__setClasses( $classes ); }
+	public function Show() { return $this->__setAlwaysShow( true ); }
+	public function AlwaysShow() { return $this->__setAlwaysShow( true ); }
 	public function SetClean() { return $this->__setClean(); }
+	public function Clean() { return $this->__setClean(); }
 	public function SetCrumbs( $crumbs ) { return $this->__setCrumbs( $crumbs ); }
+	public function Crumbs( $crumbs ) { return $this->__setCrumbs( $crumbs ); }
 	public function SetCurrent( $current ) { return $this->__setCurrent( $current ); }
+	public function Current( $current ) { return $this->__setCurrent( $current ); }
 	public function SetFull() { return $this->__setFull(); }
 	public function SetKey( $key ) { return $this->__setKey( $key ); }
 	public function SetNext( $next ) { return $this->__setNext( $next ); }
 	public function SetPrevious( $previous ) { return $this->__setPrevious( $previous ); }
+	public function SetPrev( $previous ) { return $this->__setPrevious( $previous ); }
 	public function SetRpp( $rpp ) { return $this->__setRpp( $rpp ); }
+	public function SetLimit( $rpp ) { return $this->__setRpp( $rpp ); }
+	public function Limit( $rpp ) { return $this->__setRpp( $rpp ); }
 	public function SetPath( $path ) { return $this->__setPath( $path ); }
 	public function SetTotal( $total ) { return $this->__setTotal( $total ); }
+	public function Total( $total ) { return $this->__setTotal( $total ); }
 	
 	public function __construct( $current = null, $total = null ) 
 	{
@@ -205,12 +214,10 @@ class Pagination implements iHTML, iPagination
 		$clean = $this->__getClean();
 		$current = $this->__getCurrent();
 		$total = $this->__getTotal();
-		
 		ob_start();
-		include( WIDGET_DIR . __correctPath( str_replace( 'zuuda\\', '', strtolower( __CLASS__ ) ) ) . PS . 'render.inc.php' );
+		include( ROOT_DIR.WIDGET_DIR.__correctPath(str_replace('zuuda\\', '', strtolower(__CLASS__)).DS.'render.inc.php') );
 		$_response = ob_get_contents();
 		ob_end_clean();
-		
 		return $_response;
 	}
 	

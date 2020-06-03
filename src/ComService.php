@@ -45,60 +45,68 @@ class ComService implements iComService
 		return false;
 	}
 	
+	private static function __checkLive($app, $file_path, $url, $left_url, $right_url) 
+	{
+		$live_path = str_replace( basename($file_path), 'live.xml', $file_path );
+		if( call( cFile::get(), $live_path )->exist() ) 
+		{
+			$live_xml = simplexml_load_file( $live_path );
+			if( (int) $live_xml->live->status ) 
+			{
+				getSingleton( 'Config' )->set( 'CODE_OF', $live_xml->live->codeof->__toString() ); 
+				$app->setUrl( str_replace( implode(PS, $left_url), $right_url, $url ) );
+				return true;
+			} 
+			else 
+			{ 
+				abort(500, "Your extension is disabled."); 
+			} 
+		}
+	}
+	
 	private static function __routing( $app, $url, $file_path ) 
 	{
-		global $configs;
-		$basename = basename( $file_path );
+		global $_CONFIG;
 		$handle = simplexml_load_file( $file_path ); 
 		$len = count( $handle->route );
-		for( $i = 0; $i < $len; $i++ ) 
+		for( $i=0; $i<$len; $i++ ) 
 		{
-			$name = (string)$handle->route[ $i ][ 'name' ];
-			$left = (string)$handle->route[ $i ]->left;
-			$right = (string)$handle->route[ $i ]->right;
-			$parsed_left = explode(PS, $left); 
-			$parsed_url = explode(PS, $url); 
-			$next_route = false; 
-			if(count($parsed_left)==count($parsed_url)) 
+			$left_url = array(); 
+			$end_url = array(); 
+			$left = $handle->route[$i]->left->__toString();
+			$right_url = $handle->route[$i]->right->__toString();
+			if( preg_match_all('#(/:[.]*)#', $left, $matches) ) 
 			{
-				$end_url = array(); 
-				$left_url = array(); 
-				foreach( $parsed_left as $key => $value ) 
-				{ 
-					if( false!==stripos($value, ':') ) 
-					{ 
-						$end_url[] = $parsed_url[$key];
-						continue;
-					}  
-					if($parsed_url[$key]!=$value) 
-					{ 
-						$next_route = true; 
-						break; 
-					} 
-					$left_url[] = $value; 
-				} 
-				if($next_route) 
-				{ 
-					continue; 
-				} 
-				$left_url = implode(PS, $left_url); 
-				$right .= PS.implode(PS, $end_url); 
-				$live_path = str_replace( $basename, 'live.xml', $file_path );
-				if( call( cFile::get(), $live_path )->exist() ) 
+				$parsed_left = explode(PS, $left); 
+				$parsed_url = explode(PS, $url); 
+				if( count($parsed_left)==count($parsed_url) ) 
 				{
-					$live_xml = simplexml_load_file( $live_path );
-					if( (int) $live_xml->live->status ) 
-					{
-						getSingleton( 'Config' )->set( 'CODE_OF', $live_xml->live->codeof->__toString() ); 
-						$app->setUrl( str_replace( $left_url, $right, $url ) );
-						return true;
-					} 
-					else 
+					$next_route = false; 
+					foreach( $parsed_left as $key => $value ) 
 					{ 
-						abort(500, "Your extension is disabled."); 
+						if( false!==stripos($value, ':') ) 
+						{ 
+							$end_url[] = $parsed_url[$key];
+							continue;
+						}  
+						if($parsed_url[$key]!=$value) 
+						{ 
+							$next_route = true; 
+							break; 
+						} 
+						$left_url[] = $value; 
 					} 
+					if($next_route) 
+					{ 
+						continue; 
+					} 
+					return self::__checkLive($app, $file_path, $url, $left_url, $right_url); 
 				}
 			}
+			else if( preg_match_all('#^'.$left.'$#', $url, $matches) ) 
+			{
+				return self::__checkLive($app, $file_path, $url, explode(PS, $left), $right_url); 
+			} 
 		}
 		return false;
 	}
@@ -122,7 +130,6 @@ class ComService implements iComService
 				} 
 			}
 		}
-
 		return false;
 	}
 }

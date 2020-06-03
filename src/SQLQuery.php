@@ -22,6 +22,7 @@ define( 'mcbm_show_has_mabtm',		'__showHasManyAndBelongsToMany' );
 define( 'mcbm_hide_has_one',		'__hideHasOne' );
 define( 'mcbm_hide_has_many',		'__hideHasMany' );
 define( 'mcbm_hide_has_mabtm',		'__hideHasManyAndBelongsToMany' );
+define( 'mcbm_detach_model',		'__detach_model' ); 
 define( 'mcbm_custom',				'__custom' );
 define( 'mcbm_search',				'__search' );
 define( 'mcbm_findid',				'__find' );
@@ -104,6 +105,7 @@ abstract class SQLQuery
 	protected $_propsHasMany 	= array(); 
 	protected $_propsHasMABTM 	= array(); 
 	protected $_propsRole	 	= array(); 
+	protected $_propsDeathMdl	= array(); 
 	
 	final public function GetPrefix() { return $this->_propPrefix; }
 	final public function GetPrimaryKey() { return $this->_primaryKey; }
@@ -259,6 +261,10 @@ abstract class SQLQuery
 	final public function SetPage() { return $this->__setPage( func_get_args(), func_num_args() ); }
 	final public function Page() { return $this->__setPage( func_get_args(), func_num_args() ); } 
 	final public function HasOne() { return call_user_func_array([$this, mcbm_order_has_one], array(func_get_args(), func_num_args())); } 
+	final public function Death() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
+	final public function Detach() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
+	final public function DeathModel() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
+	final public function DetachModel() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
 	final public function BlindHasOne() { return call_user_func_array([$this, mcbm_hide_has_one], array()); }
 	final public function DisplayHasOne() { return call_user_func_array([$this, mcbm_show_has_one], array()); } 
 	final public function RenameHasOne() { return call_user_func_array([$this, mcbm_rename_has_one], array(func_get_args(), func_num_args())); } 
@@ -454,6 +460,35 @@ abstract class SQLQuery
 	{
 		$this->_querySQL = $sql;
 		$this->_querySQLs[] = $sql; 
+	} 
+	
+	private function __detach_model( $args, $argsNum ) 
+	{
+		try 
+		{
+			if( $argsNum ) 
+			{
+				if(1===$argsNum) 
+				{
+					$args = current($args); 
+					if( is_string($args) ) 
+					{
+						array_push($this->_propsDeathMdl, $args); 
+						return $this;
+					} 
+				}
+				$this->_propsDeathMdl = array_merge($this->_propsDeathMdl, $args); 
+			} 
+			else 
+			{
+				throw new Exception( "Usage <strong>Model::Detach()</strong> is incorrect." ); 
+			}
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		} 
+		return $this; 
 	}
 	
 	private function __custom( $args, $argsNum, $mn="Custom" ) 
@@ -1018,7 +1053,10 @@ abstract class SQLQuery
 			{
 				$tmps = array(); 
 				for( $i=head; $i<$numf; $i++ ) 
-					$tmps[$ts[$i]][$fs[$i]] = $r[$i];
+					if(in_array($ts[$i], $this->_propsDeathMdl)) 
+						continue;
+					else
+						$tmps[$ts[$i]][$fs[$i]] = $r[$i];
 				
 				if( $this->_flagHasMany && !empty($this->_propsHasMany) ) 
 					foreach( $this->_propsHasMany as $key => $model ) 
@@ -4783,6 +4821,7 @@ abstract class SQLQuery
 						mhj => $joinModel, 
 					); 
 					$this->_propsHasMABTM += array( $args[head]=>$model ); 
+					return $dataModel; 
 				} 
 				else if( $sixArg===$argsNum ) 
 				{
@@ -4805,6 +4844,7 @@ abstract class SQLQuery
 						mhj => $joinModel, 
 					); 
 					$this->_propsHasMABTM += array( $args[head]=>$model ); 
+					return $dataModel; 
 				}
 				else 
 					throw new Exception( "Usage <strong>Model::hasManyAndBelongsToMany()</strong> is incorrect." ); 
