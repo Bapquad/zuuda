@@ -4,13 +4,14 @@ namespace Zuuda;
 class Flash implements iFlash 
 {
 	
-	public static function GetInstance() { return self::__getInstance(); } 
-	public static function Clear() { return self::__clear(); }
-	
 	private static $this = '\Zuuda\Flash';
 	final public function rootName() { return __CLASS__; }
 	private function __construct() {}
 	private function __clone() {}
+	
+	public static function GetInstance() { return self::__getInstance(); } 
+	public static function Clear() { return self::__clear(); } 
+	public static function Has() { return call_user_func_array(array(self::$this, '__has'), func_get_args()); } 
 	
 	private static function __getInstance() 
 	{
@@ -28,7 +29,7 @@ class Flash implements iFlash
 		{
 			if( count($args) ) 
 			{
-				$flash_exist = session::has('flashs'); 
+				$flash_exist = session::has('flash'); 
 				if( $flash_exist ) 
 				{ 
 					$flashs = session::get('flash'); 
@@ -68,6 +69,16 @@ class Flash implements iFlash
 			abort(500, $e->getMessage()); 
 		}
 	} 
+	
+	private static function __has( $args ) 
+	{
+		if( session::has('flash') ) 
+		{ 
+			$flash = session::get('flash'); 
+			return in_array($args, $flash); 
+		} 
+		return false;
+	}
 	
 	private static function __clear() 
 	{

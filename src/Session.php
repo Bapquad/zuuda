@@ -17,6 +17,7 @@ class Session
 	public static function Remove( $name ) { return self::__unregister( $name ); }
 	public static function GetData() { return self::__getData(); } 
 	public static function GetAll() { return self::__getData(); }
+	public static function All() { return self::__getData(); }
 	public static function Get( $name = NULL ) { return self::__getVar( $name ); }
 	public static function Set( $name, $value ) { return self::__setVar( $name, $value ); } 
 	public static function Has( $name ) { return self::__has( $name ); } 
