@@ -78,7 +78,6 @@ abstract class SQLQuery
 	protected $_propsCondOr 	= array(); 
 	protected $_propsCondOn 	= array();
 	protected $_propsCondCmd 	= array();
-	protected $_propsOrderCmd	= array();
 	protected $_propsOrder		= array();
 	protected $_propsGroupBy	= array();
 	protected $_propPage;
@@ -248,7 +247,7 @@ abstract class SQLQuery
 	final public function WhereAvg(/***/) { return $this->__whereAvg( func_get_args(), func_num_args() ); } 
 	final public function WhereMax(/***/) { return $this->__whereMax( func_get_args(), func_num_args() ); } 
 	final public function WhereMin(/***/) { return $this->__whereMin( func_get_args(), func_num_args() ); } 
-	final public function GroupBy() { return $this->__groupBy( func_get_args(), func_num_args() ); } 
+	final public function GroupBy() { return $this->__groupBy( func_get_args(), func_num_args()); } 
 	final public function Sort() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function SortBy() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function Order() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
@@ -450,8 +449,7 @@ abstract class SQLQuery
 		$this->_propsMerge		= array(); 
 		$this->_propsMergeLeft	= array(); 
 		$this->_propsMergeRight	= array(); 
-		$this->_propsOrderCmd = array();			
-		$this->_propsOrder = array();
+		$this->_propsOrder 		= array();
 		
 		return $this;
 	} 
@@ -533,10 +531,23 @@ abstract class SQLQuery
 	{
 		$sqls = array(); 
 		foreach( $d as $f ) 
-			if( NULL===$f['label'] ) 
-				$sqls[] = " `{$m}`.`{$f['name']}`"; 
+		{
+			if( isset($f['cmd']) && !isset($f['name']) )
+			{ 
+				$sql = " ".$f['cmd'];
+			} 
+			else if( isset($f['cmd']) && isset($f['name']) ) 
+			{
+				$sql = " {$f['cmd']}(`{$m}`.`{$f['name']}`)"; 
+			} 
 			else 
-				$sqls[] = " `{$m}`.`{$f['name']}` AS `{$f['label']}`"; 
+			{
+				$sql = " `{$m}`.`{$f['name']}`"; 
+			}
+			if( NULL!==$f['label'] ) 
+				$sql .= " AS `{$f['label']}`"; 
+			$sqls[] = $sql; 
+		}
 		return $sqls; 
 	} 
 	
@@ -821,9 +832,16 @@ abstract class SQLQuery
 	final protected function __buildSqlGroup() 
 	{
 		$outSql = EMPTY_STRING;
-		if( !empty($this->_propsGroupBy) ) 
+		if( count($this->_propsGroupBy) ) 
 		{
-			debug($this->_propsGroupBy); 
+			$sqls = array(); 
+			$outSql = "GROUP BY ";
+			$m = $this->_propModel; 
+			foreach( $this->_propsGroupBy as $f ) 
+			{ 
+				$sqls[] = "`{$m}`.`{$f}`";
+			} 
+			$outSql .= implode(', ', $sqls)." "; 
 		} 
 		return $outSql;
 	} 
@@ -880,12 +898,23 @@ abstract class SQLQuery
 		else 
 			$defSql = "ORDER BY"; 
 		$outSql = EMPTY_STRING;
-		if( !empty($this->_propsOrder) ) 
-			foreach( $this->_propsOrder as $field ) 
-				$outSql .= " `{$this->_propModel}`.`{$field[0]}` {$field[1]} "; 
-		if( !empty($this->_propsOrderCmd) ) 
+		if( count($this->_propsOrder) ) 
 		{
-			leave($this->_propsOrderCmd);
+			$m = $this->_propModel;
+			foreach( $this->_propsOrder as $order ) 
+			{
+				$f = $order['field'];
+				$o = $order['orient']; 
+				if( isset($order['cmd']) ) 
+				{ 
+					$c = $order['cmd']; 
+					$outSql .= " {$c}(`{$m}`.`{$f}`) {$o} ";
+				} 
+				else 
+				{
+					$outSql .= " `{$m}`.`{$f}` {$o} "; 
+				}
+			}
 		}
 		if( EMPTY_STRING!==$outSql ) 
 			$outSql = $defSql . space . $outSql; 
@@ -1412,35 +1441,7 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() ); 
 		}
-	} 
-	
-	private function __distinct( $args, $argsNum ) 
-	{
-		try 
-		{
-			if( $argsNum ) 
-			{
-				$f = current($args); 
-				$this->_propsUndescribe = array(); 
-				$selectSql = $this->__buildSQLSelection(); 
-				$selectSql = str_replace( "SELECT ", "SELECT DISTINCT(`{$f}`), ", $selectSql ); 
-				$fromSql = $this->__buildSqlFrom(); 
-				$condSql = $this->__buildSqlCondition(); 
-				$groupSql = $this->__buildSqlGroup(); 
-				$orderSql = $this->__buildSqlOrder(); 
-				$rangeSql = $this->__buildSqlRange(); 
-				$sql = $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql; 
-				$qr = $this->__query( $sql ); 
-				return $this->__fetchResult( $qr ); 
-			}
-			else 
-				throw new Exception( "Usage <strong>Model::distinct()</strong> is incorrect." ); 
-		} 
-		catch( Exception $e ) 
-		{
-			abort( 500, $e->getMessage() ); 
-		} 
-	} 
+	}
 	
 	private function __insert( $args, $argsNum ) 
 	{ 
@@ -1448,7 +1449,6 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				dump($args[0]); 
 				$keys = array(); 
 				foreach( $args[0] as $key => $value ) 
 				{
@@ -1728,7 +1728,7 @@ abstract class SQLQuery
 		{
 			if( zero===$argsNum ) 
 			{
-				$sql = "SELECT COUNT({$this->_primaryKey}) AS `total` FROM `{$this->_propTable}` AS `{$this->_propModel}` " . $this->__buildSqlCondition(); 
+				$sql = "SELECT COUNT(`{$this->_propModel}`.`{$this->_primaryKey}`) AS `total` FROM `{$this->_propTable}` AS `{$this->_propModel}` " . $this->__buildSqlCondition(); 
 				$qr = $this->__query( $sql ); 
 				$this->__clear(); 
 				if( $qr ) 
@@ -1745,6 +1745,34 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() ); 
 		}
+	}  
+	
+	private function __distinct( $args, $argsNum ) 
+	{
+		try 
+		{
+			if( $argsNum ) 
+			{
+				$f = current($args); 
+				$this->_propsUndescribe = array(); 
+				$selectSql = $this->__buildSQLSelection(); 
+				$selectSql = str_replace( "SELECT ", "SELECT DISTINCT(`{$this->_propModel}`.`{$f}`), ", $selectSql ); 
+				$fromSql = $this->__buildSqlFrom(); 
+				$condSql = $this->__buildSqlCondition(); 
+				$groupSql = $this->__buildSqlGroup(); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				$sql = $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql; 
+				$qr = $this->__query( $sql ); 
+				return $this->__fetchResult( $qr ); 
+			}
+			else 
+				throw new Exception( "Usage <strong>Model::distinct()</strong> is incorrect." ); 
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		} 
 	} 
 	
 	private function __sum( $args, $argsNum ) 
@@ -1754,10 +1782,11 @@ abstract class SQLQuery
 			if( $argsNum ) 
 			{
 				$f = current($args); 
-				$selectSql = "SELECT SUM(`{$f}`) AS `SUM` "; 
+				$selectSql = "SELECT SUM(`{$this->_propModel}`.`{$f}`) AS `SUM` "; 
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
-				$sql = $selectSql . $fromSql . $condSql; 
+				$groupSql = $this->__buildSqlGroup(); 
+				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
 				$qr = $this->__query( $sql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['SUM']; 
@@ -1778,10 +1807,11 @@ abstract class SQLQuery
 			if( $argsNum ) 
 			{ 
 				$f = current($args); 
-				$selectSql = "SELECT AVG(`{$f}`) AS `AVG` "; 
+				$selectSql = "SELECT AVG(`{$this->_propModel}`.`{$f}`) AS `AVG` "; 
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
-				$sql = $selectSql . $fromSql . $condSql; 
+				$groupSql = $this->__buildSqlGroup(); 
+				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
 				$qr = $this->__query( $sql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['AVG']; 
@@ -1802,10 +1832,11 @@ abstract class SQLQuery
 			if( $argsNum ) 
 			{
 				$f = current($args); 
-				$selectSql = "SELECT MAX(`{$f}`) AS `MAX` "; 
+				$selectSql = "SELECT MAX(`{$this->_propModel}`.`{$f}`) AS `MAX` "; 
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
-				$sql = $selectSql . $fromSql . $condSql; 
+				$groupSql = $this->__buildSqlGroup(); 
+				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
 				$qr = $this->__query( $sql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['MAX']; 
@@ -1826,10 +1857,11 @@ abstract class SQLQuery
 			if( $argsNum ) 
 			{ 
 				$f = current($args); 
-				$selectSql = "SELECT MIN(`{$f}`) AS `MIN` "; 
+				$selectSql = "SELECT MIN(`{$this->_propModel}`.`{$f}`) AS `MIN` "; 
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
-				$sql = $selectSql . $fromSql . $condSql; 
+				$groupSql = $this->__buildSqlGroup(); 
+				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
 				$qr = $this->__query( $sql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['MIN']; 
@@ -1988,15 +2020,30 @@ abstract class SQLQuery
 
 	private function __boundField( $fieldName, $fieldLabel=NULL ) 
 	{
+		$patt = '#^([\w\d]+)\(([\w\d]+)\)#';
 		if( in_array($fieldName, $this->_propsDescribe) ) 
 		{
-			$describe = $this->_propsUndescribe; 
 			$field = [ $fieldName => array( 
 				'name'	=> $fieldName, 
 				'label'	=> $fieldLabel, 
 			)]; 
-			$this->_propsUndescribe = array_merge($describe, $field); 
+		} 
+		else if( preg_match($patt, $fieldName, $matches) )  
+		{
+			$field = [ $fieldName => array( 
+				'cmd'	=> strtoupper($matches[1]), 
+				'name'	=> $matches[2], 
+				'label'	=> $fieldLabel, 
+			)]; 
+		} 
+		else 
+		{
+			$field = [ $fieldName => array( 
+				'cmd'	=> $fieldName, 
+				'label'	=> $fieldLabel, 
+			)];
 		}
+		$this->_propsUndescribe = array_merge($this->_propsUndescribe, $field); 
 		return $this; 
 	} 
 	
@@ -4499,11 +4546,23 @@ abstract class SQLQuery
 		{
 			if( $argsNum ) 
 			{
-				if( NULL===$this->_propsGroupBy ) 
-					$this->_propsGroupBy = $args; 
-				else 
-					$this->_propsGroupBy += $args;
-				return $this;
+				if( 1===$argsNum ) 
+				{
+					$args = current($args); 
+					if( is_string($args) ) 
+					{
+						$this->_propsGroupBy[] = $args;
+						return $this;
+					} 
+				} 
+				foreach($args as $arg) 
+				{
+					if( is_string($arg) )
+						call_user_func_array( array($this, '__groupBy'), array([$arg], 1) );
+					else if( is_array($arg) )
+						call_user_func_array( array($this, '__groupBy'), array($arg, count($arg)) );
+				} 
+				return $this; 
 			}
 			else 
 				throw new Exception( "Usage <strong>Model::groupBy()</strong> is incorrect." ); 
@@ -4516,15 +4575,34 @@ abstract class SQLQuery
 	
 	private function __orderDesc( $field ) 
 	{ 
-		$this->_propsOrder[] = array($field, "DESC"); 
+		$this->_propsOrder[] = array(
+			'field' 	=> $field, 
+			'orient'	=> "DESC" 
+		); 
 		return $this; 
 	} 
 	
 	private function __orderAsc( $field ) 
 	{ 
-		$this->_propsOrder[] = array($field, "ASC"); 
+		$this->_propsOrder[] = array(
+			'field' 	=> $field, 
+			'orient'	=> "ASC" 
+		); 
 		return $this; 
 	} 
+	
+	private function __parseField( $field ) 
+	{
+		$patt = '#^([\w\d]+)\(([\w\d]+)\)#';
+		if( preg_match($patt, $field, $matches) )  
+		{
+			return array( 
+				'cmd'	=> strtoupper($matches[1]), 
+				'field'	=> $matches[2]
+			); 
+		} 
+		return array('field'=>$field); 
+	}
 	
 	private function __orderBy( $args, $argsNum ) 
 	{ 
@@ -4532,7 +4610,6 @@ abstract class SQLQuery
 		{ 
 			if( $argsNum ) 
 			{ 
-				$threeArg = 3; 
 				$twoArg = 2; 
 				$oneArg = 1; 
 				$dispatcher = $this; 
@@ -4541,10 +4618,13 @@ abstract class SQLQuery
 					$tmp = current($args); 
 					if( is_string( $tmp ) ) 
 					{
-						$args[] = 'ASC';
-						$this->_propsOrder[] = $args; 
-						return $this; 
-					}
+						$orient = 'ASC';
+						$field = $this->__parseField($args[0]); 
+						$this->_propsOrder[] = array_merge(array('orient' => $orient), $field); 
+						goto ORDER_BREAK;
+					} 
+					else 
+						goto ORDER_ARR;
 				} 
 				else if( $twoArg===$argsNum ) 
 				{
@@ -4552,27 +4632,14 @@ abstract class SQLQuery
 					$b1 = is_string($args[1]);
 					if( $b0&&$b1 ) 
 					{
-						$args[1] = strtoupper($args[1]);
-						$this->_propsOrder[] = $args; 
+						$orient = strtoupper($args[1]);
+						$field = $this->__parseField($args[0]); 
+						$this->_propsOrder[] = array_merge(array('orient' => $orient), $field); 
 						goto ORDER_BREAK;
 					} 
 					else 
 						goto ORDER_ARR;
 				}
-				else if( $threeArg===$argsNum ) 
-				{
-					$b0 = is_string($args[0]);
-					$b1 = is_string($args[1]);
-					$b2 = is_string($args[2]);
-					if( $b0&&$b1&&$b2 ) 
-					{
-						$args[2] = strtoupper($args[2]);
-						$this->_propsOrderCmd[] = $args; 
-						goto ORDER_BREAK;
-					}
-					else 
-						goto ORDER_ARR;
-				} 
 				
 				ORDER_ARR:
 				foreach($args as $arg) 

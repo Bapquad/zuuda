@@ -145,7 +145,7 @@ class Pagination implements iHTML, iPagination
 			}
 			else 
 			{
-				$key = "{$key}={{".$key."}}";
+				$key = $params[$key] = "{$key}={{".$key."}}";
 			}
 			$href = base($url).'?'.urldecode(http_build_query($params));
 		}
@@ -156,11 +156,13 @@ class Pagination implements iHTML, iPagination
 			$href
 		);
 		
-		if( !is_null( $page ) ) 
+		if( !is_null($page) ) 
 		{
-			$href = str_replace( $key, ( ( $page !== 1 ) ? $page : '' ), $href );
+			$pages = (int) ceil($this->__getTotal()/$this->__getRpp());
+			$page = ($page>1)?$page:1; 
+			$page = ($page<$pages)?$page:$pages;
+			$href = str_replace( $key, $page, $href );
 		}
-		
 		return $href;
 	}
 	
@@ -169,7 +171,7 @@ class Pagination implements iHTML, iPagination
 		global $configs;
 		$key = "{{".$this->__getKey()."}}";
 		$page = (int) $this->__getCurrent();
-		$pages = ( (int) ceil( $this->__getTotal() / $this->__getRpp() ) );
+		$pages = (int) ceil($this->__getTotal()/$this->__getRpp());
 		
 		$href = $this->__getPageUrl();
 		
