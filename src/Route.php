@@ -17,7 +17,7 @@ use Zuuda\Flash;
 class Route implements iRoute 
 {
 	private static $this = '\Zuuda\Route';
-	private static $prefix = empc;
+	private static $prefix = empc;	
 	
 	final public static function Instance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
 	final public static function GetInstance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
@@ -78,13 +78,6 @@ class Route implements iRoute
 		current($arg)(self::instance());
 	} 
 	
-	final public static function __group( $args ) 
-	{ 
-		$name = current($args); 
-		self::$prefix .= $name.PS;
-		next($args)(self::instance());
-	} 
-	
 	private static function __start() 
 	{ 
 		session::start();
@@ -125,12 +118,21 @@ class Route implements iRoute
 		route::__handctrl($dispatch, next($callback).ACTION);
 	}
 	
+	final public static function __group( $args ) 
+	{ 
+		$name = current($args); 
+		self::$prefix .= $name.PS;
+		next($args)(self::instance());
+		self::$prefix = empc;
+	} 
+	
 	private static function __apiType( $callback ) 
 	{
 		self::$prefix = 'api/';
 		self::__start(); 
 		response::instance()->cors();
 		$callback(self::instance());
+		self::$prefix = empc;
 	} 
 	
 	private static function __webType( $callback ) 
@@ -146,10 +148,30 @@ class Route implements iRoute
 		if("GET"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = current($args);
+			$rawpatt = '#:([\w\d]+)#';
+			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+			{
+				$matches = $matches[1]; 
+				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+			}
+			else 
+			{
+				$matches = array(); 
+			}
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
 			{
 				unset($_GET['url']); 
 				unset($request[0]);
+				if( count($matches) ) 
+				{
+					$tmp = $request;
+					$request = array(); 
+					foreach( $tmp as $it ) 
+					{
+						$request[] = $it;
+					}
+					$request = array_combine($matches,$request);
+				}
 				$_get = array(); 
 				$qp = stripos($_SERVER["REQUEST_URI"], question); 
 				if( false!==$qp ) 
@@ -171,10 +193,6 @@ class Route implements iRoute
 				}
 				self::__release();
 			} 
-			else 
-			{
-				abort( 404 );
-			}
 		}
 	} 
 	
@@ -184,16 +202,38 @@ class Route implements iRoute
 		if("POST"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = current($args);
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url']) )
+			$rawpatt = '#:([\w\d]+)#';
+			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+			{
+				$matches = $matches[1]; 
+				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+			}
+			else 
+			{
+				$matches = array(); 
+			}
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
 			{
 				unset($_GET['url']);
+				unset($request[0]);
+				if( count($matches) ) 
+				{
+					$tmp = $request;
+					$request = array(); 
+					foreach( $tmp as $it ) 
+					{
+						$request[] = $it;
+					}
+					$request = array_combine($matches,$request);
+				}
 				$_get = array(); 
 				$qp = stripos($_SERVER["REQUEST_URI"], question); 
 				if( false!==$qp ) 
 				{ 
 					$urlstr = substr( $_SERVER["REQUEST_URI"], $qp+1 ); 
-					$_get = $_GET = text::instance()->parsestr($urlstr);  
+					$_get = text::instance()->parsestr($urlstr);  
 				} 
+				$_get = $_GET = array_merge($_get, $request);
 				$res = RouteController::Instance();
 				$callback = next($args); 
 				if(is_callable( $callback )) 
@@ -208,10 +248,6 @@ class Route implements iRoute
 				}
 				self::__release();
 			} 
-			else 
-			{
-				abort( 404 );
-			}
 		}
 	} 
 	
@@ -221,16 +257,38 @@ class Route implements iRoute
 		if("PUT"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = current($args);
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url']) )
+			$rawpatt = '#:([\w\d]+)#';
+			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+			{
+				$matches = $matches[1]; 
+				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+			}
+			else 
+			{
+				$matches = array(); 
+			}
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
 			{
 				unset($_GET['url']);
+				unset($request[0]);
+				if( count($matches) ) 
+				{
+					$tmp = $request;
+					$request = array(); 
+					foreach( $tmp as $it ) 
+					{
+						$request[] = $it;
+					}
+					$request = array_combine($matches,$request);
+				}
 				$_get = array(); 
 				$qp = stripos($_SERVER["REQUEST_URI"], question); 
 				if( false!==$qp ) 
 				{ 
 					$urlstr = substr( $_SERVER["REQUEST_URI"], $qp+1 ); 
-					$_get = $_GET = text::instance()->parsestr($urlstr);  
+					$_get = text::instance()->parsestr($urlstr);  
 				} 
+				$_get = $_GET = array_merge($_get, $request);
 				$_post = $_POST = array_merge($_get, file_get_contents("php://input")->jsondecode()); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
@@ -245,10 +303,6 @@ class Route implements iRoute
 				}
 				self::__release();
 			} 
-			else 
-			{
-				abort( 404 );
-			}
 		}
 	} 
 	
@@ -258,10 +312,30 @@ class Route implements iRoute
 		if("DELETE"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = current($args);
+			$rawpatt = '#:([\w\d]+)#';
+			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+			{
+				$matches = $matches[1]; 
+				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+			}
+			else 
+			{
+				$matches = array(); 
+			}
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
 			{
 				unset($_GET['url']);
 				unset($request[0]);
+				if( count($matches) ) 
+				{
+					$tmp = $request;
+					$request = array(); 
+					foreach( $tmp as $it ) 
+					{
+						$request[] = $it;
+					}
+					$request = array_combine($matches,$request);
+				}
 				$_get = array(); 
 				$qp = stripos($_SERVER["REQUEST_URI"], question); 
 				if( false!==$qp ) 
@@ -283,10 +357,6 @@ class Route implements iRoute
 				}
 				self::__release();
 			} 
-			else 
-			{
-				abort( 404 );
-			}
 		}
 	} 
 	

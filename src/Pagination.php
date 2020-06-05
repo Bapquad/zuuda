@@ -159,9 +159,13 @@ class Pagination implements iHTML, iPagination
 		if( !is_null($page) ) 
 		{
 			$pages = (int) ceil($this->__getTotal()/$this->__getRpp());
+			$pagec = (int) $this->__getCurrent();
 			$page = ($page>1)?$page:1; 
 			$page = ($page<$pages)?$page:$pages;
-			$href = str_replace( $key, $page, $href );
+			if( $pagec===$page ) 
+				$href = "javascript:void(0)"; 
+			else 
+				$href = str_replace( $key, $page, $href );
 		}
 		return $href;
 	}

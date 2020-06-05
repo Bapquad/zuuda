@@ -1,5 +1,7 @@
 <?php 
+
 namespace Zuuda;
+
 use Exception;
 
 class Query
