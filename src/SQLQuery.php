@@ -116,8 +116,11 @@ abstract class SQLQuery
 	final public function Assign() { return $this->__setData( func_get_args(), func_num_args(), __FUNCTION__ ); }
 	final public function Require( $model ) { return $this->__require( $model ); } 
 	final public function SetPrefix( $value ) { return $this->__setPrefix( $value ); }
+	final public function SetModel( $value ) { return $this->__setModelName( $value ); }
 	final public function SetModelName( $value ) { return $this->__setModelName( $value ); }
+	final public function SetAlias( $value ) { return $this->__setAliasName( $value ); }
 	final public function SetAliasName( $value ) { return $this->__setAliasName( $value ); }
+	final public function SetTable( $value ) { return $this->__setTableName( $value ); }
 	final public function SetTableName( $value ) { return $this->__setTableName( $value ); }
 	final public function SetUnitsSize( $value ) { return $this->__setUnitsSize( $value ); }
 	final public function GetModelName() { return $this->GetModel(); }
