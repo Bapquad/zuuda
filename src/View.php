@@ -536,7 +536,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 			if( preg_match( '#^(https)|(http):\/\/#', $href ) ) 
 				$css_path = $href;
 			else if( preg_match('#(.css)$#', $href) ) 
-				$css_path = singleton('Html')->assetPath($src).question.$this->_tpl_id; 
+				$css_path = singleton('Html')->assetPath(PS.$href).question.$this->_tpl_id; 
 			else 
 				$css_path = singleton('Html')->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ).question.$this->_tpl_id; 
 $str = <<<EOD
@@ -550,7 +550,7 @@ EOD;
 			if( preg_match( '#^(https)|(http):\/\/#', $src ) ) 
 				$js_path = $src; 
 			else if( preg_match('#(.js)$#', $src) ) 
-				$js_path = singleton('Html')->assetPath($src).question.$this->_tpl_id; 
+				$js_path = singleton('Html')->assetPath(PS.$src).question.$this->_tpl_id; 
 			else 
 				$js_path = singleton('Html')->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' ).question.$this->_tpl_id; 
 $str = <<<EOD
