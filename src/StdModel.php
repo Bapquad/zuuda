@@ -92,6 +92,11 @@ class StdModel extends SQLQuery
 		return $this->_propAliasKey; 
 	} 
 	
+	final public function SetAliasModel($model) 
+	{
+		return $this->__setAliasModel($model); 
+	}
+	
 	protected function __initConn() 
 	{
 		global $configs;
@@ -131,6 +136,7 @@ class StdModel extends SQLQuery
 	private function __setAliasModel( $key ) 
 	{
 		$this->_propAliasModel = $key; 
+		return $this;
 	}
 	
 }

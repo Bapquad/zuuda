@@ -3,6 +3,7 @@
 namespace Zuuda;
 
 use Exception;
+use Zuuda\Text;
 
 class Pagination implements iHTML, iPagination 
 {
@@ -122,40 +123,44 @@ class Pagination implements iHTML, iPagination
 		global $configs;
 		$url = $this->__getPath();
 		$key = $this->__getKey();
+		$data = $data ?: array(); 
 		$params = ( isset( $configs[ 'REQUEST_VARIABLES' ] ) ) ? $configs[ 'REQUEST_VARIABLES' ] : array();
-		if( stripos( $url, "{{".$key."}}") ) 
+		$params = array_merge($params, $data); 
+		if( false===stripos( $url, "{{".$key."}}") ) 
 		{
-			$key = "{{".$key."}}";
-			foreach( $params as $name => $value ) 
-				$url = str_replace( "{{".$name."}}", $value, $url );
-			$params = array();
-			if( NULL!==$data )
-				foreach( $data as $name => $value ) 
-					$params[] = "$name=$value";
-			if( count($params) ) 
-				$href = base($url.'?'.implode('&', $params));
-			else
-				$href = base($url);
+			foreach($params as $name => $value) 
+			{ 
+				$params[$name] = "{$name}={$value}";
+			} 
+			if( NULL===$page ) 
+			{
+				$pagec = (int) $this->__getCurrent();
+				$params[$key] = $pagec;
+			} 
+			else 
+			{
+				$pattern = "{{".$key."}}";
+				$params[$key] = "{$key}={$pattern}";
+			}
+			$href = base($url).'?'.implode('&', $params);
 		}
 		else 
 		{
-			if( $page !== 1 ) 
+			unset($params[$key]);
+			if( count($params) ) 
 			{
-				$key = $params[$key] = "{{".$key."}}";
+				foreach($params as $name => $value) 
+				{ 
+					$params[$name] = "{$name}={$value}";
+				} 
+				$href = base($url.((false===stripos($url, '?'))?'?':'&').implode('&', $params)); 
 			}
 			else 
 			{
-				$key = $params[$key] = "{$key}={{".$key."}}";
+				$href = base($url);
 			}
-			$href = base($url).'?'.urldecode(http_build_query($params));
 		}
-		
-		$href = preg_replace(
-			array( '/=$/', '/=&/' ), 
-			array( '', '&' ), 
-			$href
-		);
-		
+		$href = preg_replace(array( '/=$/', '/=&/' ), array( '', '&' ), $href); 
 		if( !is_null($page) ) 
 		{
 			$pages = (int) ceil($this->__getTotal()/$this->__getRpp());
@@ -165,7 +170,7 @@ class Pagination implements iHTML, iPagination
 			if( $pagec===$page ) 
 				$href = "javascript:void(0)"; 
 			else 
-				$href = str_replace( $key, $page, $href );
+				$href = str_replace( "{{".$key."}}", $page, $href );
 		}
 		return $href;
 	}

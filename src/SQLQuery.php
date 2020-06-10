@@ -23,6 +23,14 @@ define( 'mcbm_hide_has_one',		'__hideHasOne' );
 define( 'mcbm_hide_has_many',		'__hideHasMany' );
 define( 'mcbm_hide_has_mabtm',		'__hideHasManyAndBelongsToMany' );
 define( 'mcbm_detach_model',		'__detach_model' ); 
+define( 'mcbm_view',				'__view' );
+define( 'mcbm_proc',				'__proc' );
+define( 'mcbm_func',				'__func' );
+define( 'mcbm_transaction',			'__transaction' );
+define( 'mcbm_commit',				'__commit' );
+define( 'mcbm_rollback',			'__rollback' );
+define( 'mcbm_checkpoint',			'__checkpoint' );
+define( 'mcbm_release',				'__release' );
 define( 'mcbm_custom',				'__custom' );
 define( 'mcbm_search',				'__search' );
 define( 'mcbm_findid',				'__find' );
@@ -62,6 +70,8 @@ abstract class SQLQuery
 	private static $this = '\Zuuda\SQLQuery';
 	protected $_dbHandle; 
 	protected $_primaryKey		= 'id'; 
+	protected $_flagIsolate		= false; 
+	protected $_flagCheckpoint= false; 
 	protected $_querySQL;
 	protected $_querySQLs 		= array(); 
 	protected $_flagHasExe 		= false;
@@ -262,6 +272,14 @@ abstract class SQLQuery
 	final public function Seek() { return $this->__setSeek( func_get_args(), func_num_args() ); }
 	final public function SetPage() { return $this->__setPage( func_get_args(), func_num_args() ); }
 	final public function Page() { return $this->__setPage( func_get_args(), func_num_args() ); } 
+	final public function View() { return call_user_func_array([$this, mcbm_view], func_get_args()); } 
+	final public function Proc() { return call_user_func_array([$this, mcbm_proc], array(func_get_args())); } 
+	final public function Func() { return call_user_func_array([$this, mcbm_func], array(func_get_args())); } 
+	final public function Transaction() { return call_user_func_array([$this, mcbm_transaction], array(func_get_args())); } 
+	final public function Commit() { return call_user_func_array([$this, mcbm_commit], array()); } 
+	final public function Rollback() { return call_user_func_array([$this, mcbm_rollback], array(func_get_args())); } 
+	final public function Checkpoint() { return call_user_func_array([$this, mcbm_checkpoint], array(func_get_args())); } 
+	final public function Release() { return call_user_func_array([$this, mcbm_release], array(func_get_args())); } 
 	final public function HasOne() { return call_user_func_array([$this, mcbm_order_has_one], array(func_get_args(), func_num_args())); } 
 	final public function Death() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
 	final public function Detach() { return call_user_func_array([$this, mcbm_detach_model], array(func_get_args(), func_num_args())); } 
@@ -335,6 +353,12 @@ abstract class SQLQuery
 	final public function FluidSqlQuery() { return $this->__buildSqlQuery(); } 
 	final public function GenRandString( $len=10 ) { return $this->__genRandString($len); }
 	
+	public function __get( $name ) 
+	{
+		if( $name === 'data' ) 
+			return $this->_propsRole; 
+	}
+	
 	abstract protected function __initConn();
 	final protected function __setPrefix( $value ) { $this->_propPrefix = $value; return $this; }
 	final protected function __setModel( $value ) { return $this->__setModelName( $value ); }
@@ -382,6 +406,122 @@ abstract class SQLQuery
 		return $describe; 
 	} 
 	
+	final protected function __transaction( $args ) 
+	{
+		if( count($args) ) 
+		{
+			$dispatcher = current($args);
+			if( is_callable($dispatcher) ) 
+			{
+				call_user_func_array(array($this, '__startTransaction'), array()); 
+				$this->_flagIsolate = true;
+				$dispatcher($this); 
+				$this->_flagIsolate = false;
+				return call_user_func_array(array($this, '__commit'), array()); 
+			} 
+			else if( is_string($dispatcher) ) 
+			{ 
+				switch($dispatcher) 
+				{ 
+					case 'rollback': 
+						$this->_flagCheckpoint = false;
+						return call_user_func_array(array($this, '__rollbackTransaction'), array()); 
+					case 'commit': 
+						$this->_flagCheckpoint = false;
+						return call_user_func_array(array($this, '__commitTransaction'), array());
+					case 'start': 
+					default:
+						$this->_flagCheckpoint = true; 
+						call_user_func_array(array($this, '__startTransaction'), array()); 
+						return call_user_func_array(array($this, '__createCheckpoint'), $args);  
+				} 
+			} 
+		} 
+		return call_user_func_array(array($this, '__startTransaction'), array()); 
+	}
+	
+	final protected function __startTransaction() 
+	{
+		$sql = "START TRANSACTION";
+		$result = $this->__query( $sql );
+		return $this; 
+	} 
+	
+	final protected function __commitTransaction() 
+	{
+		$sql = "COMMIT"; 
+		$result = $this->__query( $sql ); 
+		return $this; 
+	} 
+	
+	final protected function __rollbackTransaction() 
+	{ 
+		$sql = "ROLLBACK"; 
+		$result = $this->__query( $sql ); 
+		return $this; 
+	} 
+	
+	final protected function __rollbackCheckpoint( $pt ) 
+	{ 
+		$sql = "ROLLBACK TO SAVEPOINT ".$pt; 
+		$result = $this->__query( $sql ); 
+		return $this; 
+	} 
+	
+	final protected function __releaseCheckpoint( $pt ) 
+	{ 
+		$sql = "RELEASE SAVEPOINT ".$pt; 
+		$result = $this->__query( $sql ); 
+		return $this; 
+	} 
+	
+	final protected function __createCheckpoint( $pt ) 
+	{ 
+		$sql = "SAVEPOINT ".$pt; 
+		$result = $this->__query( $sql ); 
+		return $this; 
+	} 
+
+	final protected function __setAliasName( $value ) 
+	{
+		if( __useDB() ) 
+			$this->_propAlias = $value;
+		return $this;
+	}
+	
+	final protected function __setModelName( $value ) 
+	{
+		if( __useDB() ) 
+		{
+			$this->_propModel = $value; 
+			foreach( $this->_propsHasOne as $m ) 
+			{
+				$m->setAliasModel($value); 
+			}
+		}
+		return $this;
+	}
+	
+	final protected function __setTableName( $value ) 
+	{
+		if( __useDB() ) 
+		{
+			$this->_propTable = $this->_propPrefix.$value; 
+			if( isset($this->_units) ) 
+			{
+				$this->_propUnitOrigin = $this->_propTable;
+			}
+		}
+		return $this;
+	} 
+	
+	final protected function __setUnitsSize( $value ) 
+	{ 
+		if( __useDB() ) 
+			$this->_propUnits = $value; 
+		return $this;
+	} 
+	
 	final protected function __fetchCacheColumns() 
 	{
 		if( empty($this->_propsDescribe) )
@@ -422,112 +562,6 @@ abstract class SQLQuery
 			} 
 		} 
 		return false;
-	} 
-	
-	private function __clear( $deep=false ) 
-	{
-		// Be keep to forward the counting
-		if( $deep ) 
-		{
-			foreach( $this->_propsDescribe as $field ) 
-				$this->$field = NULL;
-			$this->_querySQL = NULL; 
-			$this->_querySQLs = array();
-			$this->_propLimit = NULL;
-			$this->_propOffset = 0;
-		}
-		$this->_propsUndescribe = $this->__fetchCacheColumns(); 
-		$this->_propsCond 		= array(); 
-		$this->_propsCondEx		= array(); 
-		$this->_propsCondOr 	= array(); 
-		$this->_propsCondOn 	= array();
-		$this->_propsCondCmd 	= array();
-		$this->_propsGroupBy	= array();
-		$this->_propPage		= NULL;
-		$this->_flagHasOne 		= false;
-		$this->_flagHasMany 	= false; 
-		$this->_flagHasMABTM 	= false; 
-		$this->_propsImport		= array();
-		$this->_propsImportAll	= array();
-		$this->_propsMerge		= array(); 
-		$this->_propsMergeLeft	= array(); 
-		$this->_propsMergeRight	= array(); 
-		$this->_propsOrder 		= array();
-		
-		return $this;
-	} 
-	
-	private function __logsql( $sql ) 
-	{
-		$this->_querySQL = $sql;
-		$this->_querySQLs[] = $sql; 
-	} 
-	
-	private function __detach_model( $args, $argsNum ) 
-	{
-		try 
-		{
-			if( $argsNum ) 
-			{
-				if(1===$argsNum) 
-				{
-					$args = current($args); 
-					if( is_string($args) ) 
-					{
-						array_push($this->_propsDeathMdl, $args); 
-						return $this;
-					} 
-				}
-				$this->_propsDeathMdl = array_merge($this->_propsDeathMdl, $args); 
-			} 
-			else 
-			{
-				throw new Exception( "Usage <strong>Model::Detach()</strong> is incorrect." ); 
-			}
-		} 
-		catch( Exception $e ) 
-		{
-			abort( 500, $e->getMessage() ); 
-		} 
-		return $this; 
-	}
-	
-	private function __custom( $args, $argsNum, $mn="Custom" ) 
-	{
-		try 
-		{
-			if( $argsNum ) 
-			{
-				$sql = current( $args );
-				$sql = str_replace( ':table', $this->_propTable, $sql ); 
-				$sql = str_replace( ':model', $this->_propModel, $sql ); 
-				$qr = $this->__query( $sql );
-				if( $this->num_rows($qr) ) 
-				{
-					$out = array(); 
-					$ts;
-					$fs; 
-					$numf = $this->fetch_field( $qr, $ts, $fs ); 
-					while( $r = $this->fetch_row($qr) ) 
-					{
-						$tmps = array(); 
-						for( $i=head; $i<$numf; $i++ ) 
-							$tmps[$ts[$i]][$fs[$i]] = $r[$i];
-						
-						array_push($out,$tmps);
-					}
-					$this->free_result($qr); 
-					return $out;
-				} 
-				return true;
-			} 
-			else 
-				throw new Exception( "Usage <strong>Model::".$mn."()</strong> is incorrect." ); 
-		} 
-		catch( Exception $e ) 
-		{
-			abort( 500, $e->getMessage() );
-		} 
 	} 
 	
 	final protected function __parseSqlSelection( $m, $d ) 
@@ -840,13 +874,23 @@ abstract class SQLQuery
 			$sqls = array(); 
 			$outSql = "GROUP BY ";
 			$m = $this->_propModel; 
-			foreach( $this->_propsGroupBy as $f ) 
+			foreach( $this->_propsGroupBy as $field ) 
 			{ 
-				$sqls[] = "`{$m}`.`{$f}`";
+				$f = $field['name']; 
+				$sql = "`{$m}`.`{$f}`"; 
+				if( isset($field['cmd']) ) 
+				{ 
+					$c = $field['cmd']; 
+					$sqls[] = "{$c}({$sql})"; 
+				} 
+				else 
+				{
+					$sqls[] = $sql; 
+				} 
 			} 
 			$outSql .= implode(', ', $sqls)." "; 
 		} 
-		return $outSql;
+		return $outSql; 
 	} 
 	
 	final public function FluidSqlGroup() 
@@ -904,13 +948,13 @@ abstract class SQLQuery
 		if( count($this->_propsOrder) ) 
 		{
 			$m = $this->_propModel;
-			foreach( $this->_propsOrder as $order ) 
+			foreach( $this->_propsOrder as $field ) 
 			{
-				$f = $order['field'];
-				$o = $order['orient']; 
-				if( isset($order['cmd']) ) 
+				$f = $field['name'];
+				$o = $field['orient']; 
+				if( isset($field['cmd']) ) 
 				{ 
-					$c = $order['cmd']; 
+					$c = $field['cmd']; 
 					$outSql .= " {$c}(`{$m}`.`{$f}`) {$o} ";
 				} 
 				else 
@@ -1070,9 +1114,273 @@ abstract class SQLQuery
 		. $rangeSql 
 		. $importSql 
 		. $importOnceSql; 
+	} 
+	
+	final private function __func( $args ) 
+	{ 
+		$out = array(); 
+		$params = array_splice( $args, 1 ); 
+		$name = $args[0]; 
+		if( empty($params) ) 
+		{
+			$sql = "SELECT {$func}() AS `data`"; 
+		} 
+		else 
+		{
+			foreach( $params as $key => $param ) 
+			{ 
+				if( is_string($param) ) 
+				{
+					$params[$key] = "'".$this->escape_string($param)."'"; 
+				} 
+				else if( is_numeric($param) ) 
+				{ 
+					$params[$key] = $param; 
+				} 
+			} 
+			$params = implode(',', $params); 
+			$sql = "SELECT {$name}({$params}) as `data`"; 
+		} 
+		$result = $this->__query( $sql ); 
+		if( $this->num_rows($result) ) 
+		{ 
+			$mem = $this->_propModel;
+			$this->__setModel( $name );
+			$data = $this->__fetchCQR($result);
+			$out = array_merge( $out, $data[0] ); 
+			$this->free_result( $result ); 
+			$this->__setModel( $mem );
+		} 
+		return $out;
+	} 
+	
+	final private function __proc( $args ) 
+	{ 
+		$out = array();
+		$params = array_splice( $args, 1 ); 
+		$name = $args[0]; 
+		if( empty($params) ) 
+		{
+			$sql = "CALL {$name}()"; 
+			return $this->__query($sql); 
+		} 
+		else 
+		{
+			$iparams = array(); 
+			$oparams = array(); 
+			foreach( $params as $key => $param ) 
+			{ 
+				if( is_string($param) ) 
+				{
+					$p = '#^&(.*)#'; 
+					if(preg_match($p, $param, $m)) 
+					{
+						$iparams[] = "@".$m[1]; 
+						$oparams[] = $m[1]; 
+						continue; 
+					}
+					$iparams[] = "'".$this->escape_string($param)."'"; 
+				} 
+				else if( is_numeric($param) ) 
+				{ 
+					$iparams[] = $param; 
+				} 
+			} 
+			$iparams = implode(',', $iparams); 
+			$sql = "CALL {$name}({$iparams})"; 
+			if( $result = $this->__query($sql) ) 
+			{
+				foreach( $oparams as $key => $param ) 
+				{
+					$param = $this->escape_string($param); 
+					$oparams[$key] = "@{$param} AS `{$param}`"; 
+				} 
+				$sql = "SELECT ".implode( ", ", $oparams ); 
+			} 
+			else 
+			{
+				return $result; 
+			}
+		} 
+		$result = $this->__query( $sql ); 
+		if( $this->num_rows($result) ) 
+		{ 
+			$mem = $this->_propModel;
+			$this->__setModel( $name );
+			$data = $this->__fetchCQR($result);
+			$out = array_merge( $out, $data[0] ); 
+			$this->free_result( $result ); 
+			$this->__setModel( $mem );
+		} 
+		return $out; 
+	} 
+	
+	final private function __view( $view ) 
+	{
+		$out = array(); 
+		$sql = "SELECT * FROM ".$view; 
+		$result = $this->__query( $sql ); 
+		if( $this->num_rows($result) ) 
+		{
+			$out = array_merge( $out, $this->__fetchCQR($result) ); 
+			$this->free_result( $result ); 
+			return $out;
+		} 
+		return $out;
 	}
 	
-	private function __fetchResult( $qr ) 
+	final private function __commit() 
+	{ 
+		if( $this->_flagIsolate ) 
+		{
+			call_user_func_array(array($this, '__commitTransaction'), array()); 
+			return call_user_func_array(array($this, '__startTransaction'), array()); 
+		} 
+		if( $this->_flagCheckpoint ) 
+		{
+			return $this;
+		}
+		return call_user_func_array(array($this, '__commitTransaction'), array()); 
+	} 
+	
+	final private function __rollback( $args ) 
+	{ 
+		if( 1===count($args) && is_string(current($args)) ) 
+		{ 
+			return call_user_func_array(array($this, '__rollbackCheckpoint'), $args); 
+		}
+		if( $this->_flagIsolate ) 
+		{ 
+			call_user_func_array(array($this, '__rollbackTransaction'), array()); 
+			return call_user_func_array(array($this, '__startTransaction'), array()); 
+		} 
+		if( $this->_flagCheckpoint ) 
+		{
+			return $this;
+		}
+		return call_user_func_array(array($this, '__rollbackTransaction'), array()); 
+	} 
+	
+	final private function __release( $args ) 
+	{ 
+		return call_user_func_array(array($this, '__releaseCheckpoint'), $args); 
+	} 
+	
+	final private function __checkpoint( $args ) 
+	{ 
+		return call_user_func_array(array($this, '__createCheckpoint'), $args); 
+	} 
+	
+	final private function __clear( $deep=false ) 
+	{
+		// Be keep to forward the counting
+		if( $deep ) 
+		{
+			foreach( $this->_propsDescribe as $field ) 
+				$this->$field = NULL;
+			$this->_querySQL = NULL; 
+			$this->_querySQLs = array();
+			$this->_propLimit = NULL;
+			$this->_propOffset = 0;
+		}
+		$this->_propsUndescribe = $this->__fetchCacheColumns(); 
+		$this->_propsCond 		= array(); 
+		$this->_propsCondEx		= array(); 
+		$this->_propsCondOr 	= array(); 
+		$this->_propsCondOn 	= array();
+		$this->_propsCondCmd 	= array();
+		$this->_propsGroupBy	= array();
+		$this->_propPage		= NULL;
+		$this->_flagHasOne 		= false;
+		$this->_flagHasMany 	= false; 
+		$this->_flagHasMABTM 	= false; 
+		$this->_propsImport		= array();
+		$this->_propsImportAll	= array();
+		$this->_propsMerge		= array(); 
+		$this->_propsMergeLeft	= array(); 
+		$this->_propsMergeRight	= array(); 
+		$this->_propsOrder 		= array();
+		
+		return $this;
+	} 
+	
+	final private function __logsql( $sql ) 
+	{
+		$this->_querySQL = $sql;
+		$this->_querySQLs[] = $sql; 
+	} 
+	
+	final private function __detach_model( $args, $argsNum ) 
+	{
+		try 
+		{
+			if( $argsNum ) 
+			{
+				if(1===$argsNum) 
+				{
+					$args = current($args); 
+					if( is_string($args) ) 
+					{
+						array_push($this->_propsDeathMdl, $args); 
+						return $this;
+					} 
+				}
+				$this->_propsDeathMdl = array_merge($this->_propsDeathMdl, $args); 
+			} 
+			else 
+			{
+				throw new Exception( "Usage <strong>Model::Detach()</strong> is incorrect." ); 
+			}
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() ); 
+		} 
+		return $this; 
+	}
+	
+	final private function __fetchCQR( $qr ) 
+	{
+		$out = array(); $ts; $fs; 
+		$numf = $this->fetch_field( $qr, $ts, $fs ); 
+		while( $r = $this->fetch_row($qr) ) 
+		{
+			$tmps = array(); 
+			for( $i=head; $i<$numf; $i++ ) 
+				$tmps[$ts[$i]][$fs[$i]] = $r[$i];
+			array_push($out,$tmps);
+		} 
+		return $out; 
+	}
+	
+	final private function __custom( $args, $argsNum, $mn="Custom" ) 
+	{
+		try 
+		{
+			if( $argsNum ) 
+			{
+				$sql = current( $args );
+				$sql = str_replace( ':table', $this->_propTable, $sql ); 
+				$sql = str_replace( ':model', $this->_propModel, $sql ); 
+				$qr = $this->__query( $sql );
+				if( $this->num_rows($qr) ) 
+				{
+					$out = $this->__fetchCQR( $qr ); 
+					$this->free_result($qr); 
+					return $out;
+				} 
+				return true;
+			} 
+			else 
+				throw new Exception( "Usage <strong>Model::".$mn."()</strong> is incorrect." ); 
+		} 
+		catch( Exception $e ) 
+		{
+			abort( 500, $e->getMessage() );
+		} 
+	} 
+	
+	final private function __fetchResult( $qr ) 
 	{
 		global $configs;
 		$out = array(); 
@@ -1119,12 +1427,12 @@ abstract class SQLQuery
 		return $out; 
 	}
 	
-	private function __search( $args, $argsNum ) 
+	final private function __search( $args, $argsNum ) 
 	{		
 		return $this->__fetchResult( $this->__query($this->__buildSqlQuery()) ); 
 	} 
 	
-	private function __find( $args, $argsNum ) 
+	final private function __find( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1153,7 +1461,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __first( $args, $argsNum ) 
+	final private function __first( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -1182,7 +1490,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __last( $args, $argsNum ) 
+	final private function __last( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -1209,15 +1517,9 @@ abstract class SQLQuery
 		{
 			abort( 500, $e->getMessage() );
 		} 
-	} 
-	
-	private function __clone() 
-	{
-		$out = deep_copy($this); 
-		return $out->__reset(); 
 	}
 	
-	private function __entity( $args, $argsNum ) 
+	final private function __entity( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -1241,13 +1543,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	public function __get( $name ) 
-	{
-		if( $name === 'data' ) 
-			return $this->_propsRole; 
-	}
-	
-	private function __role( $args, $argsNum ) 
+	final private function __role( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -1282,7 +1578,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __unit( $args, $argsNum ) 
+	final private function __unit( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -1316,7 +1612,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 	
-	private function __item( $args, $argsNum ) 
+	final private function __item( $args, $argsNum ) 
 	{
 		if( zero===$argsNum ) 
 			$mod = ':first'; 
@@ -1348,7 +1644,7 @@ abstract class SQLQuery
 			return array(); 
 	}
 	
-	private function __paginate( $args, $argsNum ) 
+	final private function __paginate( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1412,7 +1708,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __total( $args, $argsNum ) 
+	final private function __total( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1446,20 +1742,54 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __insert( $args, $argsNum ) 
+	final private function __insert( $args, $argsNum ) 
 	{ 
 		try 
 		{
-			if( $argsNum ) 
+			if( 2<=$argsNum ) 
 			{
-				$keys = array(); 
-				foreach( $args[0] as $key => $value ) 
+				$fields = array(); 
+				$data = null;
+				$multiple_row = false; 
+				foreach( $args as $key => $value ) 
 				{
-					$keys[] = $key;
+					if( is_string($value) ) 
+						$fields[] = $value; 
+					else if( is_array($value) ) 
+						$data = $value; 
 				} 
-				dd($keys); 
-				dd($args);
-				
+				foreach( $data as $key => $value ) 
+				{
+					if( is_string($value) ) 
+					{
+						$data[$key] = $this->escape_string($value); 
+					}
+					else if( is_array($value) ) 
+					{
+						$multiple_row = true; 
+						foreach( $value as $i => $val ) 
+						{ 
+							$value[$i] = $this->escape_string($val);
+						}
+						$data[$key] = "('".implode("','", $value)."')"; 
+					}
+				}
+				if( $multiple_row ) 
+				{
+					$f = implode("`,`", $fields);
+					$v = implode(", ", $data); 
+					$sql = ("INSERT INTO `{$this->_propTable}` (`{$f}`) VALUES {$v}"); 
+					$result = $this->__query($sql); 
+					return $this; 
+				} 
+				else 
+				{
+					$f = implode("`,`", $fields);
+					$v = implode("','", $data); 
+					$sql = ("INSERT INTO `{$this->_propTable}` (`{$f}`) VALUES ('{$v}')"); 
+					$result = $this->__query($sql); 
+					return $this; 
+				}
 			} 
 			else 
 			{ 
@@ -1472,7 +1802,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __delete( $args, $argsNum ) 
+	final private function __delete( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1532,7 +1862,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __parseFields( $data ) 
+	final private function __parseFields( $data ) 
 	{
 		$outSql = array(); 
 		foreach ( $this->_propsDescribe as $field ) 
@@ -1575,7 +1905,7 @@ abstract class SQLQuery
 		return implode( comma, $outSql ); 
 	}
 
-	private function __save( $args, $argsNum ) 
+	final private function __save( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1660,7 +1990,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __create( $data ) 
+	final private function __create( $data ) 
 	{ 
 		$fields = array();
 		$values = array(); 
@@ -1702,7 +2032,7 @@ abstract class SQLQuery
 		return $data; 
 	} 
 	
-	private function __totalPages( $args, $argsNum ) 
+	final private function __totalPages( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1725,7 +2055,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __count( $args, $argsNum ) 
+	final private function __count( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1750,7 +2080,7 @@ abstract class SQLQuery
 		}
 	}  
 	
-	private function __distinct( $args, $argsNum ) 
+	final private function __distinct( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1778,7 +2108,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __sum( $args, $argsNum ) 
+	final private function __sum( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1803,7 +2133,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __avg( $args, $argsNum ) 
+	final private function __avg( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1828,7 +2158,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __max( $args, $argsNum ) 
+	final private function __max( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -1853,7 +2183,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __min( $args, $argsNum ) 
+	final private function __min( $args, $argsNum ) 
 	{ 
 		try 
 		{ 
@@ -1878,7 +2208,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __implode( $args, $argsNum ) 
+	final private function __implode( $args, $argsNum ) 
 	{ 
 		try 
 		{ 
@@ -1895,7 +2225,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __length( $args, $argsNum ) 
+	final private function __length( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1912,7 +2242,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __dbList( $args, $argsNum ) 
+	final private function __dbList( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1934,7 +2264,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __row( $args, $argsNum ) 
+	final private function __row( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -1955,7 +2285,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __setData( $args, $argsNum, $method="_setData" ) 
+	final private function __setData( $args, $argsNum, $method="_setData" ) 
 	{
 		try 
 		{ 
@@ -1987,41 +2317,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	protected function __setAliasName( $value ) 
-	{
-		if( __useDB() ) 
-			$this->_propAlias = $value;
-		return $this;
-	}
-	
-	protected function __setModelName( $value ) 
-	{
-		if( __useDB() ) 
-			$this->_propModel = $value; 
-		return $this;
-	}
-	
-	protected function __setTableName( $value ) 
-	{
-		if( __useDB() ) 
-		{
-			$this->_propTable = $this->_propPrefix.$value; 
-			if( isset($this->_units) ) 
-			{
-				$this->_propUnitOrigin = $this->_propTable;
-			}
-		}
-		return $this;
-	} 
-	
-	protected function __setUnitsSize( $value ) 
-	{ 
-		if( __useDB() ) 
-			$this->_propUnits = $value; 
-		return $this;
-	} 
-
-	private function __boundField( $fieldName, $fieldLabel=NULL ) 
+	final private function __boundField( $fieldName, $fieldLabel=NULL ) 
 	{
 		$patt = '#^([\w\d]+)\(([\w\d]+)\)#';
 		if( in_array($fieldName, $this->_propsDescribe) ) 
@@ -2050,19 +2346,19 @@ abstract class SQLQuery
 		return $this; 
 	} 
 	
-	private function __unboundField( $fieldName ) 
+	final private function __unboundField( $fieldName ) 
 	{
 		if( isset($this->_propsUndescribe[$fieldName]) ) 
 			unset($this->_propsUndescribe[$fieldName]);
 	} 
 	
-	private function __unsecureField( $fieldName ) 
+	final private function __unsecureField( $fieldName ) 
 	{
 		if( !array_key_exists($fieldName, $this->_propsUndescribe) ) 
 			return $this->__boundField( $fieldName ); 
 	} 
 	
-	private function __affected( $args, $argsNum ) 
+	final private function __affected( $args, $argsNum ) 
 	{ 
 		try 
 		{ 
@@ -2079,7 +2375,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __prefix( $args, $argsNum ) 
+	final private function __prefix( $args, $argsNum ) 
 	{ 
 		try 
 		{ 
@@ -2098,7 +2394,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 	
-	private function __bound( $args, $argsNum ) 
+	final private function __bound( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2151,7 +2447,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __unbound( $args, $argsNum ) 
+	final private function __unbound( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2183,7 +2479,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __unsecure( $args, $argsNum ) 
+	final private function __unsecure( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2215,7 +2511,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __between( $args, $argsNum ) 
+	final private function __between( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2231,7 +2527,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __equal( $args, $argsNum ) 
+	final private function __equal( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2247,7 +2543,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __greaterThan( $args, $argsNum ) 
+	final private function __greaterThan( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2263,7 +2559,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 
-	private function __greaterThanOrEqual( $args, $argsNum ) 
+	final private function __greaterThanOrEqual( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2279,7 +2575,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 
-	private function __in( $args, $argsNum ) 
+	final private function __in( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2295,7 +2591,7 @@ abstract class SQLQuery
 		return $this;
 	}
 
-	private function __is( $args, $argsNum ) 
+	final private function __is( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2311,7 +2607,7 @@ abstract class SQLQuery
 		return $this;  
 	} 
 
-	private function __isNot( $args, $argsNum ) 
+	final private function __isNot( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2327,7 +2623,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 
-	private function __isNotNull( $args, $argsNum ) 
+	final private function __isNotNull( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -2343,7 +2639,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __isNull( $args, $argsNum ) 
+	final private function __isNull( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -2359,7 +2655,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __lessThan( $args, $argsNum ) 
+	final private function __lessThan( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2375,7 +2671,7 @@ abstract class SQLQuery
 		return $this; 
 	} 
 
-	private function __lessThanOrEqual( $args, $argsNum ) 
+	final private function __lessThanOrEqual( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2391,7 +2687,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __like( $args, $argsNum ) 
+	final private function __like( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2407,7 +2703,7 @@ abstract class SQLQuery
 		return $this;
 	}
 
-	private function __not( $args, $argsNum ) 
+	final private function __not( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2423,7 +2719,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __notBetween( $args, $argsNum ) 
+	final private function __notBetween( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2439,7 +2735,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __notEqual( $args, $argsNum ) 
+	final private function __notEqual( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2455,7 +2751,7 @@ abstract class SQLQuery
 		return $this;
 	}
 
-	private function __notIn( $args, $argsNum ) 
+	final private function __notIn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2471,7 +2767,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __notLike( $args, $argsNum, $type=NULL ) 
+	final private function __notLike( $args, $argsNum, $type=NULL ) 
 	{
 		try 
 		{
@@ -2489,7 +2785,7 @@ abstract class SQLQuery
 		return $this;
 	}
 
-	private function __notNull( $args, $argsNum ) 
+	final private function __notNull( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -2505,7 +2801,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __between_operator( $args, $argsNum, $sign ) 
+	final private function __between_operator( $args, $argsNum, $sign ) 
 	{
 		$threeArg = 3;
 		$twoArg = 2;
@@ -2537,7 +2833,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __in_operator( $args, $argsNum, $sign, $method ) 
+	final private function __in_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -2566,7 +2862,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __null_operator( $args, $argsNum, $sign, $method ) 
+	final private function __null_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -2590,7 +2886,7 @@ abstract class SQLQuery
 			call_user_func_array( array($dispatcher, $method), array(array ($args), $oneArg) );
 	}
 	
-	private function __where_operator( $args, $argsNum, $sign, $method ) 
+	final private function __where_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -2645,7 +2941,7 @@ abstract class SQLQuery
 		}
 	}
 
-	private function __where( $args, $argsNum, $embed=false ) 
+	final private function __where( $args, $argsNum, $embed=false ) 
 	{
 		try 
 		{
@@ -2712,9 +3008,9 @@ abstract class SQLQuery
 						else 
 						{
 							if( !in_array($args[0], $this->_propsDescribe) && config::get('DEVELOPMENT_ENVIRONMENT') ) 
-								throw new Exception( 'Cột <strong>'.$args[0].'</strong> không có trong bảng <strong>'.$this->_propTable.'</strong>.' ); 
-							if( !array_key_exists($args[1], $allowOps) && config::get('DEVELOPMENT_ENVIRONMENT') )
-								throw new Exception( 'Không chấp nhận toán tử <strong>'.$args[1].'</strong>.' );
+								throw new Exception( 'Field <strong>'.$args[0].'</strong> doesn\'t exist in <strong>'.$this->_propTable.'</strong>.' ); 
+							if( !array_key_exists($args[1], $allowOps) && config::get('DEVELOPMENT_ENVIRONMENT') ) 
+								throw new Exception( 'The oparator is\'nt accepted <strong>'.$args[1].'</strong>.' ); 
 						}
 					} 
 					else if( $fourArg===$argsNum ) 
@@ -2742,7 +3038,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __betweenOr( $args, $argsNum ) 
+	final private function __betweenOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2757,7 +3053,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __equalOr( $args, $argsNum ) 
+	final private function __equalOr( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -2773,7 +3069,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __greaterThanOr( $args, $argsNum ) 
+	final private function __greaterThanOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2789,7 +3085,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __greaterThanOrEqualOr( $args, $argsNum ) 
+	final private function __greaterThanOrEqualOr( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -2805,7 +3101,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __inOr( $args, $argsNum ) 
+	final private function __inOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2821,7 +3117,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __isOr( $args, $argsNum ) 
+	final private function __isOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2836,7 +3132,7 @@ abstract class SQLQuery
 		} 
 		return $this;
 	} 
-	private function __isNotOr( $args, $argsNum ) 
+	final private function __isNotOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2852,7 +3148,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __isNotNullOr( $args, $argsNum ) 
+	final private function __isNotNullOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2868,7 +3164,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __isNullOr( $args, $argsNum ) 
+	final private function __isNullOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2884,7 +3180,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __lessOr( $args, $argsNum ) 
+	final private function __lessOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2900,7 +3196,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __lessThanOr( $args, $argsNum ) 
+	final private function __lessThanOr( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -2916,7 +3212,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __lessThanOrEqualOr( $args, $argsNum ) 
+	final private function __lessThanOrEqualOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2932,7 +3228,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __likeOr( $args, $argsNum ) 
+	final private function __likeOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2948,7 +3244,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __notOr( $args, $argsNum ) 
+	final private function __notOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2964,7 +3260,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __notBetweenOr( $args, $argsNum ) 
+	final private function __notBetweenOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2979,7 +3275,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __notEqualOr( $args, $argsNum ) 
+	final private function __notEqualOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -2995,7 +3291,7 @@ abstract class SQLQuery
 		return $this;
 	}
 	
-	private function __notInOr( $args, $argsNum ) 
+	final private function __notInOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3011,7 +3307,7 @@ abstract class SQLQuery
 		return $this;
 	}
 	
-	private function __notLikeOr( $args, $argsNum ) 
+	final private function __notLikeOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3027,7 +3323,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __notNullOr( $args, $argsNum ) 
+	final private function __notNullOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3043,7 +3339,7 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
-	private function __between_or_operator( $args, $argsNum, $sign ) 
+	final private function __between_or_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -3062,7 +3358,7 @@ abstract class SQLQuery
 		call_user_func_array( array($dispatcher, '_whereOr'), array($args, count($args)) );
 	}
 	
-	private function __null_or_operator( $args, $argsNum, $sign ) 
+	final private function __null_or_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -3083,7 +3379,7 @@ abstract class SQLQuery
 		call_user_func_array( array($dispatcher, '_whereOr'), array($tmps, count($tmps)) ); 
 	}
 	
-	private function __where_or_operator( $args, $argsNum, $sign ) 
+	final private function __where_or_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -3100,7 +3396,7 @@ abstract class SQLQuery
 		call_user_func_array( array($dispatcher, '_whereOr'), array($tmps, count($tmps)) ); 
 	}
 	
-	private function __whereOr( $args, $argsNum ) 
+	final private function __whereOr( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3170,7 +3466,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __betweenOn( $args, $argsNum ) 
+	final private function __betweenOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3185,7 +3481,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __equalOn( $args, $argsNum ) 
+	final private function __equalOn( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3200,7 +3496,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __greaterThanOn( $args, $argsNum ) 
+	final private function __greaterThanOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3215,7 +3511,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __greaterThanOrEqualOn( $args, $argsNum ) 
+	final private function __greaterThanOrEqualOn( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3230,7 +3526,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __inOn( $args, $argsNum ) 
+	final private function __inOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3245,7 +3541,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __isOn( $args, $argsNum ) 
+	final private function __isOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3260,7 +3556,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __isNotOn( $args, $argsNum ) 
+	final private function __isNotOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3275,7 +3571,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __isNotNullOn( $args, $argsNum ) 
+	final private function __isNotNullOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3290,7 +3586,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __isNullOn( $args, $argsNum ) 
+	final private function __isNullOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3305,7 +3601,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __lessOn( $args, $argsNum ) 
+	final private function __lessOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3320,7 +3616,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __lessThanOn( $args, $argsNum ) 
+	final private function __lessThanOn( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3335,7 +3631,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __lessThanOrEqualOn( $args, $argsNum ) 
+	final private function __lessThanOrEqualOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3350,7 +3646,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __likeOn( $args, $argsNum ) 
+	final private function __likeOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3365,7 +3661,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __notOn( $args, $argsNum ) 
+	final private function __notOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3380,7 +3676,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __notBetweenOn( $args, $argsNum ) 
+	final private function __notBetweenOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3395,7 +3691,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __notEqualOn( $args, $argsNum ) 
+	final private function __notEqualOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3410,7 +3706,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __notInOn( $args, $argsNum ) 
+	final private function __notInOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3425,7 +3721,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __notLikeOn( $args, $argsNum ) 
+	final private function __notLikeOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3440,7 +3736,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __notNullOn( $args, $argsNum ) 
+	final private function __notNullOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3455,7 +3751,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __between_on_operator( $args, $argsNum, $sign ) 
+	final private function __between_on_operator( $args, $argsNum, $sign ) 
 	{
 		$twoArg = 2;
 		$oneArg = 1; 
@@ -3481,7 +3777,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __in_on_operator( $args, $argsNum, $sign, $method ) 
+	final private function __in_on_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -3512,7 +3808,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __null_on_operator( $args, $argsNum, $sign, $method ) 
+	final private function __null_on_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -3537,7 +3833,7 @@ abstract class SQLQuery
 		return $this; 
 	}
 	
-	private function __where_on_operator( $args, $argsNum, $sign, $method ) 
+	final private function __where_on_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -3593,7 +3889,7 @@ abstract class SQLQuery
 		return $this;
 	}
 	
-	private function __whereOn( $args, $argsNum ) 
+	final private function __whereOn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3643,7 +3939,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orBetween( $args, $argsNum ) 
+	final private function __orBetween( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3658,7 +3954,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orEqual( $args, $argsNum ) 
+	final private function __orEqual( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3673,7 +3969,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orGreater( $args, $argsNum ) 
+	final private function __orGreater( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3688,7 +3984,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orGreaterThan( $args, $argsNum ) 
+	final private function __orGreaterThan( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3703,7 +3999,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orGreaterThanOrEqual( $args, $argsNum ) 
+	final private function __orGreaterThanOrEqual( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3718,7 +4014,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIn( $args, $argsNum ) 
+	final private function __orIn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3733,7 +4029,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIs( $args, $argsNum ) 
+	final private function __orIs( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3748,7 +4044,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNot( $args, $argsNum ) 
+	final private function __orIsNot( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3763,7 +4059,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNotNull( $args, $argsNum ) 
+	final private function __orIsNotNull( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3778,7 +4074,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNull( $args, $argsNum ) 
+	final private function __orIsNull( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3793,7 +4089,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLess( $args, $argsNum ) 
+	final private function __orLess( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3808,7 +4104,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLessThan( $args, $argsNum ) 
+	final private function __orLessThan( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -3823,7 +4119,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLessThanOrEqual( $args, $argsNum ) 
+	final private function __orLessThanOrEqual( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3838,7 +4134,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLike( $args, $argsNum ) 
+	final private function __orLike( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3853,7 +4149,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNot( $args, $argsNum ) 
+	final private function __orNot( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3868,7 +4164,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNotBetween( $args, $argsNum ) 
+	final private function __orNotBetween( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3883,7 +4179,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orNotEqual( $args, $argsNum ) 
+	final private function __orNotEqual( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3898,7 +4194,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __orNotIn( $args, $argsNum ) 
+	final private function __orNotIn( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3913,7 +4209,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __orNotLike( $args, $argsNum ) 
+	final private function __orNotLike( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3928,7 +4224,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNotNull( $args, $argsNum ) 
+	final private function __orNotNull( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -3943,7 +4239,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __or_between_operator( $args, $argsNum, $sign ) 
+	final private function __or_between_operator( $args, $argsNum, $sign ) 
 	{
 		$twoArg = 2;
 		$oneArg = 1; 
@@ -3969,7 +4265,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __or_in_operator( $args, $argsNum, $sign, $method ) 
+	final private function __or_in_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -4000,7 +4296,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __or_null_operator( $args, $argsNum, $sign, $method ) 
+	final private function __or_null_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -4025,7 +4321,7 @@ abstract class SQLQuery
 		return $this; 
 	}
 	
-	private function __or_where_operator( $args, $argsNum, $sign, $method ) 
+	final private function __or_where_operator( $args, $argsNum, $sign, $method ) 
 	{
 		$twoArg = 2; 
 		$oneArg = 1; 
@@ -4081,7 +4377,7 @@ abstract class SQLQuery
 		return $this; 
 	}
 	
-	private function __orWhere( $args, $argsNum ) 
+	final private function __orWhere( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4131,7 +4427,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orBetweenAnd( $args, $argsNum ) 
+	final private function __orBetweenAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4146,7 +4442,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orEqualAnd( $args, $argsNum ) 
+	final private function __orEqualAnd( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -4161,7 +4457,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orGreaterAnd( $args, $argsNum ) 
+	final private function __orGreaterAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4176,7 +4472,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orGreaterThanOrEqualAnd( $args, $argsNum ) 
+	final private function __orGreaterThanOrEqualAnd( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -4191,7 +4487,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orInAnd( $args, $argsNum ) 
+	final private function __orInAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4206,7 +4502,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsAnd( $args, $argsNum ) 
+	final private function __orIsAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4221,7 +4517,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNotAnd( $args, $argsNum ) 
+	final private function __orIsNotAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4236,7 +4532,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNotNullAnd( $args, $argsNum ) 
+	final private function __orIsNotNullAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4251,7 +4547,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orIsNullAnd( $args, $argsNum ) 
+	final private function __orIsNullAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4266,7 +4562,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLessAnd( $args, $argsNum ) 
+	final private function __orLessAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4281,7 +4577,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLessThanAnd( $args, $argsNum ) 
+	final private function __orLessThanAnd( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -4296,7 +4592,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLessThanOrEqualAnd( $args, $argsNum ) 
+	final private function __orLessThanOrEqualAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4311,7 +4607,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orLikeAnd( $args, $argsNum ) 
+	final private function __orLikeAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4326,7 +4622,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNotAnd( $args, $argsNum ) 
+	final private function __orNotAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4341,7 +4637,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNotBetweenAnd( $args, $argsNum ) 
+	final private function __orNotBetweenAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4356,7 +4652,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orNotNullAnd( $args, $argsNum ) 
+	final private function __orNotNullAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4371,7 +4667,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orNotEqualAnd( $args, $argsNum ) 
+	final private function __orNotEqualAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4386,7 +4682,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __orNotInAnd( $args, $argsNum ) 
+	final private function __orNotInAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4401,7 +4697,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __orNotLikeAnd( $args, $argsNum ) 
+	final private function __orNotLikeAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4416,7 +4712,7 @@ abstract class SQLQuery
 		} 
 	}
 	
-	private function __or_between_and_operator( $args, $argsNum, $sign ) 
+	final private function __or_between_and_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -4435,7 +4731,7 @@ abstract class SQLQuery
 		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($args, count($args)) );
 	}
 	
-	private function __or_null_and_operator( $args, $argsNum, $sign ) 
+	final private function __or_null_and_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -4456,7 +4752,7 @@ abstract class SQLQuery
 		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
-	private function __or_where_and_operator( $args, $argsNum, $sign ) 
+	final private function __or_where_and_operator( $args, $argsNum, $sign ) 
 	{
 		$oneArg = 1; 
 		$dispatcher = $this; 
@@ -4473,7 +4769,7 @@ abstract class SQLQuery
 		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
-	private function __orWhereAnd( $args, $argsNum ) 
+	final private function __orWhereAnd( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4543,7 +4839,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __groupBy( $args, $argsNum ) 
+	final private function __groupBy( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4552,13 +4848,15 @@ abstract class SQLQuery
 				if( 1===$argsNum ) 
 				{
 					$args = current($args); 
+					
 					if( is_string($args) ) 
 					{
-						$this->_propsGroupBy[] = $args;
+						
+						$this->_propsGroupBy[] = $this->__parseField($args); 
 						return $this;
 					} 
 				} 
-				foreach($args as $arg) 
+				foreach( $args as $arg ) 
 				{
 					if( is_string($arg) )
 						call_user_func_array( array($this, '__groupBy'), array([$arg], 1) );
@@ -4576,38 +4874,38 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orderDesc( $field ) 
+	final private function __orderDesc( $field ) 
 	{ 
 		$this->_propsOrder[] = array(
-			'field' 	=> $field, 
+			'name' 	=> $field, 
 			'orient'	=> "DESC" 
 		); 
 		return $this; 
 	} 
 	
-	private function __orderAsc( $field ) 
+	final private function __orderAsc( $field ) 
 	{ 
 		$this->_propsOrder[] = array(
-			'field' 	=> $field, 
+			'name' 	=> $field, 
 			'orient'	=> "ASC" 
 		); 
 		return $this; 
 	} 
 	
-	private function __parseField( $field ) 
+	final private function __parseField( $field ) 
 	{
 		$patt = '#^([\w\d]+)\(([\w\d]+)\)#';
 		if( preg_match($patt, $field, $matches) )  
 		{
 			return array( 
 				'cmd'	=> strtoupper($matches[1]), 
-				'field'	=> $matches[2]
+				'name'	=> $matches[2]
 			); 
 		} 
-		return array('field'=>$field); 
+		return array('name'=>$field); 
 	}
 	
-	private function __orderBy( $args, $argsNum ) 
+	final private function __orderBy( $args, $argsNum ) 
 	{ 
 		try 
 		{ 
@@ -4659,7 +4957,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __setLimit( $args, $argsNum ) 
+	final private function __setLimit( $args, $argsNum ) 
 	{
 		$this->_propLimit = (int) current($args); 
 		if( is_null($this->_propPage) ) 
@@ -4667,26 +4965,26 @@ abstract class SQLQuery
 		return $this;
 	} 
 
-	private function __setSeek( $args, $argsNum ) 
+	final private function __setSeek( $args, $argsNum ) 
 	{
 		$this->_propOffset = (int) current($args); 
 		return $this;
 	}
 	
-	private function __setPage( $args, $argsNum ) 
+	final private function __setPage( $args, $argsNum ) 
 	{
 		$this->_propPage = (int) current($args); 
 		return $this;
 	} 
 	
-	private function __require( $model ) 
+	final private function __require( $model ) 
 	{
 		if( method_exists($this, $model) ) 
 			return call_user_func_array(array($this, $model), array()); 
 		return NULL;
 	}
 	
-	private function __renameHasOne( $args, $argsNum ) 
+	final private function __renameHasOne( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4711,7 +5009,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __orderHasOne( $args, $argsNum ) 
+	final private function __orderHasOne( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4752,10 +5050,10 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __showHasOne() { $this->_flagHasOne = true; return $this; } 
-	private function __hideHasOne() { $this->_flagHasOne = false; return $this; } 
+	final private function __showHasOne() { $this->_flagHasOne = true; return $this; } 
+	final private function __hideHasOne() { $this->_flagHasOne = false; return $this; } 
 	
-	private function __renameHasMany( $args, $argsNum ) 
+	final private function __renameHasMany( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4780,7 +5078,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __orderHasMany( $args, $argsNum ) 
+	final private function __orderHasMany( $args, $argsNum ) 
 	{ 
 		try 
 		{
@@ -4821,10 +5119,10 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __showHasMany() { $this->_flagHasMany = true; return $this; }
-	private function __hideHasMany() { $this->_flagHasMany = false; return $this; } 
+	final private function __showHasMany() { $this->_flagHasMany = true; return $this; }
+	final private function __hideHasMany() { $this->_flagHasMany = false; return $this; } 
 
-	private function __renameHasMABTM( $args, $argsNum ) 
+	final private function __renameHasMABTM( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4848,7 +5146,7 @@ abstract class SQLQuery
 		}
 	}
 	
-	private function __orderHasMABTM( $args, $argsNum ) 
+	final private function __orderHasMABTM( $args, $argsNum ) 
 	{
 		global $_inflect; 
 		try 
@@ -4928,13 +5226,13 @@ abstract class SQLQuery
 		}
 	} 
 
-	private function __showHasManyAndBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
-	private function __hideHasManyAndBelongsToMany() { $this->_flagHasMABTM = false; return $this; } 
+	final private function __showHasManyAndBelongsToMany() { $this->_flagHasMABTM = true; return $this; } 
+	final private function __hideHasManyAndBelongsToMany() { $this->_flagHasMABTM = false; return $this; } 
 	
-	private function __orderImport( $model ) { $this->_propsImport[] = current($model); return $this; } 
-	private function __orderImportAll( $model ) { $this->_propsImportAll[] = current($model); return $this; } 
+	final private function __orderImport( $model ) { $this->_propsImport[] = current($model); return $this; } 
+	final private function __orderImportAll( $model ) { $this->_propsImportAll[] = current($model); return $this; } 
 	
-	private function __orderMerge( $args, $argsNum ) 
+	final private function __orderMerge( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4965,7 +5263,7 @@ abstract class SQLQuery
 		}
 	} 
 	
-	private function __orderMergeLeft( $args, $argsNum ) 
+	final private function __orderMergeLeft( $args, $argsNum ) 
 	{
 		try 
 		{
@@ -4989,7 +5287,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __orderMergeRight( $args, $argsNum ) 
+	final private function __orderMergeRight( $args, $argsNum ) 
 	{
 		try 
 		{ 
@@ -5013,7 +5311,7 @@ abstract class SQLQuery
 		} 
 	} 
 	
-	private function __getError() 
+	final private function __getError() 
 	{
 		return array( 
 			'error_msg'	=>$this->error(), 
@@ -5021,7 +5319,7 @@ abstract class SQLQuery
 		); 
 	} 
 	
-	private function __genRandString( $max_len = 10 ) 
+	final private function __genRandString( $max_len = 10 ) 
 	{
 		$chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$!';
 		$output = '';
@@ -5033,17 +5331,17 @@ abstract class SQLQuery
 		return $output;
 	} 
 	
-	private function errno() { return mysqli_errno( $this->_dbHandle ); } 
-	private function error() { return mysqli_error( $this->_dbHandle ); } 
-	private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
-	private function num_rows( $rs ) { return mysqli_num_rows($rs); } 
-	private function fetch_assoc( $rs ) { return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
-	private function affected_rows( $rs ) { return ($rs)?mysqli_affected_rows( $rs ):$rs; } 
-	private function fetch_row( $rs ) { return ($rs)?mysqli_fetch_row( $rs ):$rs; } 
-	private function free_result( $rs ) { return ($rs)?mysqli_free_result( $rs ):$rs; } 
-	private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
+	final private function errno() { return mysqli_errno( $this->_dbHandle ); } 
+	final private function error() { return mysqli_error( $this->_dbHandle ); } 
+	final private function insert_id() { return mysqli_insert_id( $this->_dbHandle ); } 
+	final private function num_rows( $rs ) { return mysqli_num_rows($rs); } 
+	final private function fetch_assoc( $rs ) { return ($rs)?mysqli_fetch_assoc( $rs ):$rs; } 
+	final private function affected_rows( $rs ) { return ($rs)?mysqli_affected_rows( $rs ):$rs; } 
+	final private function fetch_row( $rs ) { return ($rs)?mysqli_fetch_row( $rs ):$rs; } 
+	final private function free_result( $rs ) { return ($rs)?mysqli_free_result( $rs ):$rs; } 
+	final private function escape_string( $str ) { return mysqli_real_escape_string( $this->_dbHandle, trim($str) ); } 
 	
-	private function fetch_field( $rs, &$ts, &$fs ) 
+	final private function fetch_field( $rs, &$ts, &$fs ) 
 	{
 		$ts = array(); 
 		$fs = array(); 
@@ -5055,7 +5353,7 @@ abstract class SQLQuery
 		return count($fs);
 	}
 	
-	private function __query( $sql ) 
+	final private function __query( $sql ) 
 	{
 		$sql = trim($sql); 
 		$result = mysqli_query( $this->_dbHandle, $sql ); 
@@ -5121,7 +5419,13 @@ abstract class SQLQuery
 			} 
 		}
 		return;
-	} 
+	}  
+	
+	final private function __duplicate() 
+	{
+		$out = deep_copy($this); 
+		return $out->__reset(); 
+	}
 	
 	final static private function __close() 
 	{ 
