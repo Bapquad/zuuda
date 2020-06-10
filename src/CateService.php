@@ -9,7 +9,7 @@ class CateService implements  iTaskService, iCateService
 	
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function BootService( Application $app = NULL ) { return self::__bootService( $app ); }
-	public static function Task( Model $model ) { return self::__routing( $model, getSingleton( 'Global' )->get( 'url' ) ); }
+	public static function Task( Model $model ) { return self::__routing( $model, singleton( 'Global' )->get( 'url' ) ); }
 	public static function GetPath( $category, $item, $sp='/', $last=NULL ) { return self::__getPath( $category, $item, $sp, $last ); }
 	public static function GetParent( $category, $item ) { return self::getParent( $category, $item ); }
 	
@@ -100,7 +100,7 @@ class CateService implements  iTaskService, iCateService
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
 		
-		$url = getSingleton( 'Global' )->get( 'url' );
+		$url = singleton( 'Global' )->get( 'url' );
 		$handle = simplexml_load_file( $service );
 		
 		foreach( $handle as $key => $program ) 

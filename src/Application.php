@@ -102,7 +102,7 @@ class Application
 	private function __bootParams() 
 	{
 		global $_CONFIG;
-		$_CONFIG['QUERY_STRING'] = explode(PS, trim($this->__routeURL(getSingleton('Global')->get('url')), '?-_')); 
+		$_CONFIG['QUERY_STRING'] = explode(PS, trim($this->__routeURL(singleton('Global')->get('url')), '?-_')); 
 		$this->__parseQuery($GLOBALS['request_uri']);
 		GlobalModifier::set( '_server', $_SERVER );
 	}

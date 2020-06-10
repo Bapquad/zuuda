@@ -53,7 +53,7 @@ class ComService implements iComService
 			$live_xml = simplexml_load_file( $live_path );
 			if( (int) $live_xml->live->status ) 
 			{
-				getSingleton( 'Config' )->set( 'CODE_OF', $live_xml->live->codeof->__toString() ); 
+				singleton('Config')->set( 'CODE_OF', $live_xml->live->codeof->__toString() ); 
 				$app->setUrl( str_replace( implode(PS, $left_url), $right_url, $url ) );
 				return true;
 			} 
@@ -115,7 +115,7 @@ class ComService implements iComService
 	{
 		if( Config::has( 'COM' ) && !$app->hasUrl() ) 
 		{
-			$url = getSingleton( 'Global' )->get( 'url' ); 
+			$url = singleton( 'Global' )->get( 'url' ); 
 			$configs = self::__loadConfigs();
 			$realpath = key( $configs ); 
 			$filename = current( $configs );

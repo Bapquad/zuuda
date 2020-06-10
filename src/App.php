@@ -26,9 +26,9 @@ class App
 		global $configs; 
 		try
 		{
-			getSingleton( 'Config' )->set( 'CODE_OF', $this->_codeof );
+			singleton( 'Config' )->set( 'CODE_OF', $this->_codeof );
 			$this->_class = new \ReflectionClass($this->_className);
-			getSingleton( 'Config' )->die( 'CODE_OF' ); 
+			singleton( 'Config' )->die( 'CODE_OF' ); 
 			if(!empty($args))
 				return $this->_class->newInstanceArgs($args); 
 			else 

@@ -59,7 +59,7 @@ class BTShipnelService implements iTaskService, iBTShipnelService
 		else 
 		{
 			Config::set( 'SHIP', SHIPNEL );
-			$url = getSingleton( 'Global' )->get( 'url' );
+			$url = singleton( 'Global' )->get( 'url' );
 		}
 		
 		if( self::__withUrl( $program->name[ 'route' ].DOT.$program->name[ 'class' ], $url ) )

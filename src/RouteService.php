@@ -52,7 +52,7 @@ class RouteService implements iTaskService, iRouteService
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
 		
-		$url = getSingleton( 'Global' )->get( 'url' );
+		$url = singleton( 'Global' )->get( 'url' );
 		$handle = simplexml_load_file( $service );
 		foreach( $handle as $key => $program ) 
 		{

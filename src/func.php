@@ -1120,9 +1120,9 @@ EOL;
 	escape();
 }
 
-if( \Zuuda\GlobalModifier::func( 'getSingleTon' ) ) 
+if( \Zuuda\GlobalModifier::func('singleton') ) 
 {
-	function getSingleTon( $const ) 
+	function singleton( $const ) 
 	{
 		switch( $const ) 
 		{

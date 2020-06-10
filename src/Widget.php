@@ -12,7 +12,7 @@ class Widget extends Block
 	public static function Use($class_name, $codeof=NULL) { return self::__use( $class_name, $codeof ); }
 	private static function __use($n, $c) 
 	{
-		$infos = getSingleton('WidgetServiceLive');
+		$infos = singleton('WidgetServiceLive');
 		$dirName = explode(DS, $n);
 		$module = $dirName[0];
 		$_live = false;

@@ -533,13 +533,12 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		
 		foreach( $assets[STYLE_ASSET] as $href ) 
 		{
-			if( preg_match( '/(https)|(http):\/\//', $href ) ) 
+			if( preg_match( '#^(https)|(http):\/\/#', $href ) ) 
 				$css_path = $href;
+			else if( preg_match('#(.css)$#', $href) ) 
+				$css_path = singleton('Html')->assetPath($src).question.$this->_tpl_id; 
 			else 
-			{
-				$css_path = getSingleton('Html')->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ); 
-				$css_path .= question.$this->_tpl_id;
-			}
+				$css_path = singleton('Html')->assetPath( ((preg_match('/(jui)\//', $href))?PS:'/skin/css/').$href.'.css' ).question.$this->_tpl_id; 
 $str = <<<EOD
 		<link rel="stylesheet" type="text/css" href="$css_path" media="all">\n
 EOD;
@@ -548,13 +547,12 @@ EOD;
 		
 		foreach( $assets[ SCRIPT_ASSET ] as $src ) 
 		{
-			if( preg_match( '/(https)|(http):\/\//', $src ) ) 
+			if( preg_match( '#^(https)|(http):\/\/#', $src ) ) 
 				$js_path = $src; 
+			else if( preg_match('#(.js)$#', $src) ) 
+				$js_path = singleton('Html')->assetPath($src).question.$this->_tpl_id; 
 			else 
-			{
-				$js_path = getSingleton( 'Html' )->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' );
-				$js_path .= question.$this->_tpl_id;
-			}
+				$js_path = singleton('Html')->assetPath( ((preg_match('/(jui)\//', $src))?PS:'/js/').$src.'.js' ).question.$this->_tpl_id; 
 $str = <<<EOD
 <script type="text/javascript" src="$js_path"></script>\n
 EOD;
