@@ -145,6 +145,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function Get( $name ) { return $this->__getVar( $name ); }
 	final public function AddBlock( $block, $force_name ) { return $this->__addBlock( $block, $force_name ); } 
 	final public function Json() { return call_user_func_array(array($this, '__json'), func_get_args()); } 
+	final public function HtmlJson() { return call_user_func_array(array($this, '__htmlJson'), func_get_args()); } 
 	
 	final public function SetHeaderLayout( $layout ) { return $this->__setHeaderLayout( $layout ); }
 	final public function SetFooterLayout( $layout ) { return $this->__setFooterLayout( $layout ); }
@@ -253,6 +254,11 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		{
 			return json_encode($in); 
 		}
+	}
+	
+	private function __htmlJson( $in ) 
+	{
+		return htmlentities(json_encode($in)); 
 	}
 
 	protected function __setTemplate( $tpl_path ) 

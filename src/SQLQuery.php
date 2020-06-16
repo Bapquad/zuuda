@@ -31,15 +31,15 @@ define( 'mcbm_commit',				'__commit' );
 define( 'mcbm_rollback',			'__rollback' );
 define( 'mcbm_checkpoint',			'__checkpoint' );
 define( 'mcbm_release',				'__release' );
-define( 'mcbm_custom',				'__custom' );
 define( 'mcbm_search',				'__search' );
+define( 'mcbm_custom',				'__custom' );
 define( 'mcbm_findid',				'__find' );
+define( 'mcbm_item',				'__item' );
 define( 'mcbm_first',				'__first' );
 define( 'mcbm_last',				'__last' );
 define( 'mcbm_entity',				'__entity' );
 define( 'mcbm_role',				'__role' );
 define( 'mcbm_unit',				'__unit' );
-define( 'mcbm_item',				'__item' );
 define( 'mcbm_paginate',			'__paginate' );
 define( 'mcbm_insert',				'__insert' );
 define( 'mcbm_delete',				'__delete' );
@@ -69,30 +69,31 @@ abstract class SQLQuery
 {
 	private static $this = '\Zuuda\SQLQuery';
 	protected $_dbHandle; 
-	protected $_primaryKey		= 'id'; 
-	protected $_flagIsolate		= false; 
-	protected $_flagCheckpoint= false; 
+	protected $_primaryKey					= 'id'; 
+	protected $_flagIsolate					= false; 
+	protected $_flagCheckpoint				= false; 
 	protected $_querySQL;
-	protected $_querySQLs 		= array(); 
-	protected $_flagHasExe 		= false;
-	protected $_propPrefix		= EMPTY_CHAR;
-	protected $_propModel		= EMPTY_CHAR;
-	protected $_propAlias		= EMPTY_CHAR; 
-	protected $_propTable		= EMPTY_CHAR;
-	protected $_propUnits		= 0;
+	protected $_querySQLs 					= array(); 
+	protected $_flagHasExe 					= false;
+	protected $_propPrefix					= EMPTY_CHAR;
+	protected $_propModel					= EMPTY_CHAR;
+	protected $_propAlias					= EMPTY_CHAR; 
+	protected $_propTable					= EMPTY_CHAR;
+	protected $_propUnits					= 0;
 	protected $_propUnitOrigin;
-	protected $_propsDescribe 	= array(); 
-	protected $_propsUndescribe = array(); 
-	protected $_propsCond 		= array(); 
-	protected $_propsCondEx		= array(); 
-	protected $_propsCondOr 	= array(); 
-	protected $_propsCondOn 	= array();
-	protected $_propsCondCmd 	= array();
-	protected $_propsOrder		= array();
-	protected $_propsGroupBy	= array();
+	protected $_propsDescribe 				= array(); 
+	protected $_propsPersistentUndescribe 	= array(); 
+	protected $_propsUndescribe 		  	= array(); 
+	protected $_propsCond 				  	= array(); 
+	protected $_propsCondEx					= array(); 
+	protected $_propsCondOr 				= array(); 
+	protected $_propsCondOn 				= array();
+	protected $_propsCondCmd 				= array();
+	protected $_propsOrder					= array();
+	protected $_propsGroupBy				= array();
 	protected $_propPage;
 	protected $_propLimit;
-	protected $_propOffset		= 0;
+	protected $_propOffset					= 0;
 	protected $_eventBoot;
 	protected $_eventOnBoot;
 	protected $_eventRide;
@@ -102,19 +103,19 @@ abstract class SQLQuery
 	protected $_propForeignKey;
 	protected $_propAliasKey;
 	protected $_propAliasModel; 
-	protected $_flagHasOne 		= false; 
-	protected $_flagHasMany 	= false; 
-	protected $_flagHasMABTM 	= false; 
-	protected $_propsImport		= array();
-	protected $_propsImportAll	= array();
-	protected $_propsMerge		= array(); 
-	protected $_propsMergeLeft	= array(); 
-	protected $_propsMergeRight	= array(); 
-	protected $_propsHasOne 	= array(); 
-	protected $_propsHasMany 	= array(); 
-	protected $_propsHasMABTM 	= array(); 
-	protected $_propsRole	 	= array(); 
-	protected $_propsDeathMdl	= array(); 
+	protected $_flagHasOne 					= false; 
+	protected $_flagHasMany 				= false; 
+	protected $_flagHasMABTM 				= false; 
+	protected $_propsImport					= array();
+	protected $_propsImportAll				= array();
+	protected $_propsMerge					= array(); 
+	protected $_propsMergeLeft				= array(); 
+	protected $_propsMergeRight				= array(); 
+	protected $_propsHasOne 				= array(); 
+	protected $_propsHasMany 				= array(); 
+	protected $_propsHasMABTM 				= array(); 
+	protected $_propsRole	 				= array(); 
+	protected $_propsDeathMdl				= array(); 
 	
 	final public function GetPrefix() { return $this->_propPrefix; }
 	final public function GetPrimaryKey() { return $this->_primaryKey; }
@@ -143,7 +144,7 @@ abstract class SQLQuery
 	final public function Unselect() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Ungrab() { return $this->__unbound( func_get_args(), func_num_args() ); }
 	final public function Unbound() { return $this->__unbound( func_get_args(), func_num_args() ); }
-	final public function Secure() { return $this->__unbound( func_get_args(), func_num_args() ); }
+	final public function Secure() { return $this->__secure( func_get_args(), func_num_args() ); }
 	final public function Unsecure() { return $this->__unsecure( func_get_args(), func_num_args() ); } 
 	final public function Between() { return $this->__between( func_get_args(), func_num_args() ); }
 	final public function Equal() { return $this->__equal( func_get_args(), func_num_args() ); }
@@ -310,14 +311,14 @@ abstract class SQLQuery
 	final public function New() { return $this->__new(); }
 	final public function Reset() { return $this->__new(); }
 	final public function Clear( $deep=false ) { return $this->__clear( $deep ); } 
-	final public function Query() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args(), 'Query')); } 
-	final public function Custom() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args())); }
 	final public function Search() { return call_user_func_array([$this, mcbm_search], array(func_get_args(), func_num_args())); } 
+	final public function Custom() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args())); }
+	final public function Query() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args(), 'Query')); } 
 	final public function Load() { return call_user_func_array([$this, mcbm_findid], array(func_get_args(), func_num_args())); } 
 	final public function Find() { return call_user_func_array([$this, mcbm_findid], array(func_get_args(), func_num_args())); } 
+	final public function Entity() { return call_user_func_array([$this, mcbm_entity], array(func_get_args(), func_num_args())); } 
 	final public function First() { return call_user_func_array([$this, mcbm_first], array(func_get_args(), func_num_args())); } 
 	final public function Last() { return call_user_func_array([$this, mcbm_last], array(func_get_args(), func_num_args())); } 
-	final public function Entity() { return call_user_func_array([$this, mcbm_entity], array(func_get_args(), func_num_args())); } 
 	final public function Item() { return call_user_func_array([$this, mcbm_item], array(func_get_args(), func_num_args())); }
 	final public function Paginate() { return call_user_func_array([$this, mcbm_paginate], array(func_get_args(), func_num_args())); }
 	final public function Remove() { return call_user_func_array([$this, mcbm_delete], array(func_get_args(), func_num_args())); }
@@ -526,10 +527,17 @@ abstract class SQLQuery
 	{
 		if( empty($this->_propsDescribe) )
 			$this->_propsDescribe = $this->__parseDescribe($this->_propTable); 
-		foreach( $this->_propsDescribe as $fieldName ) 
+		foreach( $this->_propsDescribe as $f ) 
 		{
-			$this->$fieldName = NULL; 
-			$this->__boundField( $fieldName ); 
+			$this->$f = NULL; 
+			if( in_array($f, $this->_propsPersistentUndescribe) ) 
+			{
+				$this->__unboundField( $f );
+			} 
+			else 
+			{
+				$this->__boundField( $f ); 
+			}
 		} 
 		return $this->_propsUndescribe;
 	} 
@@ -2479,6 +2487,77 @@ abstract class SQLQuery
 		return $this;
 	} 
 	
+	final private function __addPersistentUndescrible( $field ) 
+	{
+		if( is_string($field) && !in_array($field, $this->_propsPersistentUndescribe) ) 
+		{
+			$this->_propsPersistentUndescribe[] = $field; 
+		} 
+	} 
+	
+	final private function __removePersistentUndescrible( $field ) 
+	{
+		if( is_string($field) && in_array($field, $this->_propsPersistentUndescribe) ) 
+		{
+			foreach( $this->_propsPersistentUndescribe as $key => $field ) 
+			{
+				if( is_string($key) ) 
+				{
+					unset( $this->_propsPersistentUndescribe[$key] );
+				} 
+				elseif( is_numeric($key) ) 
+				{
+					array_splice($this->_propsPersistentUndescribe, $key, 1); 
+				}
+			}
+		}
+	}
+	
+	final private function __secure( $args, $argsNum ) 
+	{
+		try 
+		{
+			if( $argsNum ) 
+			{
+				$oneArg = 1; 
+				$zeroArg = 0;
+				$dispatcher = $this;
+				if( $argsNum===$oneArg ) 
+				{
+					if( is_array($args[$zeroArg]) )
+					{
+						$args[$oneArg] = count($args[$zeroArg]); 
+						call_user_func_array( array($dispatcher, '__secure'), $args );
+					} 
+					else 
+					{
+						$field = $args[$zeroArg];
+						$this->__unboundField( $field ); 
+						$this->__addPersistentUndescrible( $field );
+					}
+				}
+				else 
+				{
+					foreach( $args as $key => $field ) 
+					{
+						if( is_numeric($key) ) 
+						{
+							$this->__unboundField( $field ); 
+							$this->__addPersistentUndescrible( $field );
+						}
+					}
+				}
+			}
+			else 
+				throw new Exception( "Using <strong>Model::Unsecure()</strong> has a syntax error." ); 
+		}
+		catch( Exception $e ) 
+		{ 
+			abort( 500, $e->getMessage() );
+		} 
+		return $this;
+	} 
+	
 	final private function __unsecure( $args, $argsNum ) 
 	{
 		try 
@@ -2489,17 +2568,30 @@ abstract class SQLQuery
 				$zeroArg = 0;
 				$dispatcher = $this;
 				if( $argsNum===$oneArg ) 
+				{
 					if( is_array($args[$zeroArg]) )
 					{
 						$args[$oneArg] = count($args[$zeroArg]); 
 						call_user_func_array( array($dispatcher, '__unsecure'), $args );
 					} 
 					else 
-						$this->__unsecureField( $args[$zeroArg] ); 
+					{
+						$field = $args[$zeroArg];
+						$this->__unsecureField( $field ); 
+						$this->__removePersistentUndescrible( $field ); 
+					}
+				}
 				else 
-					foreach( $args as $fieldKey => $fieldValue ) 
-						if( is_numeric($fieldKey) ) 
-							$this->__unsecureField( $fieldValue ); 
+				{
+					foreach( $args as $key => $field ) 
+					{
+						if( is_numeric($key) ) 
+						{
+							$this->__unsecureField( $field ); 
+							$this->__removePersistentUndescrible( $field );
+						}
+					}
+				}
 			}
 			else 
 				throw new Exception( "Using <strong>Model::Unsecure()</strong> has a syntax error." ); 
@@ -4249,7 +4341,7 @@ abstract class SQLQuery
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
-			return call_user_func_array(array($dispatcher, '_orWhere'), array($args, count($args)));
+			return call_user_func_array(array($dispatcher, '__orWhere'), array($args, count($args)));
 		}
 		else if($argsNum===$oneArg) 
 		{
@@ -4259,7 +4351,7 @@ abstract class SQLQuery
 				$tmp = array(key($param)); 
 				$tmp[] = $sign; 
 				$tmp[] = current($param);
-				call_user_func_array(array($dispatcher, '_orWhere'), array($tmp, count($tmp)));
+				call_user_func_array(array($dispatcher, '__orWhere'), array($tmp, count($tmp)));
 			} 
 			return $this;
 		}
@@ -4276,7 +4368,7 @@ abstract class SQLQuery
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			return call_user_func_array( array($dispatcher, '_orWhere'), array($args, $argsNum) ); 
+			return call_user_func_array( array($dispatcher, '__orWhere'), array($args, $argsNum) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -4284,7 +4376,7 @@ abstract class SQLQuery
 			$tmp[] = array_shift($args); 
 			$tmp[] = $sign;
 			$tmp[] = $args;
-			return call_user_func_array( array($dispatcher, '_orWhere'), array($tmp, 3) ); 
+			return call_user_func_array( array($dispatcher, '__orWhere'), array($tmp, 3) ); 
 		}
 		else 
 		{
@@ -4307,7 +4399,7 @@ abstract class SQLQuery
 			{
 				$args[] = $sign; 
 				$args[] = NULL;
-				return call_user_func_array( array($dispatcher, '_orWhere'), array( $args, 3 ) );
+				return call_user_func_array( array($dispatcher, '__orWhere'), array( $args, 3 ) );
 			}
 			else 
 			{
@@ -4349,7 +4441,7 @@ abstract class SQLQuery
 				$tmp = $args[1];
 				$args[1] = $sign;
 				$args[2] = $tmp; 
-				call_user_func_array( array($dispatcher, '_orWhere'), array($args, $argsNum) ); 
+				call_user_func_array( array($dispatcher, '__orWhere'), array($args, $argsNum) ); 
 			} 
 			else 
 			{
@@ -4370,7 +4462,7 @@ abstract class SQLQuery
 						$tmp[] = $arg[1];
 					}
 					$arg = $tmp;
-					call_user_func_array( array($dispatcher, '_orWhere'), array($arg, count($arg)) ); 
+					call_user_func_array( array($dispatcher, '__orWhere'), array($arg, count($arg)) ); 
 				}
 			}
 		} 
@@ -4411,7 +4503,7 @@ abstract class SQLQuery
 				{
 					$args = current($args);
 					foreach($args as $arg) 
-						call_user_func_array( array($dispatcher, '_orWhere'), array($arg, count($arg)) ); 
+						call_user_func_array( array($dispatcher, '__orWhere'), array($arg, count($arg)) ); 
 				}
 				if( count($params) ) 
 					foreach($params as $args) 

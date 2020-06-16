@@ -1,9 +1,6 @@
 <?php
 namespace Zuuda;
 
-define ( 'ZUUDA_SECTION_SYMBOL', 'Zuuda\Section' );
-define ( 'ZUUDA_WIDGET_SYMBOL', 'Zuuda\Section' );
-
 use Exception;
 use Zuuda\Html; 
 use Zuuda\Query;

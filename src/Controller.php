@@ -143,9 +143,15 @@ abstract class Controller implements iController, iDeclare, iBlock
 			try 
 			{
 				if( $name == 'model' && NULL===$this->_model ) 
+				{
+					$model_class_name = __currentModelClass();
 					throw new Exception("Your model <b>" . $model_class_name . "</b> coundn't found.");
-				elseif( $name == 'view' && NULL===$this->_model ) 
+				}
+				elseif( $name == 'view' && NULL===$this->_view ) 
+				{
+					$view_class_name = __currentViewClass(); 
 					throw new Exception("Your view <b>" . $view_class_name . "</b> coundn't found.");
+				}
 				else 
 					return $this->{ '_' . $name }; 
 			} 

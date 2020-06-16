@@ -7,6 +7,8 @@ use Zuuda\Error;
 class Text 
 {
 	private $_data = empc;
+	private $_toArray = false; 
+	private $_withJson = false; 
 	
 	private static $this = "Zuuda\Text"; 
 	final public function rootName() { return __CLASS__; } 
@@ -17,6 +19,8 @@ class Text
 	final public function UrlEncode() { return call_user_func_array(array($this, '__urlEncode'), func_get_args()); } 
 	final public function RawUrlDecode() { return call_user_func_array(array($this, '__rawUrlDecode'), func_get_args()); } 
 	final public function RawUrlEncode() { return call_user_func_array(array($this, '__rawUrlEncode'), func_get_args()); } 
+	final public function ToObject() { return call_user_func_array(array($this, '__toObject'), func_get_args()); }
+	final public function ToArray() { return call_user_func_array(array($this, '__toArray'), func_get_args()); }
 	final public function Json() { return call_user_func_array(array($this, '__json'), func_get_args()); }
 	final public function JsonDecode() { return call_user_func_array(array($this, '__jsonDecode'), func_get_args()); }
 	final public function JsonEncode() { return call_user_func_array(array($this, '__jsonEncode'), func_get_args()); }
@@ -73,15 +77,110 @@ class Text
 		return rawurlencode($data); 
 	} 
 	
-	final private function __json( $in ) 
+	final private function __toObject( $in=NULL ) 
 	{
-		if( is_string($in) ) 
-		{
-			return json_decode($in); 
+		if( NULL===$in ) 
+		{ 
+			if( false===$this->_toArray && true===$this->_withJson ) 
+			{
+				$data = $this->_data; 
+				$out = json_decode($data); 
+				$this->__clear(); 
+				return $out; 
+			} 
+			else 
+			{
+				$this->_toArray = false; 
+				$this->_withJson = true; 
+				return $this; 
+			}
 		} 
 		else 
 		{
-			return json_encode($in); 
+			$data = $in; 
+			$out = json_decode($data); 
+			$this->__clear(); 
+			return $out; 
+		}
+	}
+	
+	final private function __toArray( $in=NULL ) 
+	{
+		if( NULL===$in ) 
+		{
+			if( $this->_withJson ) 
+			{
+				$out = json_decode( $this->_data, true );
+				$this->__clear(); 
+				return $out; 
+			} 
+			else 
+			{
+				$this->_toArray = true; 
+				return $this;
+			}
+		} 
+		else 
+		{
+			$out = array(); 
+			$data = $in; 
+			if( $this->_withJson ) 
+			{
+				$out = json_decode($data, true); 
+			} 
+			else 
+			{
+				$out = [$data];
+			}
+			$this->__clear(); 
+			return $out; 
+		}
+	}
+	
+	final private function __json( $in=NULL ) 
+	{
+		if( NULL===$in ) 
+		{
+			if( $this->_toArray ) 
+			{
+				$out = json_decode( $this->_data, true ); 
+				$this->__clear(); 
+				return $out; 
+			} 
+			else if( $this->_withJson ) 
+			{
+				$data = $this->_data; 
+				$out = json_decode($data); 
+				$this->__clear(); 
+				return $out; 
+			} 
+			else 
+			{
+				$this->_withJson = true; 
+				return $this; 
+			} 
+		}
+		else 
+		{
+			$out = null; 
+			$data = $in; 
+			if( is_string($data) ) 
+			{
+				if( $this->_toArray ) 
+				{ 
+					$out = json_decode( $data, true ); 
+				} 
+				else 
+				{
+					$out = json_decode($data); 
+				} 
+			} 
+			else 
+			{
+				$out = json_encode($data); 
+			} 
+			$this->__clear(); 
+			return $out; 
 		}
 	}
 	
@@ -191,4 +290,10 @@ class Text
 		$out = quote.$data.quote;
 		return $out;
 	} 
+	
+	final private function __clear() 
+	{
+		$this->_withJson = false; 
+		$this->_toArray = false; 
+	}
 }

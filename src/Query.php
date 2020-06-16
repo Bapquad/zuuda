@@ -115,7 +115,7 @@ class Query
 		try 
 		{ 
 			if( empty($args) ) 
-				return $_get[$name]; 
+				return (isset($_get[$name]))?$_get[$name]:NULL; 
 			else 
 				$value = current($args);
 			$_get[$name] = $value; 

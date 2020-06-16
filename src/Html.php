@@ -41,6 +41,7 @@ class Html implements iHTML
 	public static function IncludeJpeg( $file_name, $alt_text ) { return self::__includeJpeg( $file_name, $alt_text ); }
 	public static function Write( $content ) { echo ( $content ); }
 	public static function Assign( $name, $value, $template ) { return self::__assign( $name, $value, $template ); }
+	public static function Json() { return call_user_func_array(array(self::$this, '__json'), func_get_args()); }
 	
 	private function __construct() {}
 	private function __clone() {}
@@ -52,6 +53,11 @@ class Html implements iHTML
 			$_instance = new Html;
 		}
 		return $_instance;
+	}
+	
+	private static function __json( $in ) 
+	{
+		return htmlentities(json_encode($in)); 
 	}
 	
 	private static function __link( $text, $path ) 
