@@ -15,13 +15,15 @@ class Auth
 	private function __construct() {}
 	private function __clone() {} 
 	
-	public static function Get($prop) { return self::__user($prop); } 
-	public static function GetAll() { return self::__getAll(); }
-	public static function Instance() { return self::__getInstance(); }
-	public static function Body($prop) { return self::__user($prop); } 
-	public static function Role() { return call_user_func_array([self::$this, '__role'], array(func_get_args())); } 
-	public static function Apply() { return call_user_func_array([self::$this, '__role'], array(func_get_args())); } 
-	public static function Status() { return call_user_func_array([self::$this, '__status'], array()); }
+	public static function GetAll() { return call_user_func_array(array(self::$this, '__user') , array()); }
+	public static function All() { return call_user_func_array(array(self::$this, '__user'), array()); }
+	public static function Get() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
+	public static function Data() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
+	public static function Body() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
+	public static function Role() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
+	public static function Apply() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
+	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
+	public static function Instance() { return call_user_func_array(); } 
 	
 	public static function __callStatic( $name, $args ) 
 	{
@@ -49,7 +51,7 @@ class Auth
 		} 
 	}
 	
-	private static function __getInstance() 
+	private static function __instance() 
 	{
 		static $_instance;
 		if( is_null( $_instance ) ) 
@@ -59,33 +61,33 @@ class Auth
 		return $_instance;
 	}
 	
-	private static function __user($prop) 
+	private static function __user($prop=NULL) 
 	{
-		if($prop) 
+		$data = session::get(user_auth); 
+		if( is_string($prop) ) 
 		{
-			$data = session::get(user_auth); 
-			if( isset($data[$prop]) )
+			if( isset($data[$prop]) ) 
+			{
 				return session::get(user_auth)[$prop]; 
-			else
+			}
+			else 
+			{
 				return NULL;
+			}
 		}
-		return self::__getInstance(); 
+		else if( is_null($prop) ) 
+		{
+			return $data; 
+		} 
 	} 
 	
-	private static function __getAll() 
-	{ 
-		return session::get(user_auth);
-	}
-	
-	public function __get( $prop ) // IMPORTANT: Must be public.
+	public function __get( $prop ) 
 	{
 		if($prop) 
 		{
 			$data = session::get(user_auth); 
 			if( isset($data[$prop]) )
-				return session::get(user_auth)[$prop]; 
-			else
-				return NULL;
+				return $data[$prop]; 
 		}
 	} 
 	
