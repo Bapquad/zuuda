@@ -15,9 +15,8 @@
 		"files": ["symbol.php", "src/func.php"]
     },
     "license": "LGPL-2.1-only", 
-	"require": {
+    "require": {
         "php": ">=5.6.0",
-        "vlucas/phpdotenv": "^4.1.7", 
-		"php-on-couch/php-on-couch": "^3.0.1"
+	"php-on-couch/php-on-couch": "^3.0.1"
     }
 }
