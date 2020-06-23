@@ -6,6 +6,7 @@ use Exception;
 use Zuuda\Error;
 use Zuuda\Fx;
 use Zuuda\Text;
+use Zuuda\Route;
 
 class Application 
 {
@@ -64,15 +65,6 @@ class Application
 	
 	private function __bootService() 
 	{
-		GlobalModifier::set( '_cache', new Cache() );
-		GlobalModifier::set( '_irregularWords', array() );
-		GlobalModifier::set( '_inflect', new Inflection() );
-		GlobalModifier::set( '_post', array() );
-		GlobalModifier::set( '_put', array() );
-		GlobalModifier::set( '_delete', array() );
-		GlobalModifier::set( '_get', array() );
-		GlobalModifier::set( '_server', array() );
-		GlobalModifier::set( '_file', array() );
 		GlobalModifier::loadUrl();
 		GlobalModifier::timezone(); 
 	}
@@ -119,8 +111,8 @@ class Application
 		$_extract = array();
 		if(is_array($_CONFIG['QUERY_STRING'])) 
 		{
-			$module = $_CONFIG['QUERY_STRING'][0];
-			array_push($_extract, array_shift($_CONFIG['QUERY_STRING']));
+			$module = $_CONFIG['QUERY_STRING'][0]; 
+			array_push($_extract, array_shift($_CONFIG['QUERY_STRING'])); 
 			$_CONFIG["MODULE"] = ucfirst($module); 
 			$controller = (isset($_CONFIG['QUERY_STRING']) && isset($_CONFIG['QUERY_STRING'][0])) ? $_CONFIG['QUERY_STRING'][0] : NULL;
 			if( NULL === $controller || empty_char === $controller ) 
@@ -154,9 +146,10 @@ class Application
 		static $_instance;
 		if( NULL!==$_instance ) 
 			return $_instance;	// NEEDLE HANDLE.
-		Session::start();
-		Cookie::start();
-		Error::handle();
+		session::start(); 
+		cookie::start(); 
+		error::handle();
+		route::fetch(); 
 		$_instance = application::instance();
 		$_instance->__bootService();
 		if( Config::has('COM') ) 
@@ -190,53 +183,19 @@ class Application
 	
 	public function SetReporting() 
 	{
-		global $_CONFIG; 
-		if ( $_CONFIG[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
-		{
-			error_reporting(E_ALL);
-			ini_set('display_errors', 1);
-		} 
-		else 
-		{
-			error_reporting(E_ALL);
-			ini_set('display_errors', 0);
-			ini_set('log_errors', 1);
-			ini_set('error_log', WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log');
-		}
+		Route::SetReporting(); 
 		return $this;
 	}
 
 	public function SecureMagicQuotes() 
 	{
-		$_GET    = __stripSlashesDeep( $_GET );
-		$_POST   = __stripSlashesDeep( $_POST );
-		$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
+		Route::SecureMagicQuote(); 
 		return $this;
 	}
 
 	public function UnregisterGlobals() 
 	{
-		$registed = array
-		(
-			'_SESSION', 
-			'_POST', 
-			'_GET', 
-			'_COOKIE', 
-			'_REQUEST', 
-			'_SERVER', 
-			'_ENV', 
-			'_FILES'
-		);
-		foreach( $registed as $value ) 
-		{
-			foreach ( GlobalModifier::get( $value ) as $key => $var ) 
-			{
-				if ( $var === GlobalModifier::get( $key ) ) 
-				{
-					GlobalModifier::destroy( $key );
-				}
-			}
-		}
+		Route::UnregisterGlobals(); 
 		return $this;
 	}
 

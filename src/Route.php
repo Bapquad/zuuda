@@ -16,8 +16,9 @@ use Zuuda\Flash;
 
 class Route implements iRoute 
 {
-	private static $this = '\Zuuda\Route';
-	private static $prefix = empc;	
+	private static $this = '\Zuuda\Route'; 
+	private static $prefix = empc; 
+	private static $inited = false;
 	
 	final public static function Instance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
 	final public static function GetInstance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
@@ -31,6 +32,10 @@ class Route implements iRoute
 	final public static function Api() { return call_user_func_array(array(self::$this, '__apiType'), func_get_args()); } 
 	final public static function Web() { return call_user_func_array(array(self::$this, '__webType'), func_get_args()); } 
 	final public static function Group() { return call_user_func_array(array(self::$this, '__group'), array(func_get_args())); } 
+	final public static function Fetch() { return call_user_func_array(array(self::$this, '__fetch'), array()); } 
+	final public static function SecureMagicQuote() { return call_user_func_array(array(self::$this, '__secure_magic_quote'), array()); } 
+	final public static function UnregisterGlobals() { return call_user_func_array(array(self::$this, '__unregister_global'), array()); } 
+	final public static function SetReporting() { return call_user_func_array(array(self::$this, '__set_report'), array()); } 
 	
 	private function __construct() {}
 	private function __clone() {}
@@ -42,34 +47,6 @@ class Route implements iRoute
 			$_instance = new Route;
 		}
 		return $_instance;
-	}
-	
-	private static function __getAll() 
-	{
-		return $GLOBALS[ 'router' ][ 'routings' ];
-	}
-	
-	private static function __setVar( $pattern, $result ) 
-	{
-		$GLOBALS[ 'router' ][ 'routings' ][ $pattern ] = $result; 
-		return array( $pattern => $result );
-	}
-	
-	private static function __routing( $url ) 
-	{
-		global $router;
-		foreach ( $router[ 'routings' ] as $pattern => $result ) 
-		{
-			if ( preg_match($pattern, $url) ) 
-			{
-				if( FALSE!==strpos($url, $result) 
-				 || FALSE!==strpos($result, $url) )
-					return $result;
-				else
-					return preg_replace( $pattern, $result, $url );
-			}
-		} 
-		return $url;
 	} 
 	
 	final public static function __callStatic( $name, $arg ) 
@@ -78,20 +55,107 @@ class Route implements iRoute
 		current($arg)(self::instance());
 	} 
 	
+	private static function __fetch() 
+	{
+		globalmodifier::set( '_cache', new Cache() ); 
+		globalmodifier::set( '_irregularWords', array() ); 
+		globalmodifier::set( '_inflect', new Inflection() ); 
+		globalmodifier::set( '_post', array() ); 
+		globalmodifier::set( '_put', array() ); 
+		globalmodifier::set( '_delete', array() ); 
+		globalmodifier::set( '_get', array() ); 
+		globalmodifier::set( '_server', array() ); 
+		globalmodifier::set( '_file', array() ); 
+	}
+	
+	private static function __getAll() 
+	{
+		return $GLOBALS['router']['routings'];
+	}
+	
+	private static function __setVar( $pattern, $result ) 
+	{
+		$GLOBALS['router']['routings'][$pattern] = $result; 
+		return array( $pattern => $result ); 
+	}
+	
+	private static function __routing( $url ) 
+	{
+		global $router;
+		foreach ( $router['routings'] as $pattern => $result ) 
+		{
+			$pattern = '#^'.$pattern.'$#'; 
+			if ( preg_match($pattern, $url) ) 
+			{
+				if( FALSE!==strpos($url, $result) || 
+					FALSE!==strpos($result, $url) )
+					return $result;
+				else
+					return preg_replace( $pattern, $result, $url );
+			}
+		} 
+		return preg_replace( '#^/(.*)#', '$1', $url ); 
+	} 
+	
+	private static function __set_report() 
+	{
+		global $_CONFIG; 
+		if ( $_CONFIG[ 'DEVELOPMENT_ENVIRONMENT' ] == true ) 
+		{
+			error_reporting(E_ALL);
+			ini_set('display_errors', 1);
+		} 
+		else 
+		{
+			error_reporting(E_ALL);
+			ini_set('display_errors', 0);
+			ini_set('log_errors', 1);
+			ini_set('error_log', WEB_DIR.DS.'tmp'.DS.'logs'.DS.'error.log');
+		}
+	} 
+	
+	private static function __secure_magic_quote() 
+	{
+		$_GET    = __stripSlashesDeep( $_GET );
+		$_POST   = __stripSlashesDeep( $_POST );
+		$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
+	} 
+	
+	private static function __unregister_global() 
+	{
+		$registed = array (
+			'_SESSION', 
+			'_POST', 
+			'_GET', 
+			'_COOKIE', 
+			'_REQUEST', 
+			'_SERVER', 
+			'_ENV', 
+			'_FILES'
+		);
+		foreach( $registed as $value ) 
+		{
+			foreach ( GlobalModifier::get( $value ) as $key => $var ) 
+			{
+				if ( $var === GlobalModifier::get( $key ) ) 
+				{
+					GlobalModifier::destroy( $key );
+				}
+			}
+		}
+	}
+	
 	private static function __start() 
 	{ 
+		if( self::$inited ) return; 
 		session::start();
 		cookie::start(); 
 		error::handle();
-		globalmodifier::set( '_cache', new Cache() );
-		globalmodifier::set( '_irregularWords', array() );
-		globalmodifier::set( '_inflect', new Inflection() );
-		globalmodifier::set( '_post', array() );
-		globalmodifier::set( '_put', array() );
-		globalmodifier::set( '_delete', array() );
-		globalmodifier::set( '_get', array() );
-		globalmodifier::set( '_server', array() );
-		globalmodifier::set( '_file', array() );
+		self::fetch(); 
+		self::__set_report(); 
+		self::__secure_magic_quote(); 
+		self::__unregister_global(); 
+		self::$inited = true;
 	} 
 	
 	private static function __handctrl( $dispatcher, $action ) 
@@ -121,14 +185,22 @@ class Route implements iRoute
 	final public static function __group( $args ) 
 	{ 
 		$name = current($args); 
-		self::$prefix .= $name.PS;
+		self::$prefix .= PS.$name;
+		if( !isset($_GET['url']) ) 
+			$_GET['url'] = self::$prefix.PS; 
+		if( $_GET['url']===self::$prefix ) 
+			$_GET['url'] .= PS; 
 		next($args)(self::instance());
 		self::$prefix = empc;
 	} 
 	
 	private static function __apiType( $callback ) 
 	{
-		self::$prefix = 'api/';
+		self::$prefix = '/api';
+		if( !isset($_GET['url']) ) 
+			$_GET['url'] = PS; 
+		if( $_GET['url']===self::$prefix ) 
+			$_GET['url'] .= PS; 
 		self::__start(); 
 		response::instance()->cors();
 		$callback(self::instance());
@@ -142,23 +214,29 @@ class Route implements iRoute
 		$callback(self::instance());
 	} 
 	
+	private static function __parseUrl( $pattern, &$matches ) 
+	{
+		$rawpatt = '#:([\w\d]+)#';
+		if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+		{
+			$matches = $matches[1]; 
+			$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+		}
+		else 
+		{
+			$matches = array(); 
+		} 
+		return $pattern; 
+	}
+	
 	private static function __getVerb( $args ) 
 	{ 
 		global $_get;
 		if("GET"===$_SERVER["REQUEST_METHOD"]) 
 		{
-			$pattern = current($args);
-			$rawpatt = '#:([\w\d]+)#';
-			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
-			{
-				$matches = $matches[1]; 
-				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
-			}
-			else 
-			{
-				$matches = array(); 
-			}
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
+			$pattern = self::__parseUrl( current($args), $matches );
+			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) )
 			{
 				unset($_GET['url']); 
 				unset($request[0]);
@@ -201,18 +279,9 @@ class Route implements iRoute
 		global $_get, $_post; 
 		if("POST"===$_SERVER["REQUEST_METHOD"]) 
 		{
-			$pattern = current($args);
-			$rawpatt = '#:([\w\d]+)#';
-			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
-			{
-				$matches = $matches[1]; 
-				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
-			}
-			else 
-			{
-				$matches = array(); 
-			}
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
+			$pattern = self::__parseUrl( current($args), $matches );
+			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) ) 
 			{
 				unset($_GET['url']);
 				unset($request[0]);
@@ -256,18 +325,9 @@ class Route implements iRoute
 		global $_get, $_post; 
 		if("PUT"===$_SERVER["REQUEST_METHOD"]) 
 		{
-			$pattern = current($args);
-			$rawpatt = '#:([\w\d]+)#';
-			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
-			{
-				$matches = $matches[1]; 
-				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
-			}
-			else 
-			{
-				$matches = array(); 
-			}
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
+			$pattern = self::__parseUrl( current($args), $matches );
+			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) ) 
 			{
 				unset($_GET['url']);
 				unset($request[0]);
@@ -311,18 +371,9 @@ class Route implements iRoute
 		global $_get;
 		if("DELETE"===$_SERVER["REQUEST_METHOD"]) 
 		{
-			$pattern = current($args);
-			$rawpatt = '#:([\w\d]+)#';
-			if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
-			{
-				$matches = $matches[1]; 
-				$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
-			}
-			else 
-			{
-				$matches = array(); 
-			}
-			if( preg_match('#^'.self::$prefix.$pattern.'$#', $_GET['url'], $request) )
+			$pattern = self::__parseUrl( current($args), $matches );
+			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) )
 			{
 				unset($_GET['url']);
 				unset($request[0]);

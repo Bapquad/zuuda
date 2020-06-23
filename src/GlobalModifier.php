@@ -76,10 +76,14 @@ class GlobalModifier implements iGlobalModifier
 			{ 
 				$request_uri = str_replace( config::get('APP_PATH'), '', $request_uri );
 			} 
-			$qmpos = stripos( $request_uri, '?' ); 
-			if($qmpos) 
+			
+			if( $qmpos = stripos( $request_uri, '?' ) ) 
 			{
 				$url = substr( $request_uri, 1, $qmpos ); 
+				if( question===$url ) 
+				{ 
+					$url = $router['default']['url']; 
+				} 
 			} 
 			else 
 			{

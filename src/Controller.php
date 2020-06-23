@@ -381,9 +381,12 @@ abstract class Controller implements iController, iDeclare, iBlock
 			}
 			else 
 			{
-				if( method_exists($view, $_CONFIG['BEFORE_RENDER_EVENT']) )
+				if( isset($_CONFIG['BEFORE_RENDER_EVENT']) ) 
 				{
-					call_user_func_array(array($view, $_CONFIG['BEFORE_RENDER_EVENT']), array( $query )); 
+					if( method_exists($view, $_CONFIG['BEFORE_RENDER_EVENT']) )
+					{
+						call_user_func_array(array($view, $_CONFIG['BEFORE_RENDER_EVENT']), array( $query )); 
+					}
 				}
 				$view->render( $this->_template ); 
 			}

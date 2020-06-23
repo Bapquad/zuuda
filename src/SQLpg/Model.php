@@ -1,9 +1,10 @@
 <?php
-namespace Zuuda;
+namespace Zuuda\SQLpg;
 
 use Exception; 
+use Zuuda\SQLpgQuery; 
 
-class Model extends SQLQuery
+class Model extends SQLpgQuery
 {
 	protected $_model;
 	

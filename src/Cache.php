@@ -17,7 +17,8 @@ class Cache
 	static $upload_size = 0;
 	static $upload_thread = "";
 
-	function get($fileName) {
+	function get($fileName) 
+	{
 		$fileName = ROOT.DS.'tmp'.DS.'cache'.DS.$fileName;
 		if (file_exists($fileName)) {
 			$handle = fopen($fileName, 'rb');

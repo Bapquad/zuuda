@@ -217,8 +217,14 @@ function escape()
 		exit(zero); 
 }
 
+function ndefine( $n, $v ) { if( !defined($n) ) define($n, $v); }
+function ninclude( $v ) { include_once( $v ); }
+
 function __escape() 
 {
+	\Zuuda\NoSQL\MongoDB\FreeModel::instance()->close();
+	\Zuuda\SQLite\FreeModel::instance()->close();
+	\Zuuda\SQLpg\FreeModel::instance()->close();
 	\Zuuda\FreeModel::instance()->close();
 	\Zuuda\Cache::clearUploadTemp(); 
 	return true;
@@ -838,6 +844,12 @@ function __exc_handler( $e )
 		E_RECOVERABLE_ERROR  => '<i>[CATCHABLE FALTA ERROR]</i>', 
 		8192				 => '<i>[SYNTAX WARNING]</i>', 
 		0					 => '<i>[SYNTAX ERROR]</i>', 
+		14					 => '<i>[MONGODB EXCEPTION]</i>', 
+		9					 => '<i>[MONGODB EXCEPTION]</i>', 
+		40422				 => '<i>[MONGODB EXCEPTION]</i>', 
+		22					 => '<i>[MONGODB EXCEPTION]</i>', 
+		13053				 => '<i>[MONGODB EXCEPTION]</i>', 
+		20					 => '<i>[MONGODB EXCEPTION]</i>', 
 	);
 	$errno = $e->getCode();
 	abort( 500, "<b>{$errortype[$errno]}:</b> <span style=\"word-break: break-word\">".$e->getMessage().'</span>'.\Zuuda\Error::Exchandle($e) ); 

@@ -15,7 +15,7 @@ class Fx
 	final static public function save_content($path, $data, $flag=0, $resource=NULL) 
 	{ 
 		return file_put_contents($path);
-	}
+	} 
 	
 	final static public function load_file($path, $flag=0, $resource=NULL, $offset=-1, $maxlen=-1) 
 	{ 
