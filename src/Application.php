@@ -6,6 +6,7 @@ use Exception;
 use Zuuda\Error;
 use Zuuda\Fx;
 use Zuuda\Text;
+use Zuuda\Session;
 use Zuuda\Route;
 
 class Application 
