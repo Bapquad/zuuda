@@ -61,6 +61,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
 	public function Computed() { $args = func_get_args(); $com = current($args); $in = next($args); return call_user_func_array(array($this, $com), array($in)); }
 	public function Map() { return call_user_func_array(array($this, '__map'), array(func_get_args())); }
+	public function __() { return $this->__setVar( func_get_args(), func_num_args()); }
 	public function Set() { return $this->__setVar( func_get_args(), func_num_args()); }
 	public function Assign() { return $this->__setVar( func_get_args(), func_num_args()); }
 	public function Share() { return $this->__setVar( func_get_args(), func_num_args()); }
@@ -86,6 +87,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	final public function Escape() { escape(); } 
 	final public function Response() { escape(); } 
 	final public function Back() { response::back(); } 
+	final public function Direct( $uri ) { response::redirect($uri); }
 	
 	final public function rootName() { return __CLASS__; }
 	final public function FinalRender( $query = NULL ) { $this->__finalRender( $query ); }

@@ -31,14 +31,10 @@ use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\Regex; 
 use MongoDB\BSON\Timestamp; 
 use MongoDB\BSON\UTCDateTime; 
-use MongoDB\BSON\Type; 
 use MongoDB\BSON\Persistable; 
 use MongoDB\BSON\Serializable; 
-use MongoDB\BSON\Unserializable;  
-use MongoDB\BSON\DBPointer;  
+use MongoDB\BSON\Unserializable; 
 use MongoDB\BSON\Int64;  
-use MongoDB\BSON\Symbol;  
-use MongoDB\BSON\Undefined; 
 
 use MongoDB\Driver\Manager; 
 use MongoDB\Driver\Command; 
@@ -57,6 +53,7 @@ use MongoDB\Driver\WriteError;
 use MongoDB\Driver\WriteResult; 
 
 use Exception;
+use Datetime;
 use ReflectionClass;
 use Zuuda\NoSQLQuery; 
 use Zuuda\NoSQL\MongoDB\Bulk; 
@@ -88,6 +85,7 @@ abstract class MongoDBQuery extends NoSQLQuery
 	final public function Write( Bulk $bulk ) { return call_user_func_array([$this, '__write'], func_get_args()); } 
 	final public function Update( Bulk $bulk ) { return call_user_func_array([$this, '__write'], func_get_args()); } 
 	final public function ObjectId( string $id ) { return call_user_func_array([$this, '__parseIdStmt'], func_get_args()); } 
+	final public function OId( string $id ) { return call_user_func_array([$this, '__parseIdStmt'], func_get_args()); } 
 	
 	final private function __bulk() 
 	{
@@ -130,14 +128,14 @@ abstract class MongoDBQuery extends NoSQLQuery
 			'greater than or equal'	=>'$gte',
 			'>='					=>'$gte', 
 			'in'					=>'$in', 
-			'is'					=>'IS', 
-			'is not'				=>'IS NOT', 
+			'is'					=>'$eq', 
+			'is not'				=>'$ne', 
 			'less than' 			=>'$lt',
 			'<' 					=>'$lt', 
 			'less than or equal' 	=>'$lte',
 			'<='					=>'$lte', 
-			'like'					=>'LIKE', 
-			'not'					=>'NOT', 
+			'like'					=>'$regex', 
+			'not'					=>'$not', 
 			'not between'			=>'NOT BETWEEN',
 			'not equal'				=>'$ne',
 			'!='					=>'$ne', 
@@ -148,7 +146,11 @@ abstract class MongoDBQuery extends NoSQLQuery
 	
 	final protected function __countStmt() 
 	{
-		return array('count'=>$this->_propCollection); 
+		$stmt = array('count'=>$this->_propCollection); 
+		$filters = $this->__buildStmtCondition(); 
+		if( !empty($filters) ) 
+			$stmt['query'] = $filters; 
+		return $stmt; 
 	} 
 	
 	final protected function __parseIdStmt( $_id ) 
@@ -269,7 +271,7 @@ abstract class MongoDBQuery extends NoSQLQuery
 		if( empty($this->_propsDescribe) ) 
 		{
 			$this->_propsDescribe = $this->__parseDescribe( $this->_propCollection ); 
-		}
+		} 
 		foreach( $this->_propsDescribe as $f ) 
 		{
 			$this->$f = NULL; 
@@ -282,7 +284,6 @@ abstract class MongoDBQuery extends NoSQLQuery
 				$this->__boundField( $f ); 
 			}
 		} 
-		unset($this->_schema); 
 		return $this->_propsUndescribe;
 	} 
 	
@@ -350,8 +351,11 @@ abstract class MongoDBQuery extends NoSQLQuery
 	
 	protected function __computeSteadModel( $args, $flag=NULL ) 
 	{
+		global $_config;
 		$modelRC = new ReflectionClass( $args[1] ); 
+		$_config["require_seek"] = true; 
 		$model = $modelRC->newInstance(); 
+		unset($_config["require_seek"]); 
 		$len = count($args);
 		if( isset($args[3]) )
 			$model->setForeignKey($args[3]); 
@@ -359,6 +363,8 @@ abstract class MongoDBQuery extends NoSQLQuery
 			$model->setForeignKey($this->_primaryKey); 
 		$model->setAliasKey($args[2]); 
 		$model->setAliasModel($args[$len-2]); 
+		if( array_key_exists("require_hasone", $_config) ) 
+			$model->setModelName($args[0]); 
 		return $model;
 	}
 	
@@ -373,9 +379,9 @@ abstract class MongoDBQuery extends NoSQLQuery
 			$rs = $this->_dbHandle->executeBulkWrite($collection, $bulkWriter, $writeConcern); 
 			$bulk->release(); 
 			$writeResult = array(
-				"deleted"		=> $rs->getDeletedCount(), 
-				"inserted"		=> $rs->getInsertedCount(), 
-				"modified"		=> $rs->getModifiedCount() 
+				"deleted"	=> $rs->getDeletedCount(), 
+				"inserted"	=> $rs->getInsertedCount(), 
+				"modified"	=> $rs->getModifiedCount() 
 			); 
 			$result = array_merge( $result, $writeResult );
 			$bulk->result( $result ); 
@@ -403,7 +409,8 @@ abstract class MongoDBQuery extends NoSQLQuery
 					$update = $this->_propCollection; 
 					$updates = array();
 					$set = array(); 
-					$q = array( $this->_primaryKey => $document[$this->_primaryKey] );
+					$id = $document[$this->_primaryKey];
+					$q = array( $this->_primaryKey => (is_object($id))?$id:$this->__parseIdStmt($id) );
 					$data = $this->__parseData( $document, $this->_eventRide ); 
 					$u = array( '$set' => $data );
 					$set = array_merge( $set, compact('q') );
@@ -417,6 +424,7 @@ abstract class MongoDBQuery extends NoSQLQuery
 					{
 						if( method_exists($this, 'onride') ) 
 							$this->_eventOnRide = $this->onride( $data ); 
+						$document[$this->_primaryKey] = $q[$this->_primaryKey];
 						return $document; 
 					} 
 					return false; 
@@ -428,12 +436,13 @@ abstract class MongoDBQuery extends NoSQLQuery
 			}
 		} 
 		else 
-		{
-			if( NULL!==$this->$this->_primaryKey ) 
-			{
+		{ 
+			$primary_key = $this->_primaryKey; 
+			if( NULL!==$this->$primary_key ) 
+			{ 
 				$document = array(); 
-				foreach( $this->_propsDescribe as $descible ) 
-					$document[$descible] = $this->$descible; 
+				foreach( $this->_propsDescribe as $describle ) 
+					$document[$describle] = $this->$describle; 
 				return call_user_func_array(array($this, '__save'), array([$document], 1)); 
 			}
 		}
@@ -475,9 +484,10 @@ abstract class MongoDBQuery extends NoSQLQuery
 		}
 		else 
 		{
-			if( NULL!==$this->$this->_primaryKey ) 
+			$pk = $this->_primaryKey;
+			if( NULL!==$this->$pk ) 
 			{
-				$param = [$this->$this->_primaryKey];
+				$param = [$this->$pk]; 
 				return call_user_func_array(array($this, '__delete'), array($param, count($param))); 
 			}
 		}
@@ -555,28 +565,162 @@ abstract class MongoDBQuery extends NoSQLQuery
 		}
 	} 
 	
+	final private function __parseStmtData( $data, $describle ) 
+	{
+		try 
+		{
+			if(NULL===$data) 
+			{
+				$basename = 'Null';
+			} 
+			else 
+			{
+				$schema = $this->_schema[$describle]; 
+				$basename = $schema[0]; 
+			}
+			switch( $basename )
+			{
+				case "Binary": 
+					$class = new ReflectionClass( "\MongoDB\BSON\Binary" ); 
+					return $class->newInstanceArgs( array($data, $schema[1] ) ); 
+				case "Decimal128":
+					$class = new ReflectionClass( "\MongoDB\BSON\Decimal128" ); 
+					return $class->newInstanceArgs( array($data) ); 
+				case "Javascript": 
+					if( is_array($data) ) 
+					{
+						$class = new ReflectionClass( "\MongoDB\BSON\Javascript" ); 
+						return $class->newInstanceArgs( $data ); 
+					} 
+					else 
+					{
+						throw new Exception( "You javascript data must be in array format." ); 
+					} 
+				case "MaxKey":
+					$class = new ReflectionClass( "\MongoDB\BSON\MaxKey" ); 
+					return $class->newInstance(); 
+				case "MinKey":
+					$class = new ReflectionClass( "\MongoDB\BSON\MinKey" ); 
+					return $class->newInstance(); 
+				case "ObjectId": 
+					$class = new ReflectionClass( "\MongoDB\BSON\ObjectId" ); 
+					if( NULL===$data ) 
+						return $class->newInstanceArgs( array() ); 
+					else
+						return $class->newInstanceArgs( array($data) ); 
+				case "Regex":
+					$class = new ReflectionClass( "\MongoDB\BSON\Regex" ); 
+					if( isset($schema[1]) ) 
+						return $class->newInstanceArgs( array($data, $schema[1]) ); 
+					else 
+						return $class->newInstanceArgs( array($data) ); 
+				case "Timestamp": 
+					$class = new ReflectionClass( "\MongoDB\BSON\Timestamp" ); 
+					if( isset($schema[1]) ) 
+						return $class->newInstanceArgs( array($data, $schema[1]) ); 
+					else 
+						throw new Exception("Your <b><code>{$describle}</code></b> field has wrong schema."); 
+				case "UTCDateTime": 
+					$class = new ReflectionClass( "\MongoDB\BSON\UTCDateTime" ); 
+					if( is_object($data) && get_class($data) ) 
+						return $class->newInstanceArgs( array($data) ); 
+					else if( is_string($data) ) 
+						return $class->newInstanceArgs( array(new Datetime($data)) ); 
+				case "Array": 
+					if( is_array($data) ) 
+						return (array) $data; 
+					else throw new Exception("Your <b><code>{$describle}</code></b> field has expected array format."); 
+				case "Document": 
+					if( is_object($data) ) 
+						return $data; 
+					else throw new Exception("Your <b><code>{$describle}</code></b> field has expected document object format."); 
+				case "String": 
+					if( isset($schema[1]) ) 
+					{
+						return substr($data, 0, $schema[1]); 
+					}
+					return $data; 
+				case "Int64": 
+					$class = new ReflectionClass( "\MongoDB\BSON\Int64" ); 
+					return $class->newInstanceArgs( array($data) ); 
+				case "Integer": 
+				case "Int32": 
+					$data_str = "".$data; 
+					if( isset($schema[1]) )
+					{
+						if( strlen($data_str) >= $schema[1] ) 
+							return (int) substr($data_str, 0, $schema[1]); 
+					}
+					return (int)$data; 
+				case "Null": 
+					return NULL; 
+				default:
+					return $data; 
+			}
+		}
+		catch( Exception $e )
+		{ 
+			abort( 500, $e->getMessage() ); 
+		}
+	}
+	
 	final private function __parseData( $document, $rideData ) 
 	{
 		$out = array(); 
-		foreach( $this->_propsDescribe as $descible ) 
-			if( $this->_primaryKey===$descible ) continue; 
-			elseif( array_key_exists($descible, $rideData) ) 
-				$out[$descible] = $rideData[$descible]; 
-			else $out[$descible] = $document[$descible]; 
+		foreach( $this->_propsDescribe as $describle ) 
+		{
+			$value = NULL;
+			if( $this->_primaryKey===$describle ) 
+			{
+				continue; 
+			}
+			elseif( NULL!==$rideData ) 
+			{
+				if( array_key_exists($describle, $rideData) ) 
+				{
+					$value = $rideData[$describle]; 
+				}
+			}
+			else 
+			{
+				if( isset($document[$describle]) ) 
+					$value = $document[$describle]; 
+			} 
+			if( isset($value) ) 
+			{
+				$out[$describle] = $this->__parseStmtData($value, $describle);
+			}
+		}
 		return $out; 
-	}
+	} 
 	
 	final private function __document( $data, $bootData = array() ) 
 	{
 		$out = array(); 
-		foreach( $this->_propsDescribe as $descible ) 
+		foreach( $this->_propsDescribe as $describle ) 
 		{
-			if( $this->_primaryKey===$descible ) 
-				$out[$this->_primaryKey] = new ObjectId; 
-			elseif( isset($data[$descible]) ) 
-				$out[$descible] = $data[$descible]; 
-			else if( array_key_exists($descible, $bootData) ) 
-				$out[$descible] = $bootData[$descible]; 
+			if( $this->_primaryKey===$describle ) 
+			{
+				$out[$describle] = new ObjectId; 
+			}
+			elseif( array_key_exists($describle, $data) ) 
+			{
+				$out[$describle] = $this->__parseStmtData($data[$describle], $describle); 
+			}
+			else if( NULL!==$bootData ) 
+			{
+				if( array_key_exists($describle, $bootData) ) 
+				{
+					$out[$describle] = $this->__parseStmtData($bootData[$describle], $describle); 
+				}
+			}
+			else 
+			{
+				if( isset($this->_schema[$describle][2]) ) 
+				{
+					$out[$describle] = $this->__parseStmtData($this->_schema[$describle][2], $describle); 
+				} 
+			} 
 		}
 		return $out; 
 	}
@@ -607,12 +751,12 @@ abstract class MongoDBQuery extends NoSQLQuery
 		$this->__addCommand( $command ); 
 		$commandRC = new ReflectionClass( 'MongoDB\Driver\Command' ); 
 		$command = $commandRC->newInstanceArgs( (array) $command ); 
-		// $session = $this->_dbHandle->startSession();
-		// $session->startTransaction();
+		$session = $this->_dbHandle->startSession();
+		$session->startTransaction();
 		$cr = $this->_dbHandle->executeCommand($this->_propDatabase, $command); 
 		// $cr = $this->_dbHandle->executeCommand($this->_propDatabase, $command, ["session"=>$session]); 
-		// $session->abortTransaction(); 
-		// $session->endSession(); 
+		$session->abortTransaction(); 
+		$session->endSession(); 
 		return $cr; 
 	}
 	

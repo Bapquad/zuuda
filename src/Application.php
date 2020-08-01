@@ -4,11 +4,9 @@ namespace Zuuda;
 use ReflectionClass;
 use Exception;
 use Zuuda\Error;
-use Zuuda\Session;
-use Zuuda\Cookie;
-use Zuuda\Route;
 use Zuuda\Fx;
 use Zuuda\Text;
+use Zuuda\Route;
 
 class Application 
 {

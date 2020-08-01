@@ -291,11 +291,11 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 		extract( $this->_blocks );
 		if( $this->_layout_engine_path && is_file($this->_layout_engine_path) )  
 			include_once( $this->_layout_engine_path ); 
-		if( $this->__finishHeaderPath() && $this->_layout_header && is_file($this->_layout_header_path) ) 
+		if( $this->__finishHeaderPath() && $this->_layout_header && is_file(ROOT_DIR.$this->_layout_header_path) ) 
 			include_once( $this->_layout_header_path ); 
 		if( $this->__finishPath() && is_file($this->_tpl_path) ) 
 			include_once( $this->_tpl_path ); 
-		if( $this->__finishFooterPath() && $this->_layout_footer && is_file($this->_layout_footer_path) ) 
+		if( $this->__finishFooterPath() && $this->_layout_footer && is_file(ROOT_DIR.$this->_layout_footer_path) ) 
 			include_once( $this->_layout_footer_path );
 	}
 	

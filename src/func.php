@@ -218,7 +218,6 @@ function escape()
 }
 
 function ndefine( $n, $v ) { if( !defined($n) ) define($n, $v); }
-function ninclude( $v ) { include_once( $v ); }
 
 function __escape() 
 {
@@ -850,6 +849,7 @@ function __exc_handler( $e )
 		22					 => '<i>[MONGODB EXCEPTION]</i>', 
 		13053				 => '<i>[MONGODB EXCEPTION]</i>', 
 		20					 => '<i>[MONGODB EXCEPTION]</i>', 
+		-1					 => '<i>[EXCEPTION]</i>', 
 	);
 	$errno = $e->getCode();
 	abort( 500, "<b>{$errortype[$errno]}:</b> <span style=\"word-break: break-word\">".$e->getMessage().'</span>'.\Zuuda\Error::Exchandle($e) ); 

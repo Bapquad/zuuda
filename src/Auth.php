@@ -4,6 +4,7 @@ namespace Zuuda;
 
 use Exception;
 use Zuuda\Config;
+use Zuuda\Session; 
 use Zuuda\Fx;
 use Zuuda\AuthAction;
 
@@ -16,6 +17,7 @@ class Auth
 	private function __clone() {} 
 	
 	public static function GetAll() { return call_user_func_array(array(self::$this, '__user') , array()); }
+	public static function Has() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); }
 	public static function All() { return call_user_func_array(array(self::$this, '__user'), array()); }
 	public static function Get() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
 	public static function Data() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
@@ -23,6 +25,9 @@ class Auth
 	public static function Role() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Apply() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
+	public static function Register() { return call_user_func_array(array(self::$this, '__register'), func_get_args()); }
+	public static function Destroy() { return call_user_func_array(array(self::$this, '__destroy'), array()); } 
+	public static function Update() { return call_user_func_array(array(self::$this, '__update'), func_get_args()); } 
 	public static function Instance() { return call_user_func_array(); } 
 	
 	public static function __callStatic( $name, $args ) 
@@ -59,6 +64,25 @@ class Auth
 			$_instance = new Auth;
 		}
 		return $_instance;
+	} 
+	
+	private static function __register( $data ) 
+	{
+		self::__destroy(); 
+		session::register( user_auth, $data ); 
+		return $data; 
+	} 
+	
+	private static function __update( $data ) 
+	{
+		session::modify( user_auth, $data ); 
+		return $data; 
+	}
+	
+	private static function __destroy() 
+	{
+		session::unregister( user_auth ); 
+		return true; 
 	}
 	
 	private static function __user($prop=NULL) 
@@ -89,6 +113,16 @@ class Auth
 			if( isset($data[$prop]) )
 				return $data[$prop]; 
 		}
+	} 
+	
+	public function __has( $prop ) 
+	{
+		if($prop) 
+		{
+			$data = session::get(user_auth); 
+			return isset($data[$prop]);
+		} 
+		return false;
 	} 
 	
 	private static function __login() 

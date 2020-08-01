@@ -12,6 +12,8 @@ class Request extends RequestHeader
 	public static $this = '\Zuuda\Request';
 	public static function All() { return self::__params(); } 
 	public static function Has($name) { return self::__has($name); }
+	public static function HasNot($name) { return self::__hasNot($name); }
+	public static function Not($name) { return self::__hasNot($name); }
 	public static function Params() { return self::__params(); } 
 	public static function Body($name=NULL) { return self::__param($name, true); } 
 	public static function Data($name=NULL) { return self::__param($name, true); } 
@@ -109,9 +111,16 @@ class Request extends RequestHeader
 		try 
 		{ 
 			if( empty($args) ) 
-				return $_post[$name]; 
+			{
+				if( isset($_post[$name]) )
+					return $_post[$name]; 
+				else 
+					return;
+			}
 			else 
-				$value = current($args);
+			{
+				$value = current($args); 
+			}
 			$_post[$name] = $value; 
 			return $value;	
 		} 
@@ -147,7 +156,13 @@ class Request extends RequestHeader
 	private static function __has( $name ) 
 	{
 		global $_post; 
-		return isset($_post[$name]); 
+		return array_key_exists($name, $_post); 
+	}
+	
+	private static function __hasNot( $name ) 
+	{
+		global $_post; 
+		return !array_key_exists($name, $_post); 
 	}
 	
 	private static function __param( $name=NULL, $body=false ) 

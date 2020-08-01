@@ -5,6 +5,7 @@ use Exception;
 use ReflectionClass;
 use Zuuda\RouteController;
 use Zuuda\GlobalModifier;
+use Zuuda\LocateService;
 use Zuuda\Error;
 use Zuuda\Text;
 use Zuuda\Request;
@@ -19,6 +20,7 @@ class Route implements iRoute
 	private static $this = '\Zuuda\Route'; 
 	private static $prefix = empc; 
 	private static $inited = false;
+	private static $headset = array(); 
 	
 	final public static function Instance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
 	final public static function GetInstance() { return call_user_func_array(array(self::$this, '__instance'), array()); }
@@ -36,6 +38,8 @@ class Route implements iRoute
 	final public static function SecureMagicQuote() { return call_user_func_array(array(self::$this, '__secure_magic_quote'), array()); } 
 	final public static function UnregisterGlobals() { return call_user_func_array(array(self::$this, '__unregister_global'), array()); } 
 	final public static function SetReporting() { return call_user_func_array(array(self::$this, '__set_report'), array()); } 
+	final public static function Share() { return call_user_func_array(array(self::$this, '__assign'), func_get_args()); } 
+	final public static function Assign() { return call_user_func_array(array(self::$this, '__assign'), func_get_args()); } 
 	
 	private function __construct() {}
 	private function __clone() {}
@@ -54,6 +58,40 @@ class Route implements iRoute
 		self::$prefix .= $name.PS;
 		current($arg)(self::instance());
 	} 
+	
+	private static function __assign( $name, $value=NULL ) 
+	{
+		if( is_array($name) ) 
+		{
+			$data = item($name);
+			$name = current($data); 
+			$value = next($data); 
+		}
+		self::$headset[$name] = $value; 
+		return true; 
+	}
+	
+	private static function __headset( $data, $res ) 
+	{
+		foreach( $data as $name => $value ) 
+		{
+			$res->assign( $name, $value );
+		} 
+		return true; 
+	}
+	
+	private static function __apply( $middlewares, $res ) 
+	{
+		if( $middlewares ) 
+		{
+			$req = query::instance(); 
+			if(is_object($middlewares)) 
+				$middlewares::handle($req, $res);
+			else 
+				foreach($middlewares as $middleware) 
+					$middleware::handle($req, $res); 
+		}
+	}
 	
 	private static function __fetch() 
 	{
@@ -155,6 +193,7 @@ class Route implements iRoute
 		self::__set_report(); 
 		self::__secure_magic_quote(); 
 		self::__unregister_global(); 
+		LocateService::getInstance()->bootService();
 		self::$inited = true;
 	} 
 	
@@ -167,7 +206,13 @@ class Route implements iRoute
 		call_user_func_array(array($dispatcher, "FinalRender" ), array());
 	} 
 	
-	private static function __callback( $callback ) 
+	private static function __preware( $dispatch, $middlewares ) 
+	{
+		call_user_func_array(array(self::$this, '__headset'), array(self::$headset, $dispatch)); 
+		call_user_func_array(array(self::$this, '__apply'), array(next($middlewares), $dispatch));
+	}
+	
+	private static function __callback( $callback, $middlewares ) 
 	{
 		$controller_class_name = current($callback);
 		$ctrlRefl = new ReflectionClass($controller_class_name); 
@@ -179,6 +224,7 @@ class Route implements iRoute
 			$args[] = new $propName;
 		}
 		$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
+		call_user_func_array(array(self::$this, '__preware'), array($res, $middlewares));
 		route::__handctrl($dispatch, next($callback).ACTION);
 	}
 	
@@ -235,7 +281,8 @@ class Route implements iRoute
 		if("GET"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = self::__parseUrl( current($args), $matches );
-			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			$url = (isset($_GET['url']))?$_GET['url']:PS; 
+			
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) )
 			{
 				unset($_GET['url']); 
@@ -262,12 +309,13 @@ class Route implements iRoute
 				$callback = next($args); 
 				if(is_callable( $callback )) 
 				{
+					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(query::instance(), $res);
 					$res->finalRender();
 				}
 				else if( is_array($callback) ) 
 				{
-					route::__callback($callback); 
+					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -280,7 +328,7 @@ class Route implements iRoute
 		if("POST"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = self::__parseUrl( current($args), $matches );
-			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			$url = (isset($_GET['url']))?$_GET['url']:PS; 
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) ) 
 			{
 				unset($_GET['url']);
@@ -308,12 +356,13 @@ class Route implements iRoute
 				if(is_callable( $callback )) 
 				{
 					$_post = $_POST;
+					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(request::instance(), $res);
 					$res->finalRender();
 				}
 				else if( is_array($callback) ) 
 				{
-					route::__callback($callback); 
+					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -326,7 +375,7 @@ class Route implements iRoute
 		if("PUT"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = self::__parseUrl( current($args), $matches );
-			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			$url = (isset($_GET['url']))?$_GET['url']:PS; 
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) ) 
 			{
 				unset($_GET['url']);
@@ -354,12 +403,13 @@ class Route implements iRoute
 				$callback = next($args); 
 				if(is_callable( $callback )) 
 				{
+					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(request::instance(), $res);
 					$res->finalRender();
 				}
 				else if( is_array($callback) ) 
 				{
-					route::__callback($callback); 
+					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -372,7 +422,7 @@ class Route implements iRoute
 		if("DELETE"===$_SERVER["REQUEST_METHOD"]) 
 		{
 			$pattern = self::__parseUrl( current($args), $matches );
-			$url = (isset($_GET['url']))?$_GET['url']:NULL; 
+			$url = (isset($_GET['url']))?$_GET['url']:PS; 
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) )
 			{
 				unset($_GET['url']);
@@ -399,12 +449,13 @@ class Route implements iRoute
 				$callback = next($args); 
 				if(is_callable( $callback )) 
 				{
+					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(query::instance(), $res);
 					$res->finalRender();
 				}
 				else if( is_array($callback) ) 
 				{
-					route::__callback($callback); 
+					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 

@@ -151,22 +151,29 @@ class QueryStmt
 	final public function Unsecure() { return $this->__unsecure( func_get_args(), func_num_args() ); } 
 	final public function Between() { return $this->__between( func_get_args(), func_num_args() ); }
 	final public function Equal() { return $this->__equal( func_get_args(), func_num_args() ); }
+	final public function Eq() { return $this->__equal( func_get_args(), func_num_args() ); }
+	final public function __() { return $this->__equal( func_get_args(), func_num_args() ); }
 	final public function Greater() { return $this->__greaterThan( func_get_args(), func_num_args() ); } 
+	final public function Gt() { return $this->__greaterThan( func_get_args(), func_num_args() ); } 
 	final public function GreaterThan() { return $this->__greaterThan( func_get_args(), func_num_args() ); } 
 	final public function GreaterThanOrEqual() { return $this->__greaterThanOrEqual( func_get_args(), func_num_args() ); } 
+	final public function Gteq() { return $this->__greaterThanOrEqual( func_get_args(), func_num_args() ); } 
 	final public function In() { return $this->__in( func_get_args(), func_num_args() ); }
 	final public function Is() { return $this->__is( func_get_args(), func_num_args() ); }
 	final public function IsNot() { return $this->__isNot( func_get_args(), func_num_args() ); }
 	final public function IsNotNull() { return $this->__isNotNull( func_get_args(), func_num_args() ); }
 	final public function IsNull() { return $this->__isNull( func_get_args(), func_num_args() ); }
 	final public function Less() { return $this->__lessThan( func_get_args(), func_num_args() ); } 
+	final public function Lt() { return $this->__lessThan( func_get_args(), func_num_args() ); } 
 	final public function LessThan() { return $this->__lessThan( func_get_args(), func_num_args() ); } 
 	final public function LessThanOrEqual() { return $this->__lessThanOrEqual( func_get_args(), func_num_args() ); } 
+	final public function Lteq() { return $this->__lessThanOrEqual( func_get_args(), func_num_args() ); } 
 	final public function Like() { return $this->__like( func_get_args(), func_num_args() ); }
 	final public function Not() { return $this->__not( func_get_args(), func_num_args() ); }
 	final public function NotBetween() { return $this->__notBetween( func_get_args(), func_num_args() ); }
 	final public function Diff() { return $this->__notEqual( func_get_args(), func_num_args() ); }
 	final public function NotEqual() { return $this->__notEqual( func_get_args(), func_num_args() ); }
+	final public function ne() { return $this->__notEqual( func_get_args(), func_num_args() ); }
 	final public function NotIn() { return $this->__notIn( func_get_args(), func_num_args() ); }
 	final public function NotLike() { return $this->__notLike( func_get_args(), func_num_args() ); }
 	final public function NotNull() { return $this->__notNull( func_get_args(), func_num_args() ); }
@@ -706,7 +713,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '=', '_equal') ); 
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '=', '__equal') ); 
 			else 
 				throw new Exception( "Using <strong>Model::equal()</strong> has a syntax error." ); 
 		} 
@@ -722,7 +729,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '>', '_greaterThan'));
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '>', '__greaterThan'));
 			else 
 				throw new Exception( "Using <strong>Model::greaterThan()</strong> has a syntax error." );
 		}
@@ -738,7 +745,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '>=', '_greaterThanOrEqual') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '>=', '__greaterThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::greaterThanOrEqual()</strong> has a syntax error." ); 
 		} 
@@ -754,7 +761,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__in_operator'), array($args, $argsNum, 'in', '_in') );
+				call_user_func_array( array($this, '__in_operator'), array($args, $argsNum, 'in', '__in') );
 			else 
 				throw new Exception( "Using <strong>Model::in()</strong> has a syntax error." ); 
 		} 
@@ -770,7 +777,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'is', '_is') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'is', '__is') );
 			else 
 				throw new Exception( "Using <strong>Model::is()</strong> has a syntax error." ); 
 		} 
@@ -786,7 +793,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'is not', '_isNot') ); 
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'is not', '__isNot') ); 
 			else 
 				throw new Exception( "Using <strong>Model::isNot()</strong> has a syntax error." ); 
 		} 
@@ -802,7 +809,7 @@ class QueryStmt
 		try 
 		{ 
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is not', '_isNotNull') ); 
+				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is not', '__isNotNull') ); 
 			else 
 				throw new Exception( "Using <strong>Model::isNotNull()</strong> has a syntax error." ); 
 		} 
@@ -818,7 +825,7 @@ class QueryStmt
 		try 
 		{ 
 			if( $argsNum )
-				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is', '_isNull') ); 
+				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is', '__isNull') ); 
 			else 
 				throw new Exception( "Using <strong>Model::isNull()</strong> has a syntax error." ); 
 		} 
@@ -834,7 +841,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator') , array($args, $argsNum, '<', '_lessThan') );
+				call_user_func_array( array($this, '__where_operator') , array($args, $argsNum, '<', '__lessThan') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThan()</strong> has a syntax error." ); 
 		} 
@@ -850,7 +857,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '<=', '_lessThanOrEqual') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '<=', '__lessThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThanOrEqual()</strong> has a syntax error." ); 
 		} 
@@ -866,7 +873,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator') , array($args, $argsNum, 'like', '_like') );
+				call_user_func_array( array($this, '__where_operator') , array($args, $argsNum, 'like', '__like') );
 			else 
 				throw new Exception( "Using <strong>Model::like()</strong> has a syntax error." ); 
 		} 
@@ -882,7 +889,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '!=', '_not') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '!=', '__not') );
 			else 
 				throw new Exception( "Using <strong>Model::not()</strong> has a syntax error." ); 
 		} 
@@ -914,7 +921,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '!=', '_notEqual') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, '!=', '__notEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::notEqual()</strong> has a syntax error." ); 
 		} 
@@ -930,7 +937,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__in_operator'), array($args, $argsNum, 'not in', '_notIn') );
+				call_user_func_array( array($this, '__in_operator'), array($args, $argsNum, 'not in', '__notIn') );
 			else 
 				throw new Exception( "Using <strong>Model::notIn()</strong> has a syntax error." ); 
 		} 
@@ -947,7 +954,7 @@ class QueryStmt
 		{
 			if( $argsNum ) 
 			{
-				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'not like', '_notLike') );
+				call_user_func_array( array($this, '__where_operator'), array($args, $argsNum, 'not like', '__notLike') );
 			}
 			else 
 				throw new Exception( "Using <strong>Model::notLike()</strong> has a syntax error." ); 
@@ -964,7 +971,7 @@ class QueryStmt
 		try 
 		{ 
 			if( $argsNum ) 
-				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is not', '_notNull') ); 
+				call_user_func_array( array($this, '__null_operator'), array($args, $argsNum, 'is not', '__notNull') ); 
 			else 
 				throw new Exception( "Using <strong>Model::notNull()</strong> has a syntax error." ); 
 		} 
@@ -1078,6 +1085,15 @@ class QueryStmt
 						$tmp[] = $value;
 				if( !empty($tmp) ) 
 					call_user_func_array( array($dispatcher, $method), array($tmp, count($tmp)) ); 
+			} 
+			else 
+			{
+				if( isset($this->_primaryKey) ) 
+				{
+					$key = $this->_primaryKey;
+					$value = $params;
+					call_user_func_array( array($dispatcher, $method), array([$key, $value], $twoArg) ); 
+				}
 			}
 		}
 		else if( $twoArg<=$argsNum ) 
@@ -1168,6 +1184,14 @@ class QueryStmt
 						$args[2] = $allowOps[strtolower($args[2])]; 
 						$this->_propsCondEx[$args[0]][] = array_slice($args, 1); 
 					} 
+				}
+				else if( $oneArg===count($args) && isset($this->_primaryKey) ) 
+				{
+					$value = current($args); 
+					if( is_string($value) && method_exists($dispatcher, 'ObjectId') ) 
+						$value = $dispatcher->objectId( $value ); 
+					$params = array( $this->_primaryKey, '=', $value ); 
+					return call_user_func_array(array($dispatcher, '__where'), array($params, count($params))); 
 				}
 				else 
 				{
@@ -1505,7 +1529,7 @@ class QueryStmt
 			$param[] = current($arg);
 			$args [] = $param;
 		}
-		call_user_func_array( array($dispatcher, '_whereOr'), array($args, count($args)) );
+		call_user_func_array( array($dispatcher, '__whereOr'), array($args, count($args)) );
 	}
 	
 	final protected function __null_or_operator( $args, $argsNum, $sign ) 
@@ -1526,7 +1550,7 @@ class QueryStmt
 				$tmps[] = array($key, $sign, NULL); 
 			}
 		}
-		call_user_func_array( array($dispatcher, '_whereOr'), array($tmps, count($tmps)) ); 
+		call_user_func_array( array($dispatcher, '__whereOr'), array($tmps, count($tmps)) ); 
 	}
 	
 	final protected function __where_or_operator( $args, $argsNum, $sign ) 
@@ -1543,7 +1567,7 @@ class QueryStmt
 			foreach( $args as $key => $value ) 
 				$tmps[] = array($key, $sign, $value); 
 		}
-		call_user_func_array( array($dispatcher, '_whereOr'), array($tmps, count($tmps)) ); 
+		call_user_func_array( array($dispatcher, '__whereOr'), array($tmps, count($tmps)) ); 
 	}
 	
 	final protected function __whereOr( $args, $argsNum ) 
@@ -1636,7 +1660,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '=', '_equalOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '=', '__equalOn') );
 			else 
 				throw new Exception( "Using <strong>Model::equalOn()</strong> has a syntax error." ); 
 		} 
@@ -1651,7 +1675,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>', '_greaterThanOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>', '__greaterThanOn') );
 			else 
 				throw new Exception( "Using <strong>Model::greaterThanOn()</strong> has a syntax error." ); 
 		} 
@@ -1666,7 +1690,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>=', '_greaterThanOrEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '>=', '__greaterThanOrEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::greaterThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -1681,7 +1705,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'in', '_inOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'in', '__inOn') );
 			else 
 				throw new Exception( "Using <strong>Model::inOn()</strong> has a syntax error." ); 
 		} 
@@ -1696,7 +1720,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is', '_isOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is', '__isOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isOn()</strong> has a syntax error." ); 
 		} 
@@ -1711,7 +1735,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is not', '_isNotOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'is not', '__isNotOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNotOn()</strong> has a syntax error." ); 
 		} 
@@ -1726,7 +1750,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_isNotNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '__isNotNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNotNullOn()</strong> has a syntax error." ); 
 		} 
@@ -1741,7 +1765,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is', '_isNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is', '__isNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::isNullOn()</strong> has a syntax error." ); 
 		} 
@@ -1756,7 +1780,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '__lessOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessOn()</strong> has a syntax error." ); 
 		} 
@@ -1771,7 +1795,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '_lessThanOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<', '__lessThanOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThanOn()</strong> has a syntax error." ); 
 		} 
@@ -1786,7 +1810,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<=', '_lessThanOrEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '<=', '__lessThanOrEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::lessThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -1801,7 +1825,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'like', '_likeOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'like', '__likeOn') );
 			else 
 				throw new Exception( "Using <strong>Model::likeOn()</strong> has a syntax error." ); 
 		} 
@@ -1816,7 +1840,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not', '_notOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not', '__notOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notOn()</strong> has a syntax error." ); 
 		} 
@@ -1846,7 +1870,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '!=', '_notEqualOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, '!=', '__notEqualOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -1861,7 +1885,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not in', '_notInOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not in', '__notInOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notInOn()</strong> has a syntax error." ); 
 		} 
@@ -1876,7 +1900,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not like', '_notLikeOn') );
+				return call_user_func_array( array($this, '__where_on_operator'), array($args, $argsNum, 'not like', '__notLikeOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notLikeOn()</strong> has a syntax error." ); 
 		} 
@@ -1891,7 +1915,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '_notNullOn') );
+				return call_user_func_array( array($this, '__null_on_operator'), array($args, $argsNum, 'is not', '__notNullOn') );
 			else 
 				throw new Exception( "Using <strong>Model::notNullOn()</strong> has a syntax error." ); 
 		} 
@@ -1911,7 +1935,7 @@ class QueryStmt
 			$tmp = $args[1]; 
 			$args[1] = $sign; 
 			$args[2] = $tmp;
-			return call_user_func_array(array($dispatcher, '_whereOn'), array($args, count($args)));
+			return call_user_func_array(array($dispatcher, '__whereOn'), array($args, count($args)));
 		}
 		else if($argsNum===$oneArg) 
 		{
@@ -1921,7 +1945,7 @@ class QueryStmt
 				$tmp = array(key($param)); 
 				$tmp[] = $sign; 
 				$tmp[] = current($param);
-				call_user_func_array(array($dispatcher, '_whereOn'), array($tmp, count($tmp)));
+				call_user_func_array(array($dispatcher, '__whereOn'), array($tmp, count($tmp)));
 			}
 			return $this;
 		}
@@ -1938,7 +1962,7 @@ class QueryStmt
 			$tmp = $args[1];
 			$args[1] = $sign;
 			$args[2] = $tmp; 
-			return call_user_func_array( array($dispatcher, '_whereOn'), array($args, $argsNum) ); 
+			return call_user_func_array( array($dispatcher, '__whereOn'), array($args, $argsNum) ); 
 		} 
 		else if( $argsNum>$twoArg ) 
 		{
@@ -1946,7 +1970,7 @@ class QueryStmt
 			$tmp[] = array_shift($args); 
 			$tmp[] = $sign;
 			$tmp[] = $args;
-			return call_user_func_array( array($dispatcher, '_whereOn'), array($tmp, 3) ); 
+			return call_user_func_array( array($dispatcher, '__whereOn'), array($tmp, 3) ); 
 		}
 		else 
 		{
@@ -1969,7 +1993,7 @@ class QueryStmt
 			{
 				$args[] = $sign; 
 				$args[] = NULL;
-				return call_user_func_array( array($dispatcher, '_whereOn'), array( $args, 3 ) );
+				return call_user_func_array( array($dispatcher, '__whereOn'), array( $args, 3 ) );
 			}
 			else 
 			{
@@ -2011,7 +2035,7 @@ class QueryStmt
 				$tmp = $args[1];
 				$args[1] = $sign;
 				$args[2] = $tmp; 
-				call_user_func_array( array($dispatcher, '_whereOn'), array($args, $argsNum) ); 
+				call_user_func_array( array($dispatcher, '__whereOn'), array($args, $argsNum) ); 
 			} 
 			else 
 			{
@@ -2032,7 +2056,7 @@ class QueryStmt
 						$tmp[] = $arg[1];
 					}
 					$arg = $tmp;
-					call_user_func_array( array($dispatcher, '_whereOn'), array($arg, count($arg)) ); 
+					call_user_func_array( array($dispatcher, '__whereOn'), array($arg, count($arg)) ); 
 				}
 			}
 		} 
@@ -2073,7 +2097,7 @@ class QueryStmt
 				{
 					$args = current($args);
 					foreach($args as $arg) 
-						call_user_func_array( array($dispatcher, '_whereOn'), array($arg, count($arg)) ); 
+						call_user_func_array( array($dispatcher, '__whereOn'), array($arg, count($arg)) ); 
 				}
 				if( count($params) ) 
 					foreach($params as $args) 
@@ -2109,7 +2133,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '=', '_orEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '=', '__orEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orEqual()</strong> has a syntax error." ); 
 		} 
@@ -2124,7 +2148,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreater') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '__orGreater') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreater()</strong> has a syntax error." ); 
 		} 
@@ -2139,7 +2163,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '_orGreaterThan') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>', '__orGreaterThan') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterThan()</strong> has a syntax error." ); 
 		} 
@@ -2154,7 +2178,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>=', '_orGreaterThanOrEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '>=', '__orGreaterThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orGreaterThanOrEqualOn()</strong> has a syntax error." ); 
 		} 
@@ -2169,7 +2193,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'in', '_orIn') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'in', '__orIn') );
 			else 
 				throw new Exception( "Using <strong>Model::orIn()</strong> has a syntax error." ); 
 		} 
@@ -2184,7 +2208,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is', '_orIs') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is', '__orIs') );
 			else 
 				throw new Exception( "Using <strong>Model::orIs()</strong> has a syntax error." ); 
 		} 
@@ -2199,7 +2223,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is not', '_orIsNot') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'is not', '__orIsNot') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNot()</strong> has a syntax error." ); 
 		} 
@@ -2214,7 +2238,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orIsNotNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '__orIsNotNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNotNull()</strong> has a syntax error." ); 
 		} 
@@ -2229,7 +2253,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is', '_orIsNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is', '__orIsNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orIsNull()</strong> has a syntax error." ); 
 		} 
@@ -2244,7 +2268,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLess') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '__orLess') );
 			else 
 				throw new Exception( "Using <strong>Model::orLess()</strong> has a syntax error." ); 
 		} 
@@ -2259,7 +2283,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '_orLessThan') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<', '__orLessThan') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThan()</strong> has a syntax error." ); 
 		} 
@@ -2274,7 +2298,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<=', '_orLessThanOrEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '<=', '__orLessThanOrEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orLessThanOrEqual()</strong> has a syntax error." ); 
 		} 
@@ -2289,7 +2313,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'like', '_orLike') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'like', '__orLike') );
 			else 
 				throw new Exception( "Using <strong>Model::orLike()</strong> has a syntax error." ); 
 		} 
@@ -2304,7 +2328,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not', '_orNot') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not', '__orNot') );
 			else 
 				throw new Exception( "Using <strong>Model::orNot()</strong> has a syntax error." ); 
 		} 
@@ -2334,7 +2358,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '!=', '_orNotEqual') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, '!=', '__orNotEqual') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotEqual()</strong> has a syntax error." ); 
 		} 
@@ -2349,7 +2373,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not in', '_orNotIn') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not in', '__orNotIn') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotIn()</strong> has a syntax error." ); 
 		} 
@@ -2364,7 +2388,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not like', '_orNotLike') );
+				return call_user_func_array( array($this, '__or_where_operator'), array($args, $argsNum, 'not like', '__orNotLike') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotLike()</strong> has a syntax error." ); 
 		} 
@@ -2379,7 +2403,7 @@ class QueryStmt
 		try 
 		{
 			if( $argsNum ) 
-				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '_orNotNull') );
+				return call_user_func_array( array($this, '__or_null_operator'), array($args, $argsNum, 'is not', '__orNotNull') );
 			else 
 				throw new Exception( "Using <strong>Model::orNotNull()</strong> has a syntax error." ); 
 		} 
@@ -2878,7 +2902,7 @@ class QueryStmt
 			$param[] = current($arg);
 			$args [] = $param;
 		}
-		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($args, count($args)) );
+		return call_user_func_array( array($dispatcher, '__orWhereAnd'), array($args, count($args)) );
 	}
 	
 	final protected function __or_null_and_operator( $args, $argsNum, $sign ) 
@@ -2899,7 +2923,7 @@ class QueryStmt
 				$tmps[] = array($key, $sign, NULL); 
 			}
 		}
-		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
+		return call_user_func_array( array($dispatcher, '__orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
 	final protected function __or_where_and_operator( $args, $argsNum, $sign ) 
@@ -2916,7 +2940,7 @@ class QueryStmt
 			foreach( $args as $key => $value ) 
 				$tmps[] = array($key, $sign, $value); 
 		}
-		return call_user_func_array( array($dispatcher, '_orWhereAnd'), array($tmps, count($tmps)) ); 
+		return call_user_func_array( array($dispatcher, '__orWhereAnd'), array($tmps, count($tmps)) ); 
 	}
 	
 	final protected function __orWhereAnd( $args, $argsNum ) 
@@ -3129,6 +3153,10 @@ class QueryStmt
 	
 	final protected function __require( $model ) 
 	{
+		global $_config;
+		if( isset($_config['require_seek']) && $_config['require_seek'] ) 
+			return null;
+		
 		if( method_exists($this, $model) ) 
 			return call_user_func_array(array($this, $model), array()); 
 		return NULL;
@@ -3166,6 +3194,7 @@ class QueryStmt
 	
 	final protected function __orderHasOne( $args, $argsNum ) 
 	{
+		global $_config;
 		try 
 		{
 			if( $argsNum ) 
@@ -3188,7 +3217,9 @@ class QueryStmt
 					
 					$args[] = $this->_propModel;
 					$args[] = $this->_propPrefix;
+					$_config["require_hasone"] = 1;
 					$model = $this->__computeSteadModel( $args, true );
+					unset($_config["require_hasone"]);
 					$this->_propsHasOne += array( $args[head]=>$model );
 					return $model;
 				}
@@ -4062,7 +4093,6 @@ class QueryStmt
 			{
 				$page = $this->_propPage;
 			}
-			
 			if( isset($options['limit']) ) 
 			{
 				$limit = $options['limit'];
@@ -4077,7 +4107,7 @@ class QueryStmt
 			{
 				$limit = $this->_propLimit; 
 			} 
-				
+			
 			$data = call_user_func_array( [$this, mcbm_search], array([], 0) ); 
 			$total = call_user_func_array( [$this, mcbm_total], array([], 0) ); 
 			$pages = (int) ceil( $total/$limit ); 

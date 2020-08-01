@@ -9,7 +9,7 @@ class LocateService implements iLocateService
 	
 	private static function __applyConfigs() 
 	{
-		if( Config::has( 'COM' ) ) 
+		if( Config::has( 'COM' ) || true ) 
 		{
 			return array
 			(
@@ -32,12 +32,13 @@ class LocateService implements iLocateService
 		return $_instance;
 	}
 	
-	private static function __load( Application $app, $service ) 
+	private static function __load( Application $app = null, $service ) 
 	{
 		if( !call( cFile::get(), $service )->exist() ) 
 			return false; 
 		
-		$locate = Config::get('LOCATE');
+		$locate = Config::get('LOCATE'); 
+		
 		if( NULL!==$locate ) 
 		{
 			$locate_file = __correctPath($locate[$locate['default']]);

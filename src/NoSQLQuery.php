@@ -65,7 +65,7 @@ abstract class NoSQLQuery extends QueryStmt
 			{
 				$r = $this->__fetchArray($doc); 
 				$tmps = array(); 
-				for( $i=0; $i<$numf; $i++ ) 
+				for( $i=0; $i<=$numf; $i++ ) 
 				{
 					if( isset($fs[$i]) ) 
 					{
@@ -73,9 +73,19 @@ abstract class NoSQLQuery extends QueryStmt
 						if( array_key_exists($f, $this->_propsUndescribe) ) 
 						{
 							if( $f===$this->_primaryKey && isset($r[$f]['$oid']) ) 
+							{
 								$tmps[$ts[$i]][$f] = $r[$f]['$oid']; 
-							else
-								$tmps[$ts[$i]][$f] = (isset($r[$f]))?$r[$f]:NULL; 
+								continue; 
+							}
+							else if( isset($r[$f]['$date']) ) 
+							{
+								if( isset($r[$f]['$date']['$numberLong']) ) 
+								{
+									$tmps[$ts[$i]][$f] = $r[$f]['$date']['$numberLong']; 
+									continue; 
+								}
+							}
+							$tmps[$ts[$i]][$f] = (isset($r[$f]))?$r[$f]:NULL; 
 						}
 					}
 				} 
@@ -85,7 +95,19 @@ abstract class NoSQLQuery extends QueryStmt
 					{
 						if( $model->isLive() ) 
 						{
-							$hd = $model->find($r[$model->getAliasKey()]); 
+							if( isset($r[$model->getAliasKey()]) ) 
+							{
+								$hd = $model->find($r[$model->getAliasKey()]); 
+							} 
+							else 
+							{
+								$hd = array(); 
+							}
+							if( empty($hd) ) 
+							{ 
+								$modelName = $model->getModelName(); 
+								$hd = array( $modelName=>[] ); 
+							} 
 							$tmps = array_merge( $tmps, $hd ); 
 						} 
 					} 
@@ -116,7 +138,12 @@ abstract class NoSQLQuery extends QueryStmt
 	
 	protected function __parseDescribe( $collectionName ) 
 	{
-		return $this->_schema;
+		$out = array(); 
+		foreach( $this->_schema as $key => $schema ) 
+		{
+			$out[] = $key; 
+		} 
+		return $out;
 	}
 	
 	protected function __parseStmtLabelField( $field ) 
@@ -206,7 +233,11 @@ abstract class NoSQLQuery extends QueryStmt
 	
 	final protected function __buildStmtRange() 
 	{
-		return array( 'limit' => $this->_propLimit?:20, 'skip' => $this->_propOffset );
+		if( isset($this->_propPage) )  
+			$offset = ( $this->_propPage-1 ) * $this->_propLimit;
+		else
+			$offset = $this->_propOffset;
+		return array( 'limit' => $this->_propLimit?:20, 'skip' => $offset );
 	}
 	
 	final protected function __buildStmtGroup() 
@@ -284,6 +315,7 @@ abstract class NoSQLQuery extends QueryStmt
 	
 	final protected function __search( $args, $argsNum ) 
 	{
+		$out = array(); 
 		try 
 		{ 
 			if( $argsNum ) 
@@ -310,8 +342,6 @@ abstract class NoSQLQuery extends QueryStmt
 			if( $cr ) 
 			{
 				$out = $this->__fetchResult( $cr ); 
-				$this->__clear(); 
-				return $out;
 			} 
 			$this->__clear(); 
 		} 
@@ -319,11 +349,12 @@ abstract class NoSQLQuery extends QueryStmt
 		{ 
 			abort( 500, "<b>[EXCEPTION]</b> ".$e->getMessage() );
 		} 
-		return []; 
+		return $out; 
 	}
 	
 	final protected function __find( $args, $argsNum ) 
 	{
+		$out = array(); 
 		try 
 		{
 			if( $argsNum ) 
@@ -336,12 +367,12 @@ abstract class NoSQLQuery extends QueryStmt
 				$options = array_merge( $options, compact('limit') ); 
 				$options = array_merge( $options, compact('projection') ); 
 				$cr = call_user_func_array([$this, '__query'], array([$filters, $options], 2)); 
-				$this->__clear(); 
 				if( $cr ) 
 				{
 					$out = $this->__fetchResult( $cr ); 
-					return (isset($out[0]))?$out[0]:[];
+					$out = (isset($out[0]))?$out[0]:[];
 				} 
+				$this->__clear(); 
 			} 
 			else 
 			{
@@ -352,11 +383,12 @@ abstract class NoSQLQuery extends QueryStmt
 		{ 
 			abort( 500, "<b>[EXCEPTION]</b> ".$e->getMessage() ); 
 		}
-		return [];
+		return $out;
 	} 
 	
 	final protected function __first( $args, $argsNum ) 
 	{
+		$out = array(); 
 		try 
 		{ 
 			if( $argsNum ) 
@@ -379,25 +411,25 @@ abstract class NoSQLQuery extends QueryStmt
 			$options = array_merge( $options, compact('skip') ); 
 			$options = array_merge( $options, compact('sort') ); 
 			$options = array_merge( $options, compact('projection') );
-			
 			$cr = call_user_func_array([$this, '__query'], array([$filters, $options], 2)); 
-			$this->__clear(); 
 			
 			if( $cr ) 
 			{
 				$out = $this->__fetchResult( $cr ); 
-				return $out[0];
+				$out = (isset($out[0]))?$out[0]:[];
 			} 
+			$this->__clear(); 
 		} 
 		catch( Exception $e ) 
 		{ 
 			abort( 500, "<b>[EXCEPTION]</b> ".$e->getMessage() );
 		} 
-		return []; 
+		return $out; 
 	}
 	
 	final protected function __last( $args, $argsNum ) 
 	{
+		$out = array(); 
 		try 
 		{ 
 			if( $argsNum ) 
@@ -420,21 +452,20 @@ abstract class NoSQLQuery extends QueryStmt
 			$options = array_merge( $options, compact('skip') ); 
 			$options = array_merge( $options, compact('sort') ); 
 			$options = array_merge( $options, compact('projection') );
-			
 			$cr = call_user_func_array([$this, '__query'], array([$filters, $options], 2)); 
-			$this->__clear(); 
 			
 			if( $cr ) 
 			{
 				$out = $this->__fetchResult( $cr ); 
-				return $out[0];
+				$out = (isset($out[0]))?$out[0]:[];
 			} 
+			$this->__clear(); 
 		} 
 		catch( Exception $e ) 
 		{ 
 			abort( 500, "<b>[EXCEPTION]</b> ".$e->getMessage() );
 		} 
-		return []; 
+		return $out; 
 	}
 	
 	final protected function __entity( $args, $argsNum ) 
@@ -465,8 +496,8 @@ abstract class NoSQLQuery extends QueryStmt
 	{
 		$command = [ "count" => $this->_propCollection ]; 
 		$filters = $this->_propQuery[0]; 
-		if( !empty($filter) ) 
-			$command["query"] = $filter; 
+		if( !empty($filters) ) 
+			$command["query"] = $filters; 
 		$cr = call_user_func_array([$this, '__execute'], array([$command])); 
 		$this->__clear(); 
 		if( $cr->isDead() ) return;

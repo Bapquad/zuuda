@@ -12,6 +12,8 @@ class Query
 	
 	public static function All() { return self::__params(); } 
 	public static function Has($name) { return self::__has($name); }
+	public static function HasNot($name) { return self::__hasNot($name); }
+	public static function Not($name) { return self::__hasNot($name); }
 	public static function Inputs() { return self::__params(); } 
 	public static function Params() { return self::__params(); } 
 	public static function Body($name=NULL) { return self::__param($name, true); } 
@@ -153,8 +155,14 @@ class Query
 	private static function __has( $name ) 
 	{
 		global $_get; 
-		return isset($_get[$name]); 
-	}
+		return array_key_exists($name, $_get); 
+	} 
+	
+	private static function __hasNot( $name ) 
+	{
+		global $_get; 
+		return !array_key_exists($name, $_get); 
+	} 
 	
 	private static function __param( $name=NULL, $body=false ) 
 	{

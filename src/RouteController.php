@@ -17,7 +17,9 @@ class RouteController extends Controller
 		static $_inst; 
 		if( NULL===$_inst ) 
 		{
-			$_inst = new RouteController;
+			$_inst = new RouteController; 
+			$_view = $_inst->__getView(); 
+			$_view->loadLayout(); 
 		}
 		return $_inst; 
 	} 
