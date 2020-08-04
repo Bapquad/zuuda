@@ -8,6 +8,7 @@ use Zuuda\Fx;
 use Zuuda\Text;
 use Zuuda\Route;
 use Zuuda\Session;
+use Zuuda\Cookie;
 
 class Application 
 {
