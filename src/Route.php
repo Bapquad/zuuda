@@ -183,6 +183,13 @@ class Route implements iRoute
 		}
 	}
 	
+	private static function __fetch_file(&$out) 
+	{ 
+		global $_file;
+		$_file = $_FILES; 
+		$out = array_merge($out, $_file); 
+	} 
+	
 	private static function __start() 
 	{ 
 		if( self::$inited ) return; 
@@ -305,6 +312,7 @@ class Route implements iRoute
 					$_get = text::instance()->parsestr($urlstr);  
 				} 
 				$_get = $_GET = array_merge($_get, $request);
+				self::__fetch_file($_get); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
 				if(is_callable( $callback )) 
@@ -355,7 +363,8 @@ class Route implements iRoute
 				$callback = next($args); 
 				if(is_callable( $callback )) 
 				{
-					$_post = $_POST;
+					$_post = $_POST; 
+					self::__fetch_file($_post); 
 					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(request::instance(), $res);
 					$res->finalRender();
@@ -399,6 +408,7 @@ class Route implements iRoute
 				} 
 				$_get = $_GET = array_merge($_get, $request);
 				$_post = $_POST = array_merge($_get, file_get_contents("php://input")->jsondecode()); 
+				self::__fetch_file($_post); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
 				if(is_callable( $callback )) 
@@ -444,7 +454,8 @@ class Route implements iRoute
 					$urlstr = substr( $_SERVER["REQUEST_URI"], $qp+1 ); 
 					$_get = text::instance()->parsestr($urlstr);  
 				} 
-				$_get = $_GET = array_merge($_get, $request);
+				$_get = $_GET = array_merge($_get, $request); 
+				self::__fetch_file($_get); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
 				if(is_callable( $callback )) 
