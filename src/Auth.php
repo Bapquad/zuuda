@@ -89,30 +89,36 @@ class Auth
 	private static function __has($prop=NULL) 
 	{
 		$data = session::get(user_auth); 
-		if( is_string($prop) ) 
+		if( NULL!==$data ) 
 		{
-			return array_key_exists($prop, $data); 
+			if( is_string($prop) ) 
+			{
+				return array_key_exists($prop, $data); 
+			}
+			else if( NULL===$prop ) 
+			{
+				return NULL===$data; 
+			} 
 		}
-		else if( NULL===$prop ) 
-		{
-			return NULL===$data; 
-		} 
 		return false;
 	} 
 	
 	private static function __user($prop=NULL) 
 	{
 		$data = session::get(user_auth); 
-		if( is_string($prop) ) 
+		if( NULL!==$data ) 
 		{
-			if( array_key_exists($prop, $data) ) 
+			if( is_string($prop) ) 
 			{
-				return $data[$prop]; 
+				if( array_key_exists($prop, $data) ) 
+				{
+					return $data[$prop]; 
+				}
 			}
-		}
-		else if( NULL===$prop ) 
-		{
-			return $data; 
+			else if( NULL===$prop ) 
+			{
+				return $data; 
+			} 
 		} 
 	} 
 	
@@ -121,19 +127,14 @@ class Auth
 		if($prop) 
 		{
 			$data = session::get(user_auth); 
-			if( isset($data[$prop]) )
-				return $data[$prop]; 
+			if( NULL!==$data ) 
+			{
+				if( array_key_exists($prop, $data) ) 
+				{
+					return $data[$prop]; 
+				} 
+			} 
 		}
-	} 
-	
-	public function __has( $prop ) 
-	{
-		if($prop) 
-		{
-			$data = session::get(user_auth); 
-			return isset($data[$prop]);
-		} 
-		return false;
 	} 
 	
 	private static function __login() 
