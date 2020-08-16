@@ -82,15 +82,7 @@ class Route implements iRoute
 	
 	private static function __apply( $middlewares, $res ) 
 	{
-		if( $middlewares ) 
-		{
-			$req = query::instance(); 
-			if(is_object($middlewares)) 
-				$middlewares::handle($req, $res);
-			else 
-				foreach($middlewares as $middleware) 
-					$middleware::handle($req, $res); 
-		}
+		$res->use($middlewares);
 	}
 	
 	private static function __fetch() 

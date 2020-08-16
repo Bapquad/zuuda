@@ -8,6 +8,7 @@ use Zuuda\Config;
 use Zuuda\Cache;
 use Zuuda\Auth;
 use Zuuda\Fx;
+use Zuuda\Query;
 use Zuuda\Response;
 use Zuuda\Text;
 use Zuuda\RouteView;
@@ -60,6 +61,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	public function RequireJui( $value ) { return $this->__requireJui( $value ); }
 	public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
 	public function Computed() { $args = func_get_args(); $com = current($args); $in = next($args); return call_user_func_array(array($this, $com), array($in)); }
+	public function Use() { return call_user_func_array(array($this, '__use'), array(func_get_args())); }
 	public function Map() { return call_user_func_array(array($this, '__map'), array(func_get_args())); }
 	public function __() { return $this->__setVar( func_get_args(), func_num_args()); }
 	public function Set() { return $this->__setVar( func_get_args(), func_num_args()); }
@@ -165,6 +167,22 @@ abstract class Controller implements iController, iDeclare, iBlock
 			} 
 		}
 	} 
+	
+	final protected function __use( $args ) 
+	{
+		if( 1===count($args) ) 
+			$mw = current($args); 
+		else if( 2<=count($args) ) 
+			$mw = $args; 
+		$req = query::instance(); 
+		$res = $this; 
+		if( is_string($mw) ) 
+			return $mw::handle($req, $res);
+		else if( is_array($mw) ) 
+			foreach($mw as $item) 
+				$item::handle($req, $res); 
+		return $this; 
+	}
 	
 	final protected function __map( $args ) 
 	{

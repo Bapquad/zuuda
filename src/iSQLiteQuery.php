@@ -1,7 +1,7 @@
 <?php
 namespace Zuuda; 
 
-interface iSQLLiteQuery 
+interface iSQLiteQuery 
 {
 	
 }
