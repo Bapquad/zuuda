@@ -26,6 +26,7 @@ class Auth
 	public static function Apply() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
 	public static function Register() { return call_user_func_array(array(self::$this, '__register'), func_get_args()); }
+	public static function Make() { return call_user_func_array(array(self::$this, '__register'), func_get_args()); }
 	public static function Destroy() { return call_user_func_array(array(self::$this, '__destroy'), array()); } 
 	public static function Update() { return call_user_func_array(array(self::$this, '__update'), func_get_args()); } 
 	public static function Instance() { return call_user_func_array(); } 
