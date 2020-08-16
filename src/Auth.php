@@ -16,12 +16,12 @@ class Auth
 	private function __construct() {}
 	private function __clone() {} 
 	
-	public static function GetAll() { return call_user_func_array(array(self::$this, '__user') , array()); }
-	public static function Has() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); }
+	public static function Has() { return call_user_func_array(array(self::$this, '__has'), func_get_args()); }
 	public static function All() { return call_user_func_array(array(self::$this, '__user'), array()); }
 	public static function Get() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
 	public static function Data() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
 	public static function Body() { return call_user_func_array(array(self::$this, '__user'), func_get_args()); } 
+	public static function GetAll() { return call_user_func_array(array(self::$this, '__user') , array()); }
 	public static function Role() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Apply() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
@@ -86,21 +86,31 @@ class Auth
 		return true; 
 	}
 	
+	private static function __has($prop=NULL) 
+	{
+		$data = session::get(user_auth); 
+		if( is_string($prop) ) 
+		{
+			return array_key_exists($prop, $data); 
+		}
+		else if( NULL===$prop ) 
+		{
+			return NULL===$data; 
+		} 
+		return false;
+	} 
+	
 	private static function __user($prop=NULL) 
 	{
 		$data = session::get(user_auth); 
 		if( is_string($prop) ) 
 		{
-			if( isset($data[$prop]) ) 
+			if( array_key_exists($prop, $data) ) 
 			{
-				return session::get(user_auth)[$prop]; 
-			}
-			else 
-			{
-				return NULL;
+				return $data[$prop]; 
 			}
 		}
-		else if( is_null($prop) ) 
+		else if( NULL===$prop ) 
 		{
 			return $data; 
 		} 
