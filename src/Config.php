@@ -4,6 +4,7 @@ namespace Zuuda;
 class Config 
 {
 	private static $this = '\Zuuda\Config';
+	public static function Instance() { return self::__getInstance(); }
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Get( $name ) { return self::__getVar( $name ); }
 	public static function Set( $name, $value ) { return self::__setVar( $name, $value ); }
