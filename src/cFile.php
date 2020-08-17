@@ -6,6 +6,7 @@ class cFile implements iFile
 {
 	private static $this = '\Zuuda\cFile';
 	public static function GetInstance() { return self::__getInstance(); }
+	public static function Instance() { return self::__getInstance(); }
 	public static function Get() { return self::__getInstance(); }
 	public static function IsDir( $path ) { return self::__isDir( $path ); }
 	public static function IsEmptyDir( $path ) { return self::__isEmptyDir( $path ); }

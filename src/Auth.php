@@ -24,12 +24,13 @@ class Auth
 	public static function GetAll() { return call_user_func_array(array(self::$this, '__user') , array()); }
 	public static function Role() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
 	public static function Apply() { return call_user_func_array(array(self::$this, '__role'), array(func_get_args())); } 
+	public static function Login() { return call_user_func_array(array(self::$this, '__login'), func_get_args()); } 
 	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
 	public static function Register() { return call_user_func_array(array(self::$this, '__register'), func_get_args()); }
 	public static function Make() { return call_user_func_array(array(self::$this, '__register'), func_get_args()); }
 	public static function Destroy() { return call_user_func_array(array(self::$this, '__destroy'), array()); } 
 	public static function Update() { return call_user_func_array(array(self::$this, '__update'), func_get_args()); } 
-	public static function Instance() { return call_user_func_array(); } 
+	public static function Instance() { return call_user_func_array(array(self::$this, '__instance'), array()); } 
 	
 	public static function __callStatic( $name, $args ) 
 	{
@@ -137,12 +138,14 @@ class Auth
 		}
 	} 
 	
-	private static function __login() 
+	private static function __login($login_url=NULL) 
 	{
 		global $configs;
 		try 
 		{
-			if( isset($configs['AUTH']['login_url']) ) 
+			if( NULL!==$login_url ) 
+				redirect($login_url); 
+			else if( isset($configs['AUTH']['login_url']) ) 
 				redirect($configs['AUTH']['login_url']); 
 			else
 				throw new Exception( "You have not authorization." ); 
@@ -170,7 +173,7 @@ class Auth
 	
 	private static function __status() 
 	{ 
-		return $_SESSION[auth];
+		return array_key_exists(auth, $_SESSION);
 	} 
 	
 }
