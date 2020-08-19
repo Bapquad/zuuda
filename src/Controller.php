@@ -49,31 +49,31 @@ abstract class Controller implements iController, iDeclare, iBlock
 	private function SetModel( $value ) { return $this->__setVarModel( $value ); }
 	
 	/** Implements interface iDeclare */
-	public function IncludeMeta( $value ) { return $this->__includeMeta( $value ); }
-	public function IncludeHtml( $value ) { return $this->__includeHtml( $value ); }
-	public function IncludeCss( $value ) { return $this->__includeCss( $value ); }
-	public function IncludeJs( $value ) { return $this->__includeJs( $value ); }
-	public function PreloadMeta( $value ) { return $this->__preloadMeta( $value ); }
-	public function PreloadHtml( $value ) { return $this->__preloadHtml( $value ); }
-	public function PreloadCss( $value ) { return $this->__preloadCss( $value ); }
-	public function PreloadJs( $value ) { return $this->__preloadJs( $value ); }
-	public function RequireJs( $value ) { return $this->__preloadJs( $value ); }
-	public function RequireJui( $value ) { return $this->__requireJui( $value ); }
-	public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
-	public function Computed() { $args = func_get_args(); $com = current($args); $in = next($args); return call_user_func_array(array($this, $com), array($in)); }
-	public function Use() { return call_user_func_array(array($this, '__use'), array(func_get_args())); }
-	public function Map() { return call_user_func_array(array($this, '__map'), array(func_get_args())); }
-	public function __() { return $this->__setVar( func_get_args(), func_num_args()); }
-	public function Set() { return $this->__setVar( func_get_args(), func_num_args()); }
-	public function Assign() { return $this->__setVar( func_get_args(), func_num_args()); }
-	public function Share() { return $this->__setVar( func_get_args(), func_num_args()); }
-	public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
-	public function Json( $args ) { return $this->__json( $args ); } 
-	public function Cors() { return $this->__cors(); } 
-	public function Download( $loader, $name=NULL ) { return $this->__download( $loader, $name ); } 
-	public function CustomRender( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
-	public function RenderBy( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
-	public function RenderWith( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
+	final public function IncludeMeta( $value ) { return $this->__includeMeta( $value ); }
+	final public function IncludeHtml( $value ) { return $this->__includeHtml( $value ); }
+	final public function IncludeCss( $value ) { return $this->__includeCss( $value ); }
+	final public function IncludeJs( $value ) { return $this->__includeJs( $value ); }
+	final public function PreloadMeta( $value ) { return $this->__preloadMeta( $value ); }
+	final public function PreloadHtml( $value ) { return $this->__preloadHtml( $value ); }
+	final public function PreloadCss( $value ) { return $this->__preloadCss( $value ); }
+	final public function PreloadJs( $value ) { return $this->__preloadJs( $value ); }
+	final public function RequireJs( $value ) { return $this->__preloadJs( $value ); }
+	final public function RequireJui( $value ) { return $this->__requireJui( $value ); }
+	final public function IncludeJui( $value ) { return $this->__includeJui( $value ); }
+	final public function Computed() { $args = func_get_args(); $com = current($args); $in = next($args); return call_user_func_array(array($this, $com), array($in)); }
+	final public function Use() { return call_user_func_array(array($this, '__use'), array(func_get_args())); }
+	final public function Map() { return call_user_func_array(array($this, '__map'), array(func_get_args())); }
+	final public function __() { return $this->__setVar( func_get_args(), func_num_args()); }
+	final public function Set() { return $this->__setVar( func_get_args(), func_num_args()); }
+	final public function Assign() { return $this->__setVar( func_get_args(), func_num_args()); }
+	final public function Share() { return $this->__setVar( func_get_args(), func_num_args()); }
+	final public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); } 
+	final public function Json( $args ) { return $this->__json( $args ); } 
+	final public function Cors() { return $this->__cors(); } 
+	final public function Download( $loader, $name=NULL ) { return $this->__download( $loader, $name ); } 
+	final public function CustomRender( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
+	final public function RenderBy( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
+	final public function RenderWith( $renderer, $args = NULL ) { $this->__customRender( $renderer, $args ); }
 	
 	/** Implements interface iBlock */
 	public function AddBlock( $block, $force_name = NULL ) { return $this->__addBlock( $block, $force_name ); }

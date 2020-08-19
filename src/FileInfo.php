@@ -41,12 +41,15 @@ class FileInfo
 	public function Permission() { return fileperms($this->_path); } 
 	public function Content() { return file($this->_path); } 
 
-	public function __construct( $file_path, $apply_absolute_path = false ) 
+	public function __construct( $file_path=NULL, $apply_absolute_path = false ) 
 	{
-		if( $apply_absolute_path ) 
-			$this->__setRealPath( $file_path ); 
-		else 
-			$this->__setRealPath( __correctPath(APP_DIR.$file_path) ); 
+		if( NULL!==$file_path ) 
+		{
+			if( $apply_absolute_path ) 
+				$this->__setRealPath( $file_path ); 
+			else 
+				$this->__setRealPath( __correctPath(APP_DIR.$file_path) ); 
+		}
 	} 
 	
 	protected function __exist() 
