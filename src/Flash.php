@@ -9,6 +9,7 @@ class Flash implements iFlash
 	private function __construct() {}
 	private function __clone() {}
 	
+	public static function Instance() { return self::__getInstance(); } 
 	public static function GetInstance() { return self::__getInstance(); } 
 	public static function Clear() { return self::__clear(); } 
 	public static function Has() { return call_user_func_array(array(self::$this, '__has'), func_get_args()); } 
