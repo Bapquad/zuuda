@@ -31,6 +31,7 @@ class Html implements iHTML
 	public static function Instance() { return self::__getInstance(); }
 	public static function GetInstance() { return self::__getInstance(); }
 	public static function Link( $text, $path ) { return self::__link( $text, $path ); }
+	public static function Asset( $file_path ) { return self::__assetPath( $file_path ); } 
 	public static function AssetPath( $file_path ) { return self::__assetPath( $file_path ); } 
 	public static function IncludeJs( $file_name ) { return self::__includeJs( $file_name ); }
 	public static function IncludeCss( $file_name ) { return self::__includeCss( $file_name ); }
