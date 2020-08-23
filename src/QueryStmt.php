@@ -278,6 +278,8 @@ class QueryStmt
 	final public function OrderBy() { return $this->__orderBy( func_get_args(), func_num_args() ); } 
 	final public function OrderDesc( $field ) { return $this->__orderDesc( $field ); } 
 	final public function OrderAsc( $field ) { return $this->__orderAsc( $field ); } 
+	final public function SortAsc( $field ) { return $this->__orderAsc( $field ); } 
+	final public function SortDesc( $field ) { return $this->__orderDesc( $field ); } 
 	final public function Limit() { return $this->__setLimit( func_get_args(), func_num_args() ); }
 	final public function Offset() { return $this->__setSeek( func_get_args(), func_num_args() ); }
 	final public function Seek() { return $this->__setSeek( func_get_args(), func_num_args() ); }
@@ -377,7 +379,7 @@ class QueryStmt
 	final protected function __new() { return $this->__clear( true ); } 
 	final protected function __reset() { return $this->__clear( true ); } 
 	
-	final protected function __setData( $args, $argsNum, $method="_setData" ) 
+	final protected function __setData( $args, $argsNum, $method="__setData" ) 
 	{
 		try 
 		{ 
@@ -385,22 +387,32 @@ class QueryStmt
 			$oneArg = 1; 
 			$dispatcher = $this; 
 			if( $argsNum ) 
+			{
 				if( $oneArg===$argsNum ) 
 				{
 					$data = current($args); 
 					if( is_array($data) ) 
+					{
 						foreach( $data as $key => $value ) 
+						{
 							if( is_string($key) && in_array($key, $this->_propsDescribe) )
+							{
 								$this->{$key} = $value;
+							}
+						}
+					}
 				}
-				else 
+				else if( $twoArg===$argsNum )
 				{
 					$field = $args[0]; 
 					$value = $args[1]; 
 					$dispatcher->{$field} = $value; 
 				}
+			}
 			else 
+			{
 				throw new Exception( "Usage <strong>Model::$method</strong> is incorrect." ); 
+			}
 		} 
 		catch( Exception $e ) 
 		{ 
