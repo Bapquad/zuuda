@@ -363,7 +363,7 @@ class QueryStmt
 	final public function GetQuery() { return $this->__getQuerySQL(); }
 	final public function LastQuery() { return $this->__getQuerySQL(); }
 	final public function GetLastQuery() { return $this->__getQuerySQL(); }
-	final public function GetQuerys() { return $this->_querySQLs; } 
+	final public function GetQueries() { return $this->_querySQLs; } 
 	final public function GetQuerySQLs() { return $this->_querySQLs; } 
 	final public function GetQuerySQL() { return $this->_querySQL; }
 	final public function ToSql() { return $this->_querySQL; }
