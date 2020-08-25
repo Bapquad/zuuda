@@ -53,7 +53,10 @@ class Response extends ResponseHeader
 				else if( is_array($data) ) 
 				{
 					foreach($data as $key => $value ) 
-						return $this->_dispatcher->assign( $key, $value );
+					{
+						$this->_dispatcher->assign( $key, $value );
+					}
+					return $this;
 				} 
 				else 
 				{
