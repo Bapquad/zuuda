@@ -68,7 +68,6 @@ class Route implements iRoute
 			$value = next($data); 
 		}
 		self::$headset[$name] = $value; 
-		return true; 
 	}
 	
 	private static function __headset( $data, $res ) 
