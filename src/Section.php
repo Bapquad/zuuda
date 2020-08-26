@@ -80,9 +80,9 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	final public function PreloadJs( $value ) {$this->headAsset( SCRIPT_ASSET, $value );}
 	final public function RequireJs( $value ) {$this->headAsset( SCRIPT_ASSET, $value );}
 	final public function ContentAsset( $type, $value ) {array_push( $this->_content_assets[ $type ], $value );}
-	final public function IncludeMeta( $value ) {$this->contentAsset( HTML_ASSET, $value );}
+	final public function IncludeMeta( $value ) {$this->headAsset( HTML_ASSET, $value );}
 	final public function IncludeHtml( $value ) {$this->contentAsset( HTML_ASSET, $value );}
-	final public function IncludeCss( $value ) {$this->contentAsset( STYLE_ASSET, $value );}
+	final public function IncludeCss( $value ) {$this->headAsset( STYLE_ASSET, $value );}
 	final public function IncludeJs( $value ) {$this->contentAsset( SCRIPT_ASSET, $value );}
 	
 	public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
