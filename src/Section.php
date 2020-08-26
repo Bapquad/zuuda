@@ -73,55 +73,17 @@ abstract class Section implements iHTML, iTemplate, iSection, iDeclare, iWidgetH
 	final public function GetWidget( $name ) { return $this->__getWidget( $name ); }
 	final public function Render( $template = NULL, $args = NULL ) { return $this->__render( $template, $args ); }
 	
-	final public function HeadAsset( $type, $value ) 
-	{
-		array_push( $this->_head_assets[ $type ], $value );
-	}
-	
-	final public function PreloadMeta( $value ) 
-	{
-		$this->headAsset( HTML_ASSET, $value );
-	}
-	
-	final public function PreloadHtml( $value ) 
-	{
-		$this->headAsset( HTML_ASSET, $value );
-	}
-	
-	final public function PreloadCss( $value ) 
-	{
-		$this->headAsset( STYLE_ASSET, $value );
-	}
-	
-	final public function PreloadJs( $value ) 
-	{
-		$this->headAsset( SCRIPT_ASSET, $value );
-	}
-	
-	final public function ContentAsset( $type, $value ) 
-	{
-		array_push( $this->_content_assets[ $type ], $value );
-	}
-	
-	final public function IncludeMeta( $value ) 
-	{
-		$this->contentAsset( HTML_ASSET, $value );
-	}
-	
-	final public function IncludeHtml( $value ) 
-	{
-		$this->contentAsset( HTML_ASSET, $value );
-	}
-	
-	final public function IncludeCss( $value ) 
-	{
-		$this->contentAsset( STYLE_ASSET, $value );
-	}
-	
-	final public function IncludeJs( $value ) 
-	{
-		$this->contentAsset( SCRIPT_ASSET, $value );
-	}
+	final public function HeadAsset( $type, $value ) {array_push( $this->_head_assets[ $type ], $value );}
+	final public function PreloadMeta( $value ) {$this->headAsset( HTML_ASSET, $value );}
+	final public function PreloadHtml( $value ) {$this->headAsset( HTML_ASSET, $value );}
+	final public function PreloadCss( $value ) {$this->headAsset( STYLE_ASSET, $value );}
+	final public function PreloadJs( $value ) {$this->headAsset( SCRIPT_ASSET, $value );}
+	final public function RequireJs( $value ) {$this->headAsset( SCRIPT_ASSET, $value );}
+	final public function ContentAsset( $type, $value ) {array_push( $this->_content_assets[ $type ], $value );}
+	final public function IncludeMeta( $value ) {$this->contentAsset( HTML_ASSET, $value );}
+	final public function IncludeHtml( $value ) {$this->contentAsset( HTML_ASSET, $value );}
+	final public function IncludeCss( $value ) {$this->contentAsset( STYLE_ASSET, $value );}
+	final public function IncludeJs( $value ) {$this->contentAsset( SCRIPT_ASSET, $value );}
 	
 	public function __construct( $section_name = NULL, $section_tpl_name = NULL ) 
 	{
