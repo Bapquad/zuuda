@@ -27,7 +27,7 @@ class Session
 	public static function Find() { return call_user_func_array(array(self::$this, '__find'), func_get_args()); } 
 	public static function Edit() { return call_user_func_array(array(self::$this, '__edit'), array(func_get_args())); }
 	public static function Merge() { return call_user_func_array(array(self::$this, '__edit'), array(func_get_args())); }
-	public static function Earse() { return call_user_func_array(array(self::$this, '__earse'), array()); }
+	public static function Erase() { return call_user_func_array(array(self::$this, '__erase'), array()); }
 	public static function Empty() { return call_user_func_array(array(self::$this, '__empty'), array()); }
 	public static function Commit() { return call_user_func_array(array(self::$this, '__commit'), array(func_get_args())); } 
 	public static function Status() { return call_user_func_array(array(self::$this, '__status'), array()); }
@@ -118,7 +118,7 @@ class Session
 		return self::$_inst;
 	} 
 	
-	private static function __earse() 
+	private static function __erase() 
 	{ 
 		self::$_inst->_memd = NULL; 
 		return self::$_inst;
