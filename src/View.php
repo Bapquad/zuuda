@@ -442,7 +442,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	
 	private function __includeMeta( $value ) 
 	{
-		return $this->__contentHtml( $value );
+		return $this->__preloadHtml( $value );
 	}
 	
 	private function __contentScript( $value ) 
