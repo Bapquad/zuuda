@@ -164,9 +164,9 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function ExecuteBlock( $blockName, $methodName ) { return $this->__executeBlock( $blockName, $methodName ); }
 
 	final public function JsonLayout( $data=NULL ) { $this->__jsonLayout( $data ); } 
-	final public function DisplayJSON ( $data=NULL ) { $this->__renderJson(); }
-	final public function PrintJSON( $data=NULL ) { $this->__renderJson(); }
-	final public function OutputJSON( $data=NULL ) { $this->__renderJson(); } 
+	final public function DisplayJSON () { $this->__renderJson(); }
+	final public function PrintJSON() { $this->__renderJson(); }
+	final public function OutputJSON() { $this->__renderJson(); } 
 	final public function RenderJSON() { $this->__renderJson(); }
 	final public function IsJson() { return $this->_layout_json; }
 
@@ -248,7 +248,7 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	{
 		if( is_string($in) ) 
 		{
-			return json_decode($in); 
+			return json_decode($in, true); 
 		} 
 		else 
 		{
