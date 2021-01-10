@@ -145,6 +145,14 @@ class Route implements iRoute
 	
 	private static function __secure_magic_quote() 
 	{
+		global $_CONFIG;
+		if(isset($_CONFIG['DISABLE_MAGIC_QUOTE'])) 
+		{
+			if($_CONFIG['DISABLE_MAGIC_QUOTE']) 
+			{
+				return;
+			}
+		}
 		$_GET    = __stripSlashesDeep( $_GET );
 		$_POST   = __stripSlashesDeep( $_POST );
 		$_COOKIE = __stripSlashesDeep( $_COOKIE ); 
