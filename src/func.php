@@ -810,6 +810,26 @@ function fetch_validated_errors($errors, $input)
 	return $out; 
 } 
 
+function htmlent($html_str) 
+{
+	return htmlentities($html_str);
+}
+
+function htmldec($html_str) 
+{
+	return html_entity_decode($html_str);
+}
+
+function htmlschar($html) 
+{
+	return htmlspecialchars($html);
+}
+
+function htmlschardec($html) 
+{
+	return htmlspecialchars_decode($html);
+}
+
 function padnum($input, $length=5) 
 { 
 	return str_pad($input, $length, '0', STR_PAD_LEFT); 

@@ -90,6 +90,7 @@ abstract class Controller implements iController, iDeclare, iBlock
 	final public function Response() { escape(); } 
 	final public function Back() { response::back(); } 
 	final public function Direct( $uri ) { response::redirect($uri); }
+	final public function Redirect( $uri ) { response::redirect($uri); }
 	
 	final public function rootName() { return __CLASS__; }
 	final public function FinalRender( $query = NULL ) { $this->__finalRender( $query ); }
