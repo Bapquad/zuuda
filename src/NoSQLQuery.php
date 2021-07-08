@@ -60,33 +60,31 @@ abstract class NoSQLQuery extends QueryStmt
 		try 
 		{
 			$rs = $qr->toArray();
-			$numf = $this->fetch_field( $rs, $ts, $fs ); 
+			$this->fetch_field( $rs, $ts, $fs ); 
+			$numf = (!is_null($fs))?count($fs):0;
 			foreach( $rs as $doc ) 
 			{
 				$r = $this->__fetchArray($doc); 
 				$tmps = array(); 
-				for( $i=0; $i<=$numf; $i++ ) 
+				for( $i=0; $i<$numf; $i++ ) 
 				{
-					if( isset($fs[$i]) ) 
+					$f = $fs[$i]; 
+					if( array_key_exists($f, $this->_propsUndescribe) ) 
 					{
-						$f = $fs[$i]; 
-						if( array_key_exists($f, $this->_propsUndescribe) ) 
+						if( $f===$this->_primaryKey && isset($r[$f]['$oid']) ) 
 						{
-							if( $f===$this->_primaryKey && isset($r[$f]['$oid']) ) 
+							$tmps[$ts[$i]][$f] = $r[$f]['$oid']; 
+							continue; 
+						}
+						else if( isset($r[$f]['$date']) ) 
+						{
+							if( isset($r[$f]['$date']['$numberLong']) ) 
 							{
-								$tmps[$ts[$i]][$f] = $r[$f]['$oid']; 
+								$tmps[$ts[$i]][$f] = $r[$f]['$date']['$numberLong']; 
 								continue; 
 							}
-							else if( isset($r[$f]['$date']) ) 
-							{
-								if( isset($r[$f]['$date']['$numberLong']) ) 
-								{
-									$tmps[$ts[$i]][$f] = $r[$f]['$date']['$numberLong']; 
-									continue; 
-								}
-							}
-							$tmps[$ts[$i]][$f] = (isset($r[$f]))?$r[$f]:NULL; 
 						}
+						$tmps[$ts[$i]][$f] = (isset($r[$f]))?$r[$f]:NULL; 
 					}
 				} 
 				if( $this->_flagHasOne ) 
