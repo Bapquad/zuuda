@@ -868,7 +868,8 @@ function __exc_handler( $e )
 		40422				 => '<i>[MONGODB EXCEPTION]</i>', 
 		22					 => '<i>[MONGODB EXCEPTION]</i>', 
 		13053				 => '<i>[MONGODB EXCEPTION]</i>', 
-		20					 => '<i>[MONGODB EXCEPTION]</i>', 
+		20					 => '<i>[MONGODB EXCEPTION]</i>',
+		52					 => '<i>[MONGODB EXCEPTION]</i>',
 		-1					 => '<i>[EXCEPTION]</i>', 
 	);
 	$errno = $e->getCode();

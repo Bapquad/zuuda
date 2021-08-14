@@ -751,12 +751,25 @@ abstract class MongoDBQuery extends NoSQLQuery
 		$this->__addCommand( $command ); 
 		$commandRC = new ReflectionClass( 'MongoDB\Driver\Command' ); 
 		$command = $commandRC->newInstanceArgs( (array) $command ); 
-		$session = $this->_dbHandle->startSession();
-		$session->startTransaction();
-		$cr = $this->_dbHandle->executeCommand($this->_propDatabase, $command); 
-		// $cr = $this->_dbHandle->executeCommand($this->_propDatabase, $command, ["session"=>$session]); 
-		$session->abortTransaction(); 
-		$session->endSession(); 
+		try 
+		{
+			$session = $this->_dbHandle->startSession();
+			$session->startTransaction();		
+			$this->_dbHandle->executeCommand($this->_propDatabase, $command, ["session"=>$session]); 
+			$session->abortTransaction(); 
+			$session->endSession(); 
+		}
+		catch(Exception $e) 
+		{
+			try 
+			{
+				$cr = $this->_dbHandle->executeCommand($this->_propDatabase, $command);
+			}
+			catch(Exception $e) 
+			{
+				abort(500, $e->getMessage());
+			}
+		}	
 		return $cr; 
 	}
 	
