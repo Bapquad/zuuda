@@ -40,6 +40,7 @@ class Route implements iRoute
 	final public static function SetReporting() { return call_user_func_array(array(self::$this, '__set_report'), array()); } 
 	final public static function Share() { return call_user_func_array(array(self::$this, '__assign'), func_get_args()); } 
 	final public static function Assign() { return call_user_func_array(array(self::$this, '__assign'), func_get_args()); } 
+	final public static function Stop() { exit; }
 	
 	private function __construct() {}
 	private function __clone() {}
@@ -189,10 +190,13 @@ class Route implements iRoute
 		$out = array_merge($out, $_file); 
 	} 
 	
-	private static function __start() 
+	private static function __start($ssLess = false) 
 	{ 
+		if(!$ssLess) 
+		{
+			session::start();
+		}
 		if( self::$inited ) return; 
-		session::start();
 		cookie::start(); 
 		error::handle();
 		self::fetch(); 
@@ -248,15 +252,16 @@ class Route implements iRoute
 	
 	private static function __apiType( $callback ) 
 	{
-		self::$prefix = '/api';
+		self::$prefix = empc;
 		if( !isset($_GET['url']) ) 
 			$_GET['url'] = PS; 
-		if( $_GET['url']===self::$prefix ) 
-			$_GET['url'] .= PS; 
-		self::__start(); 
+		if( strpos($_GET['url'], '/api')===0 ) 
+			$_GET['url'] = str_replace('/api', empc, $_GET['url']);
+		if( $_GET['url']===empc ) 
+			$_GET['url'] = PS; 
+		self::__start(true); 
 		response::instance()->cors();
 		$callback(self::instance());
-		self::$prefix = empc;
 	} 
 	
 	private static function __webType( $callback ) 
@@ -268,16 +273,28 @@ class Route implements iRoute
 	
 	private static function __parseUrl( $pattern, &$matches ) 
 	{
-		$rawpatt = '#:([\w\d]+)#';
-		if(preg_match_all($rawpatt, self::$prefix.$pattern, $matches)) 
+		$fp = '#:([\w\d]+)#';
+		$dp = '#\?([\w\d]+)#';
+		if(preg_match_all($fp, self::$prefix.$pattern, $matches)) 
 		{
 			$matches = $matches[1]; 
-			$pattern = preg_replace($rawpatt, '([\w\d]+)', $pattern); 
+			$pattern = preg_replace($fp, '([\w\d]+)', $pattern); 
+		}
+		else if(preg_match_all($dp, self::$prefix.$pattern, $matches)) 
+		{
+			$matches = $matches[1]; 
+			$pattern = preg_replace($dp, '([\w\d]*)', $pattern); 
+			$url = (isset($_GET['url']))?$_GET['url']:PS; 
+			if(strpos($pattern, $url)===0 && $url!=PS && $url[strlen($url)-1]!=PS) 
+			{
+				$_GET['url'] .= PS;
+			}
 		}
 		else 
 		{
 			$matches = array(); 
 		} 
+		
 		return $pattern; 
 	}
 	
@@ -288,7 +305,6 @@ class Route implements iRoute
 		{
 			$pattern = self::__parseUrl( current($args), $matches );
 			$url = (isset($_GET['url']))?$_GET['url']:PS; 
-			
 			if( preg_match('#^'.self::$prefix.$pattern.'$#', $url, $request) )
 			{
 				unset($_GET['url']); 
@@ -299,7 +315,7 @@ class Route implements iRoute
 					$request = array(); 
 					foreach( $tmp as $it ) 
 					{
-						$request[] = $it;
+						$request[] = (empty($it))?null:$it;
 					}
 					$request = array_combine($matches,$request);
 				}
@@ -346,7 +362,7 @@ class Route implements iRoute
 					$request = array(); 
 					foreach( $tmp as $it ) 
 					{
-						$request[] = $it;
+						$request[] = (empty($it))?null:$it;
 					}
 					$request = array_combine($matches,$request);
 				}
@@ -394,7 +410,7 @@ class Route implements iRoute
 					$request = array(); 
 					foreach( $tmp as $it ) 
 					{
-						$request[] = $it;
+						$request[] = (empty($it))?null:$it;
 					}
 					$request = array_combine($matches,$request);
 				}
@@ -442,7 +458,7 @@ class Route implements iRoute
 					$request = array(); 
 					foreach( $tmp as $it ) 
 					{
-						$request[] = $it;
+						$request[] = (empty($it))?null:$it;
 					}
 					$request = array_combine($matches,$request);
 				}
