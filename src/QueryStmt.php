@@ -325,6 +325,7 @@ class QueryStmt
 	final public function Reset() { return $this->__new(); }
 	final public function Clear( $deep=false ) { return $this->__clear( $deep ); } 
 	final public function Search() { return call_user_func_array([$this, mcbm_search], array(func_get_args(), func_num_args())); } 
+	final public function All() { return call_user_func_array([$this, mcbm_search], array(func_get_args(), func_num_args())); } 
 	final public function Custom() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args())); }
 	final public function Query() { return call_user_func_array([$this, mcbm_custom], array(func_get_args(), func_num_args(), 'Query')); } 
 	final public function Load() { return call_user_func_array([$this, mcbm_findid], array(func_get_args(), func_num_args())); } 

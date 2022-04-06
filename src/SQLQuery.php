@@ -1014,10 +1014,20 @@ abstract class SQLQuery extends QueryStmt
 							$sql = "UPDATE {$this->_tildeControl}{$this->_propTable}{$this->_tildeControl} SET {$saveSql} {$condSql}"; 
 							$qr = $this->__query( $sql ); 
 							$this->clear(); 
-							$data = ( $qr )?array_merge($this->_propsRole, $data):$this->__getError(); 
+							if( $qr ) 
+							{
+								$data = array_merge($this->_propsRole, $data);
+								if( method_exists($this, 'onride') ) 
+								{
+									$this->_eventOnRide = $this->onride( $data ); 
+								}
+							}
+							else 
+							{
+								$data = array();
+							}
 						} 
-						if( method_exists($this, 'onride') ) 
-							$this->_eventOnRide = $this->onride( $data ); 
+							
 						return $data; 
 					}
 					else 

@@ -2,6 +2,10 @@
 
 namespace Zuuda;
 
+use RecursiveDirectoryIterator;
+use FilesystemIterator;
+use RecursiveIteratorIterator;
+
 class cFile implements iFile 
 {
 	private static $this = '\Zuuda\cFile';
@@ -20,7 +24,8 @@ class cFile implements iFile
 	public static function LookFile( $path, $file ) { return self::__lookFile( $path, $file ); }
 	public static function LookDir( $path, $file = NULL ) { return self::__lookDir( $path, $file ); } 
 	public static function MakeDir( $path ) { return self::__make_dir($path); } 
-	public static function RemoveDir( $path ) { return self::__remove_dir($path); } 
+	public static function RemoveDir( $path, $force = false ) { return self::__remove_dir($path,$force); } 
+	public static function RRmDir( $path ) { return self::__rmdir_recursive($path); } 
 	public static function Remove( $path ) { return self::__remove($path); } 
 	
 	public static function AssetPath( $path, $file = true ) { return __assetPath( $path, $file ); }
@@ -174,8 +179,21 @@ class cFile implements iFile
 		return false;
 	}
 	
-	private static function __remove_dir( $path ) 
+	private static function __rmdir_recursive( $dir ) 
 	{
+		$it = new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS);
+		$it = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+		foreach($it as $file) {
+			if ($file->isDir()) rmdir($file->getPathname());
+			else unlink($file->getPathname());
+		}
+		rmdir($dir);
+	}
+	
+	private static function __remove_dir( $path, $force ) 
+	{
+		if( $force ) 
+			return self::__rmdir_recursive( $path );
 		if( is_dir($path) && is_readable($path) ) 
 			if( count(scandir($path)) == 2 ) 
 				return rmdir($path); 
