@@ -1137,7 +1137,7 @@ abstract class SQLQuery extends QueryStmt
 			if( $argsNum ) 
 			{
 				$f = current($args); 
-				$this->_propsUndescribe = array(); 
+				/** Note: when use distinct let use with select(...) for find most available result */
 				$selectSql = $this->__buildSQLSelection(); 
 				$selectSql = str_replace( "SELECT ", "SELECT DISTINCT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}), ", $selectSql ); 
 				$fromSql = $this->__buildSqlFrom(); 
