@@ -8,7 +8,7 @@ use Zuuda\Error;
 abstract class SQLQuery extends QueryStmt
 {
 	private static $this = '\Zuuda\SQLQuery';
-	protected $_tildeControl				= "`";
+	protected $_tildeControl	= "`";
 	abstract protected function __initConn(); 
 	
 	final protected function __getOperatorSymbols() 
@@ -436,6 +436,7 @@ abstract class SQLQuery extends QueryStmt
 	final protected function __buildSqlGroup() 
 	{
 		$outSql = EMPTY_STRING;
+		$pregMatchFunc = "#(.*?)\((?<=\()(.+)(?=\))\)#is";
 		if( count($this->_propsGroupBy) ) 
 		{
 			$sqls = array(); 
@@ -444,7 +445,16 @@ abstract class SQLQuery extends QueryStmt
 			foreach( $this->_propsGroupBy as $field ) 
 			{ 
 				$f = $field['name']; 
-				$sql = "{$this->_tildeControl}{$m}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}"; 
+				$match = null;
+				if( preg_match($pregMatchFunc, $f, $match) )
+				{
+					$f = trim($match[2]);
+					$sql = $match[1]."({$this->_tildeControl}{$m}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl})"; 
+				}
+				else 
+				{
+					$sql = "{$this->_tildeControl}{$m}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}"; 
+				}
 				if( isset($field['cmd']) ) 
 				{ 
 					$c = $field['cmd']; 
@@ -1111,8 +1121,13 @@ abstract class SQLQuery extends QueryStmt
 		{
 			if( zero===$argsNum ) 
 			{
-				$sql = "SELECT COUNT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$this->_primaryKey}{$this->_tildeControl}) AS {$this->_tildeControl}total{$this->_tildeControl} FROM {$this->_tildeControl}{$this->_propTable}{$this->_tildeControl} AS {$this->_tildeControl}{$this->_propModel}{$this->_tildeControl} " . $this->__buildSqlCondition(); 
-				$qr = $this->__query( $sql ); 
+				$selectSql = "SELECT COUNT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$this->_primaryKey}{$this->_tildeControl}) AS {$this->_tildeControl}total{$this->_tildeControl} FROM {$this->_tildeControl}{$this->_propTable}{$this->_tildeControl} AS {$this->_tildeControl}{$this->_propModel}{$this->_tildeControl} "; 
+				$condSql = $this->__buildSqlCondition(); 
+				$groupSql = $this->__buildSqlGroup(); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				
+				$qr = $this->__query( $selectSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
 				$this->__clear(); 
 				if( $qr ) 
 				{
@@ -1137,9 +1152,13 @@ abstract class SQLQuery extends QueryStmt
 			if( $argsNum ) 
 			{
 				$f = current($args); 
-				/** Note: when use distinct let use with select(...) for find most available result */
+				/** Note: when use distinct let use with select(distinct(column)) for find most available result */
+				$this->_propsUndescribe = array();
 				$selectSql = $this->__buildSQLSelection(); 
-				$selectSql = str_replace( "SELECT ", "SELECT DISTINCT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}), ", $selectSql ); 
+				if($selectSql==="SELECT ")
+					$selectSql = str_replace( "SELECT ", "SELECT DISTINCT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}) ", $selectSql ); 
+				else 
+					$selectSql = str_replace( "SELECT ", "SELECT DISTINCT({$this->_tildeControl}{$this->_propModel}{$this->_tildeControl}.{$this->_tildeControl}{$f}{$this->_tildeControl}), ", $selectSql ); 
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
 				$groupSql = $this->__buildSqlGroup(); 
@@ -1169,8 +1188,10 @@ abstract class SQLQuery extends QueryStmt
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
 				$groupSql = $this->__buildSqlGroup(); 
-				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
-				$qr = $this->__query( $sql ); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				
+				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['sum']; 
 			} 
@@ -1194,8 +1215,10 @@ abstract class SQLQuery extends QueryStmt
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
 				$groupSql = $this->__buildSqlGroup(); 
-				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
-				$qr = $this->__query( $sql ); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				
+				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['avg']; 
 			} 
@@ -1219,8 +1242,10 @@ abstract class SQLQuery extends QueryStmt
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
 				$groupSql = $this->__buildSqlGroup(); 
-				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
-				$qr = $this->__query( $sql ); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				
+				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['max']; 
 			} 
@@ -1244,8 +1269,10 @@ abstract class SQLQuery extends QueryStmt
 				$fromSql = $this->__buildSqlFrom(); 
 				$condSql = $this->__buildSqlCondition(); 
 				$groupSql = $this->__buildSqlGroup(); 
-				$sql = $selectSql . $fromSql . $condSql . $groupSql; 
-				$qr = $this->__query( $sql ); 
+				$orderSql = $this->__buildSqlOrder(); 
+				$rangeSql = $this->__buildSqlRange(); 
+				
+				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
 				$data = $this->fetch_assoc($qr); 
 				return (int)$data['min']; 
 			} 

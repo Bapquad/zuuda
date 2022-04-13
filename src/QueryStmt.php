@@ -3437,6 +3437,14 @@ class QueryStmt
 		{
 			$fourArg = 4; 
 			$fiveArg = 5; 
+			if(is_object($args[0])) 
+			{
+				$args[3] = $args[2];
+				$args[2] = $args[1];
+				$args[1] = $args[0]->getAliasName();
+				$args[0] = $args[0]->getModelName();
+				$argsNum = 4;
+			}
 			if( $fourArg===$argsNum ) 
 			{
 				if( array_key_exists($args[head], $this->_propsMerge) ) 
@@ -3467,6 +3475,14 @@ class QueryStmt
 		try 
 		{
 			$fourArg = 4; 
+			if(is_object($args[0])) 
+			{
+				$args[3] = $args[2];
+				$args[2] = $args[1];
+				$args[1] = $args[0]->getAliasName();
+				$args[0] = $args[0]->getModelName();
+				$argsNum = 4;
+			}
 			if( $fourArg===$argsNum ) 
 			{
 				if( array_key_exists($args[head], $this->_propsMergeLeft) ) 
@@ -3491,6 +3507,14 @@ class QueryStmt
 		try 
 		{ 
 			$fourArg = 4;
+			if(is_object($args[0])) 
+			{
+				$args[3] = $args[2];
+				$args[2] = $args[1];
+				$args[1] = $args[0]->getAliasName();
+				$args[0] = $args[0]->getModelName();
+				$argsNum = 4;
+			}
 			if( $fourArg===$argsNum ) 
 			{ 
 				if( array_key_exists($args[head], $this->_propsMergeRight) ) 
