@@ -69,12 +69,26 @@ class Fx
 	
 	final static public function get_ipv4() 
 	{ 
-		return gethostbyname(exec('hostname')); 
+		$disable_functions = ini_get("disable_functions");
+		
+		if(stripos($disable_functions, "exec") === false) 
+		{
+			return gethostbyname(exec('hostname')); 
+		}
+		
+		return gethostbyname(getenv('HTTP_HOST')); 
 	} 
 	
 	final static public function get_ipv4s() 
 	{ 
-		return gethostbynamel(exec('hostname')); 
+		$disable_functions = ini_get("disable_functions");
+		
+		if(stripos($disable_functions, "exec") === false) 
+		{
+			return gethostbynamel(exec('hostname')); 
+		}
+		
+		return gethostbynamel(getenv('HTTP_HOST')); 
 	} 
 	
 }

@@ -24,6 +24,8 @@ DEFINE ( 'QUESTION', 				"?" );
 DEFINE ( 'question', 				QUESTION );
 DEFINE ( 'COMMA', 					',' );
 DEFINE ( 'comma', 					COMMA );
+DEFINE ( 'COLON', 					':' );
+DEFINE ( 'colon', 					COLON );
 DEFINE ( 'SEMICOLON', 				';' );
 DEFINE ( 'semicolon', 				SEMICOLON );
 DEFINE ( 'EMPTY_CHAR', 				'' );

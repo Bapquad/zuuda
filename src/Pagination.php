@@ -75,14 +75,19 @@ class Pagination implements iHTML, iPagination
 	
 	public function __construct( $current = null, $total = null ) 
 	{
-		if( !is_null( $current ) ) 
+		if( is_null( $current ) ) 
 		{
-			$this->__setCurrent( $current );
+			$current = 1;
 		}
+		$this->__setCurrent( $current );
 		
 		if( !is_null( $total ) ) 
 		{
 			$this->__setTotal( $total );
+		}
+		else 
+		{
+			$this->__setTotal( $current );
 		}
 	}
 	
@@ -212,7 +217,6 @@ class Pagination implements iHTML, iPagination
 	protected function __parse() 
 	{
 		global $configs;
-		$this->__check();
 		
 		$classes = $this->__getClassList();
 		$crumbs = $this->__getCrumbs();
@@ -225,6 +229,8 @@ class Pagination implements iHTML, iPagination
 		$clean = $this->__getClean();
 		$current = $this->__getCurrent();
 		$total = $this->__getTotal();
+
+		$this->__check($current, $total);
 		
 		ob_start();
 		include( ROOT_DIR.WIDGET_DIR.__correctPath(str_replace('zuuda\\', '', strtolower(__CLASS__)).DS.'render.inc.php') );
@@ -233,11 +239,8 @@ class Pagination implements iHTML, iPagination
 		return $_response;
 	}
 	
-	protected function __check() 
+	protected function __check($current, $total) 
 	{
-		$current = $this->__getCurrent();
-		$total = $this->__getTotal();
-		
 		try 
 		{
 			if( is_null( $current ) ) 
@@ -253,7 +256,6 @@ class Pagination implements iHTML, iPagination
 		catch(Exception $e) 
 		{
 			echo $e->getMessage(); 
-			var_dump($e->getTrace());
 		}
 	}
 }

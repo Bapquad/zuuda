@@ -1192,8 +1192,12 @@ abstract class SQLQuery extends QueryStmt
 				$rangeSql = $this->__buildSqlRange(); 
 				
 				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
-				$data = $this->fetch_assoc($qr); 
-				return (int)$data['sum']; 
+				$rs = $this->fetch_assoc($qr); 
+				if(is_array($rs)) 
+				{
+					return (int)$rs['sum']; 
+				}
+				return $rs;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::sum()</strong> is incorrect." ); 
@@ -1219,8 +1223,12 @@ abstract class SQLQuery extends QueryStmt
 				$rangeSql = $this->__buildSqlRange(); 
 				
 				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
-				$data = $this->fetch_assoc($qr); 
-				return (int)$data['avg']; 
+				$rs = $this->fetch_assoc($qr); 
+				if(is_array($rs)) 
+				{
+					return (int)$rs['avg']; 
+				}
+				return $rs;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::avg()</strong> is incorrect." ); 
@@ -1246,8 +1254,12 @@ abstract class SQLQuery extends QueryStmt
 				$rangeSql = $this->__buildSqlRange(); 
 				
 				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
-				$data = $this->fetch_assoc($qr); 
-				return (int)$data['max']; 
+				$rs = $this->fetch_assoc($qr); 
+				if(is_array($rs)) 
+				{
+					return (int)$rs['max']; 
+				}
+				return $rs;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::max()</strong> is incorrect." ); 
@@ -1273,8 +1285,12 @@ abstract class SQLQuery extends QueryStmt
 				$rangeSql = $this->__buildSqlRange(); 
 				
 				$qr = $this->__query( $selectSql . $fromSql . $condSql . $groupSql . $orderSql . $rangeSql ); 
-				$data = $this->fetch_assoc($qr); 
-				return (int)$data['min']; 
+				$rs = $this->fetch_assoc($qr); 
+				if(is_array($rs)) 
+				{
+					return (int)$rs['min']; 
+				}
+				return $rs;
 			} 
 			else 
 				throw new Exception( "Usage <strong>Model::min()</strong> is incorrect." ); 
@@ -1422,7 +1438,10 @@ abstract class SQLQuery extends QueryStmt
 				} 
 				else 
 				{
-					$dsl = mysqli_connect($server['hostname'], $server['username'], $server['password']);
+					$hostname = $server['hostname'].colon.$server['port'];
+					$username = $server['username'];
+					$password = $server['password'];
+					$dsl = mysqli_connect($hostname, $username, $password);
 					if( $dsl ) 
 					{
 						$_CONFIG['DATASOURCE']['server'][$_CONFIG['DATASOURCE'][$src]['server']]['resource'] = $dsl; 
