@@ -150,6 +150,13 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	final public function SetHeaderLayout( $layout ) { return $this->__setHeaderLayout( $layout ); }
 	final public function SetFooterLayout( $layout ) { return $this->__setFooterLayout( $layout ); }
 	final public function SetMainLayout( $layout ) { return $this->__setMainLayout( $layout ); }
+	final public function HeaderLayout( $layout ) { return $this->__setHeaderLayout( $layout ); }
+	final public function FooterLayout( $layout ) { return $this->__setFooterLayout( $layout ); }
+	final public function HeadLayout( $layout ) { return $this->__setHeaderLayout( $layout ); }
+	final public function FootLayout( $layout ) { return $this->__setFooterLayout( $layout ); }
+	final public function HLayout( $layout ) { return $this->__setHeaderLayout( $layout ); }
+	final public function FLayout( $layout ) { return $this->__setFooterLayout( $layout ); }
+	final public function MainLayout( $layout ) { return $this->__setMainLayout( $layout ); }
 	final public function EngineLayout( $layout_content = NULL, $vars = NULL ) { return $this->__engineLayout( $layout_content, $vars ); }
 	final public function RenderLayout( $vars = NULL ) { return $this->__renderLayout( $vars ); } 
 	final public function RenderBlock( $block, $args = NULL ) { return $this->__renderBlock( $block, $args ); }
@@ -328,12 +335,14 @@ abstract class View implements iHTML, iTemplate, iLayout, iDeclare, iBlock
 	{
 		$this->__setFooterLayoutPath( $layout );
 		$this->__loadFooter();
+		return $this;
 	}
 	
 	private function __setHeaderLayout( $layout ) 
 	{
 		$this->__setHeaderLayoutPath( $layout );
 		$this->__loadHeader();
+		return $this;
 	}
 	
 	private function __addBlock( $block, $force_name ) 
