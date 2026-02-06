@@ -8,9 +8,9 @@ $ composer require bapquad/zuuda
 ```
 If you want to create project with Zuuda framework, let's type the following code into your terminal window.
 ```
-$ composer create-project --prefer-dist bapquad/zuuda-create-project blog <version>
+$ composer create-project bapquad/zuuda-create-project blog <version> --ignore-platform-reqs
 ```
-The `<version>` can be version name or version number. Ex: `1.0.0` or `dev-master`.
+The `<version>` can be version name or version number. Ex: `v1.0.0` or `dev-master`.
 
 For folder construction, you can view the guide about "The folder structure".
 
@@ -33,4 +33,5 @@ Then, select the menu item `1) Run Server` for running the local PHP server. Typ
 * [Working with Database](https://github.com/Bapquad/zuuda/wiki/Working-with-Database)
 * [Making Security](https://github.com/Bapquad/zuuda/wiki/Making-Security)
 ## API References
+
 You can learn more about Zuuda API at [here](https://github.com/Bapquad/zuuda/wiki/API-References).
