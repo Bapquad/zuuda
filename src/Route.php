@@ -234,7 +234,7 @@ class Route implements iRoute
 			$args[] = new $propName;
 		}
 		$dispatch = (empty($args))?new $controller_class_name():$ctrlRefl->newInstanceArgs((array) $args);
-		call_user_func_array(array(self::$this, '__preware'), array($res, $middlewares));
+		call_user_func_array(array(self::$this, '__preware'), array(RouteController::Instance(), $middlewares));
 		route::__handctrl($dispatch, next($callback).ACTION);
 	}
 	
@@ -330,15 +330,15 @@ class Route implements iRoute
 				self::__fetch_file($_get); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
-				if(is_callable( $callback )) 
+				if( is_array($callback) ) 
+				{
+					route::__callback($callback, $args); 
+				}
+				else if(is_callable( $callback )) 
 				{
 					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(query::instance(), $res);
 					$res->finalRender();
-				}
-				else if( is_array($callback) ) 
-				{
-					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -376,17 +376,17 @@ class Route implements iRoute
 				$_get = $_GET = array_merge($_get, $request);
 				$res = RouteController::Instance();
 				$callback = next($args); 
-				if(is_callable( $callback )) 
+				if( is_array($callback) ) 
+				{
+					route::__callback($callback, $args); 
+				}
+				else if(is_callable( $callback )) 
 				{
 					$_post = $_POST; 
 					self::__fetch_file($_post); 
 					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(request::instance(), $res);
 					$res->finalRender();
-				}
-				else if( is_array($callback) ) 
-				{
-					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -426,15 +426,15 @@ class Route implements iRoute
 				self::__fetch_file($_post); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
-				if(is_callable( $callback )) 
+				if( is_array($callback) ) 
+				{
+					route::__callback($callback, $args); 
+				}
+				else if(is_callable( $callback )) 
 				{
 					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(request::instance(), $res);
 					$res->finalRender();
-				}
-				else if( is_array($callback) ) 
-				{
-					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
@@ -473,15 +473,15 @@ class Route implements iRoute
 				self::__fetch_file($_get); 
 				$res = RouteController::Instance();
 				$callback = next($args); 
-				if(is_callable( $callback )) 
+				if( is_array($callback) ) 
+				{
+					route::__callback($callback, $args); 
+				}
+				else if(is_callable( $callback )) 
 				{
 					call_user_func_array(array(self::$this, '__preware'), array($res, $args));
 					$callback(query::instance(), $res);
 					$res->finalRender();
-				}
-				else if( is_array($callback) ) 
-				{
-					route::__callback($callback, $args); 
 				}
 				self::__release();
 			} 
